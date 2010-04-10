@@ -1,14 +1,10 @@
-package ru.circumflex
+package ru.circumflex.site
 
-import _root_.ru.ciridiri.{Main => Ciridiri}
 import _root_.ru.circumflex.core.RequestRouter
 import _root_.ru.circumflex.freemarker.FreemarkerHelper
-import _root_.java.text.SimpleDateFormat
-import _root_.java.util.Date
-import _root_.org.slf4j.LoggerFactory
+import _root_.ru.ciridiri.CiriDiri
 
-class Main extends RequestRouter
+class MainRouter extends RequestRouter
     with FreemarkerHelper {
-  val log = LoggerFactory.getLogger("ru.circumflex")
-  new Ciridiri()
+  new CiriDiri()
 }

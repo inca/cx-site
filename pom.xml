@@ -13,20 +13,10 @@
   <properties>
     <port>8180</port>
     <cx.version>0.3</cx.version>
-    <cx.router>ru.circumflex.Main</cx.router>
+    <cx.router>ru.ciridiri.CiriDiri</cx.router>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-core</artifactId>
-      <version>${cx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-ftl</artifactId>
-      <version>${cx.version}</version>
-    </dependency>
     <dependency>
       <groupId>ru.ciridiri</groupId>
       <artifactId>ciridiri</artifactId>

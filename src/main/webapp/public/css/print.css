@@ -1,0 +1,21 @@
+body {
+  color: #666;
+  margin: 0;
+  padding: 0
+}
+a {
+  color: #666;
+  text-decoration: none;
+}
+a img {
+  border: 0
+}
+h1, h2, h3, h4 {
+  margin: 1em 0 .5em
+}
+p {
+  margin: 0 0 .5em
+}
+.noprint, form {
+  display: none
+}
