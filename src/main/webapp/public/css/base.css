@@ -96,7 +96,7 @@ body{
   border-bottom-left-radius-radius:8px;
   border-bottom-right-radius-radius:8px;
   -moz-border-radius-bottomleft:8px;
-  -moz-border-radius-bottom-right:8px;
+  -moz-border-radius-bottomright:8px;
   -webkit-border-bottom-left-radius:8px;
   -webkit-border-bottom-right-radius:8px;
   padding: 1px 24px 24px;
