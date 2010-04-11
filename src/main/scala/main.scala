@@ -36,7 +36,7 @@ class MainRouter extends RequestRouter
       Runtime.getRuntime.exec(Array("git","add",".")).waitFor
     } else if (param("commit") != None) {
       val msg = param("message").get
-      val p = Runtime.getRuntime.exec(Array("git","commit","-a","-m","msg"))
+      val p = Runtime.getRuntime.exec(Array("git","commit","-a","-m",msg))
       val out = p.getOutputStream
       try {
         out.write(msg.getBytes("utf-8"))
