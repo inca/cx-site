@@ -14,6 +14,7 @@ ${status}
     <input type="submit" value="add ." name="add"/>
     <input type="submit" value="commit -a" name="commit"/>
     <input type="submit" value="push origin master" name="push"/>
+    <input type="submit" value="pull origin master" name="pull"/>
   </fieldset>
 </form>
 [/@page]

@@ -46,6 +46,8 @@ class MainRouter extends RequestRouter
       p.waitFor
     } else if (param("push") != None) {
       Runtime.getRuntime.exec(Array("git","push","origin","master")).waitFor
+    } else if (param("pull") != None) {
+      Runtime.getRuntime.exec(Array("git","pull","origin","master")).waitFor
     }
     redirect("/.git")
   }
