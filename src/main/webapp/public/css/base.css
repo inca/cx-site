@@ -37,7 +37,7 @@ html{
   min-height:101%;
 }
 body{
-  font:14px/1.5 Georgia, "Times New Roman", serif;
+  font:15px/1.5 Georgia, "Times New Roman", serif;
   background: url(/img/bkg.png) repeat;
 }
 #header {
@@ -82,7 +82,7 @@ body{
   color:#fff;
 }
 #footer .years {
-  padding:16px;
+  padding:22px;
 }
 #footer .home {
   padding-left:48px;
@@ -91,7 +91,7 @@ body{
   background:transparent url("/img/paper-bkg.png") repeat-x;
   height:48px;
 }
-.content {
+#page {
   background: #fff;
   border-bottom-left-radius-radius:8px;
   border-bottom-right-radius-radius:8px;
@@ -104,7 +104,7 @@ body{
 .bar .c {
   height:32px;
   margin:0 24px;
-  padding:8px 0;
+  padding:7px 0;
   color:#fff;
 }
 .bar .c * {
@@ -132,10 +132,13 @@ body{
   margin:0 12px;
   list-style:none;
 }
+#nav ul li ul, #nav ul li ol {
+  display:none;
+}
 /* Typefaces */
 p, pre{
   line-height:1.5em;
-  margin-bottom:1.5em;
+  margin-bottom:1em;
 }
 p.intro:first-line{
   font-variant:small-caps;
@@ -150,42 +153,36 @@ p.drop:first-letter{
 h1, h2, h3, h4, h5, h6 {margin-bottom: .5em}
 h1{
   color:#000;
-  font-size:3em;
-  margin-top:0.2em;
+  font-size:2.5em;
   font-style:italic;
   line-height:1.2em;
 }
 h2{
   color:#000;
   font-size:2em;
-  margin-top:0.9em;
   line-height:0.9em;
 }
 h3{
   color:#000;
   font-size:1.5em;
-  margin-top:1.2em;
   line-height:1.2em;
   font-variant:small-caps;
 }
 h4{
   color:#000;
-  font-size:1.2em;
-  margin-top:1.5em;
+  font-size:1.3em;
   line-height:1.5em;
   font-variant:small-caps;
 }
 h5{
   color:#000;
-  font-size:1em;
-  margin-top:1.8em;
+  font-size:1.1em;
   line-height:1.8em;
   font-variant:small-caps;
 }
 h6{
   color:#000;
   font-size:1em;
-  margin-top:1.8em;
   line-height:1.8em;
 }
 a{
@@ -263,8 +260,8 @@ img.right-img{
   margin-top:0.3em;
 }
 ul{
-  margin-bottom:1.8em;
-  list-style:square inside;
+  margin-bottom:1.2em;
+  list-style:disc inside;
 }
 ul li{
   line-height:1.5em;
