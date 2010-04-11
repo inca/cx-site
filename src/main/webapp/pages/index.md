@@ -67,7 +67,7 @@ Awesome, you say?
   in your `pom.xml`.
   * All Circumflex components are designed for ease-of-use and clarity of your code.
   The development process with Circumflex is intuitive and extremely productive. 
-  * Circumflex is completely free, with BSD-style license.
+  * Circumflex is completely free, with BSD-style [license](/license.html).
 
 ## Quick start
 
