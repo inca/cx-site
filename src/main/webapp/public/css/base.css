@@ -253,6 +253,10 @@ pre, code {
 pre code {
   font-size: 12px;
 }
+textarea {
+  font-family: monaco, lucida console, monospace;
+  font-size: 11px;
+}
 .highlight {
   background-color:#EFFFCC;
   border:1px solid #66BB66;
