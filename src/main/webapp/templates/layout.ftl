@@ -6,6 +6,11 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
   <script src="/js/application.js"></script>
   [#if ciripage?? && .template_name == 'page.ftl']
     <link rel="alternate"
@@ -42,6 +47,7 @@
     <a class="home" href="http://${host}">${host}</a>
   </div>
 </div>
+[@stats/]
 </body>
 </html>
 [/#macro]
@@ -60,4 +66,13 @@
     </div>
   </div>
 </div>
+[/#macro]
+
+[#macro stats]
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
 [/#macro]
