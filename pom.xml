@@ -11,9 +11,10 @@
   <name>Circumflex Site</name>
 
   <properties>
-    <port>8180</port>
+    <port>8888</port>
     <cx.version>0.3</cx.version>
     <cx.router>ru.circumflex.site.MainRouter</cx.router>
+    <ciridiri.password>pass</ciridiri.password>
   </properties>
 
   <dependencies>
