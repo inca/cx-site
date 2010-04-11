@@ -44,7 +44,7 @@ body{
   height:260px;
   background:transparent url("/img/layout/header-bkg.png") repeat-x bottom center;
 }
-#headerContent, #header h1, #header h1 a {
+#header h1, #header h1 a {
   width:680px;
   height:260px;
   margin:0 auto;
@@ -104,16 +104,10 @@ body{
 .bar .c {
   height:32px;
   margin:0 24px;
-  padding:7px 0;
+  padding:6px 0;
   color:#fff;
 }
-.bar .c * {
-  color:#fff;
-  text-shadow:0 0 6px rgba(255,255,255,0.3);
-}
-.bar .c a:hover {
-  text-shadow:0 0 6px #fff;
-}
+.bar .c * {color:#fff}
 .bar .green .w {
   background:transparent url("/img/bar-w.png") no-repeat;
 }
@@ -129,11 +123,36 @@ body{
 }
 #nav li {
   float:left;
-  margin:0 12px;
+  margin:0 8px;
   list-style:none;
 }
-#nav ul li ul, #nav ul li ol {
-  display:none;
+#nav ul li ul, #nav ul li ol {display:none}
+#nav a {font-size:14px}
+.team {
+  list-style-type: none;
+  padding:0 !important;
+  overflow:hidden;
+}
+.team > li {clear:both}
+.team .roles {font-style:italic}
+.team > li > h3 {line-height:2em; margin: 0}
+.team .avatar {
+  float:left;
+  border:1px solid #aaa;
+  padding:8px;
+  margin:4px;
+  margin-right:16px;
+  border-radius:8px;
+  -moz-border-radius:8px;
+  -webkit-border-radius:8px;
+}
+.team .roles {
+  list-style-type: none;
+  margin:0 !important;
+}
+.team .roles li {
+  float:left;
+  margin-right:4px;
 }
 /* Typefaces */
 p, pre{
@@ -152,44 +171,38 @@ p.drop:first-letter{
 }
 h1, h2, h3, h4, h5, h6 {margin-bottom: .5em}
 h1{
-  color:#000;
   font-size:2.5em;
   font-style:italic;
   line-height:1.2em;
 }
 h2{
-  color:#000;
   font-size:2em;
-  line-height:0.9em;
+  line-height:1.2em;
 }
 h3{
-  color:#000;
   font-size:1.5em;
   line-height:1.2em;
   font-variant:small-caps;
 }
 h4{
-  color:#000;
   font-size:1.3em;
-  line-height:1.5em;
+  line-height:1.2em;
   font-variant:small-caps;
 }
 h5{
-  color:#000;
   font-size:1.1em;
-  line-height:1.8em;
+  line-height:1.2em;
   font-variant:small-caps;
 }
 h6{
-  color:#000;
   font-size:1em;
-  line-height:1.8em;
+  line-height:1.2em;
 }
 a{
   color:#000;
 }
 a:hover{
-  text-decoration:none;
+  color:#555;
 }
 blockquote p{
   font-size:1.2em!important;
@@ -233,14 +246,23 @@ abbr{
   margin-left:0;
 }
 pre, code {
-  font-family: consolas, lucida console, bitstream vera sans mono, courier new, monospace;
-  font-size: 87.5%;
-  color: #007A00
+  font-family: monaco, lucida console, monospace;
+  color: #007a00;
+  font-size: 14px;
 }
-pre code {font-size: 1em}
-img{
-  font-size:1em;
+pre code {
+  font-size: 12px;
 }
+.highlight {
+  background-color:#EFFFCC;
+  border:1px solid #66BB66;
+  border-radius:8px;
+  -moz-border-radius:8px;
+  -webkit-border-radius:8px;
+  padding:8px;
+  margin:4px 0;
+}
+img {font-size:1em}
 img.left-img{
   font-size:1em;
   float:left;
