@@ -18,7 +18,7 @@ class MainRouter extends RequestRouter
   new CiriDiri()
   // now some rough stuff for Git
   get("/\\.git") = {
-    val p = Runtime.getRuntime.exec("git status")
+    val p = Runtime.getRuntime.exec(Array("git","status"))
     val in = p.getInputStream
     try {
       var status = new String(IOUtils.toCharArray(in))
@@ -33,10 +33,10 @@ class MainRouter extends RequestRouter
   }
   post("/\\.git") = {
     if (param("add") != None) {
-      Runtime.getRuntime.exec("git add .").waitFor
+      Runtime.getRuntime.exec(Array("git","add",".")).waitFor
     } else if (param("commit") != None) {
       val msg = param("message").get
-      val p = Runtime.getRuntime.exec("git commit --all --message='" + msg + "'")
+      val p = Runtime.getRuntime.exec(Array("git","commit","-a","-m","msg"))
       val out = p.getOutputStream
       try {
         out.write(msg.getBytes("utf-8"))
@@ -45,7 +45,7 @@ class MainRouter extends RequestRouter
       }
       p.waitFor
     } else if (param("push") != None) {
-      Runtime.getRuntime.exec("git push origin master").waitFor
+      Runtime.getRuntime.exec(Array("git","push","origin","master")).waitFor
     }
     redirect("/.git")
   }
