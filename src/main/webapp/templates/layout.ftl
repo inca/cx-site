@@ -5,7 +5,6 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
-  <link rel="stylesheet" media="screen, projection" href="/css/github.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
   <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
   <meta name='yandex-verification' content='443ed98406777aa4' />

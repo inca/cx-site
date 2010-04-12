@@ -21,6 +21,7 @@ the development extremely efficient. And simple.
 
 Here's a simple web application:
 
+    lang:scala
     class Main extends RequestRouter {
       get("/") = "Hello world!"      // match GET /
       post("/form") = {              // match POST /form
@@ -34,6 +35,7 @@ Here's a simple web application:
 
 And here's simple domain model:
 
+    lang:scala
     // define records
     class Person extends Record[Person] {
       val login = field(Person.login)
@@ -78,6 +80,7 @@ Awesome, you say?
 If you already have a project and wish to use one of the Circumflex components, just
  add the corresponding dependency to your project's `pom.xml`:
 
+    lang:xml
     <properties>
       <cx.version><!-- desired version --></cx.version>
     </properties>
