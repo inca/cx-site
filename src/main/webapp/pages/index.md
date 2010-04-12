@@ -79,36 +79,38 @@ If you already have a project and wish to use one of the Circumflex components, 
     <properties>
       <cx.version><!-- desired version --></cx.version>
     </properties>
-    <!-- Circumflex Web Framework -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-core</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
-    <!-- Circumflex ORM -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-orm</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
-    <!-- Circumflex Freemarker Views -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-ftl</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
-    <!-- Circumflex Markdown -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-md</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
-    <!-- Circumflex Docco -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-docco</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
+    <dependencies>
+      <!-- Circumflex Web Framework -->
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-core</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+      <!-- Circumflex ORM -->
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-orm</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+      <!-- Circumflex Freemarker Views -->
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-ftl</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+      <!-- Circumflex Markdown -->
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-md</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+      <!-- Circumflex Docco -->
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-docco</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+    </dependencies>
 
 Note, that all Circumflex components should have the same version. Check out the
 [Central Maven Repository][m2-central] to determine the latest version.
@@ -175,6 +177,18 @@ After the build has successfully finished, Circumflex with all it's dependencies
 be available in your local Maven 2 repository (it may take a while to download
 dependencies the first time).
 
+## Contribute
+
+Circumflex is in active development stage. It is very young project and it needs your help and support to grow strong. You can help make Circumflex project better in following ways:
+
+  * fork [Circumflex on GitHub][gh-cx] and take part in development;
+  * report [issues][gh-issues];
+  * fork [this site][gh-cx-site] and help us with documentation, FAQs, tutorials, examples and success stories;
+  * blog about Circumflex and [let us know about it](/team);
+  * contact [The Circumflex Team](/team) personally.
+
+We would highly appreciate your help! 
+
   [scala]: http://scala-lang.org
   [jdk]: http://java.sun.com/javase/downloads/index.jsp
   [m2]: http://maven.apache.org
@@ -183,3 +197,5 @@ dependencies the first time).
   [m2-gsg]: http://maven.apache.org/guides/getting-started/index.html
   [m2-central]: http://repo2.maven.org/maven2/ru/circumflex/circumflex-parent
   [gh-cx]: http://github.com/inca/circumflex
+  [gh-issues]: http://github.com/inca/circumflex/issues
+  [gh-cx-site]: http://github.com/inca/cx-site
