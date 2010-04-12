@@ -23,9 +23,11 @@ Here's a simple web application:
 
     class Main extends RequestRouter {
       get("/") = "Hello world!"      // match GET /
-      post("/form") = {             // match POST /form
+      post("/form") = {              // match POST /form
         // do some work
-        "Form processing complete."
+        // . . .
+        // render FreeMarker template
+        ftl("/done.ftl")
       }
     }
 
@@ -120,10 +122,12 @@ Note, that all Circumflex components should have the same version. Check out the
 As soon as Circumflex is built, you are ready to create your first project. Change
 to the directory where you store your projects and run:
 
+    lang:no-highlight
     $ mvn archetype:generate
 
 Choose the **circumflex-archetype** from your local catalog:
 
+    lang:no-highlight
     Choose archetype:
     1: local -> circumflex-archetype (Circumflex Application Archetype)
     2: internal -> . . .
@@ -131,6 +135,7 @@ Choose the **circumflex-archetype** from your local catalog:
 
 Provide basic information about your project:
 
+    lang:no-highlight
     Define value for groupId: : com.myapp
     Define value for artifactId: : myapp
     Define value for version:  1.0-SNAPSHOT: : 1.0
@@ -140,10 +145,12 @@ After you confirm your choice, a simple Circumflex application will be created. 
 it, go to your project root (it matches `artifactId` that you have specified above)
 and execute the following:
 
+    lang:no-highlight
     $ mvn compile jetty:run
 
 The following lines indicate that your application is ready to serve requests:
 
+    lang:no-highlight
     [INFO] Started Jetty Server
     [INFO] Starting scanner at interval of 5 seconds.
 
@@ -153,6 +160,7 @@ Now you may visit your application at <http://localhost:8180>.
 
 You can obtain latest Circumflex sources at [GitHub][gh-cx]:
 
+    lang:no-highlight
     $ git clone git://github.com/inca/circumflex.git
 
 Circumflex, like all Scala applications, is compiled into Java VM bytecode. Make sure
@@ -164,6 +172,7 @@ Maven 2, [install it][m2-install]. Note, that some operating systems (e.g. Mac O
 preferrable to install Maven 2 via package managers. For example, on Debian or Ubuntu
 systems you may install Maven 2 by executing the following line:
 
+    lang:no-highlight
     $ sudo apt-get install maven2
 
 If you are unfamiliar with Maven, you should probably read the [Maven in 5 Minutes][m2-5min]
@@ -171,6 +180,7 @@ article or [Getting Started Guide][m2-gsg].
 
 Once you are ready to build, execute the following in Circumflex root directory:
 
+    lang:no-highlight
     $ mvn clean install
 
 After the build has successfully finished, Circumflex with all it's dependencies will

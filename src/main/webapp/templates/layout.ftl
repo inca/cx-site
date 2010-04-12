@@ -5,6 +5,7 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/github.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
   <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
   <meta name='yandex-verification' content='443ed98406777aa4' />
@@ -12,7 +13,11 @@
   <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
   </script>
   <script src="/js/application.js"></script>
-  [#if ciripage?? && .template_name == 'page.ftl']
+  <script src="/js/highlight.pack.js"></script>
+  <script type="text/javascript">
+  hljs.initHighlightingOnLoad();
+  </script>
+  [#if ciripage?? && .template_name?ends_with('/page.ftl')]
     <link rel="alternate"
           id="edit-link"
           type="application/x-wiki"

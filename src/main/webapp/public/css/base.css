@@ -37,7 +37,7 @@ html{
   min-height:101%;
 }
 body{
-  font:15px/1.5 Georgia, "Times New Roman", serif;
+  font:16px/1.5 Georgia, "Times New Roman", serif;
   background: url(/img/bkg.png) repeat;
 }
 #header {
@@ -62,7 +62,7 @@ body{
 }
 #outer {
   margin:-36px auto 0;
-  width:680px;
+  width:900px;
 }
 #content {
   color:#333;
@@ -118,7 +118,7 @@ body{
   background:transparent url("/img/bar-c.png") repeat-x;
 }
 #nav ul {
-  margin-top:5px;
+  margin-top:6px;
   padding:0;
 }
 #nav li {
@@ -127,7 +127,13 @@ body{
   list-style:none;
 }
 #nav ul li ul, #nav ul li ol {display:none}
-#nav a {font-size:14px}
+#nav a {
+  color: #222;
+  font-size:18px;
+  font-style:italic;
+  text-decoration:none;
+  text-shadow:0 1px 0 #aaeeaa;
+}
 .team {
   list-style-type: none;
   padding:0 !important;
@@ -155,7 +161,7 @@ body{
   margin-right:4px;
 }
 /* Typefaces */
-p, pre{
+p {
   line-height:1.5em;
   margin-bottom:1em;
 }
@@ -246,12 +252,17 @@ abbr{
   margin-left:0;
 }
 pre, code {
-  font-family: monaco, lucida console, monospace;
-  color: #007a00;
+  font-family: monaco, lucida console, bitstream vera sans mono, monospace;
+  color: #007000;
   font-size: 14px;
 }
-pre code {
-  font-size: 12px;
+pre code {font-size: 12px}
+pre {
+  background: #f3f8f3;
+  border-top: 1px solid #e0e8e0;
+  border-bottom: 1px solid #e0e8e0;
+  margin: 0 -24px 16px;
+  padding: 8px 16px;
 }
 textarea {
   font-family: monaco, lucida console, monospace;
