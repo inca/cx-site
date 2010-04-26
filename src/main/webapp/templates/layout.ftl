@@ -12,7 +12,11 @@
   <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
   </script>
   <script src="/js/application.js"></script>
-  [#if ciripage?? && .template_name == 'page.ftl']
+  <script src="/js/highlight.pack.js"></script>
+  <script type="text/javascript">
+  hljs.initHighlightingOnLoad();
+  </script>
+  [#if ciripage?? && .template_name?ends_with('/page.ftl')]
     <link rel="alternate"
           id="edit-link"
           type="application/x-wiki"
