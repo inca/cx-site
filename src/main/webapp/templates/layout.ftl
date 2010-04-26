@@ -34,7 +34,7 @@
 <div id="outer">
   [#if sitemap??]
   [@bar id="nav"]
-  ${ciridiri.prettify(sitemap.content)}
+  ${sitemap.toHtml}
   [/@bar]
   [/#if]
   <div id="scraps">
