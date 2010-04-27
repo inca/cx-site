@@ -12,12 +12,12 @@ If you wish to join the team, please contact one of the team members below.
 
 <ul class="team">
   <li>
-    <a href="mailto:incarnate@whiteants.net">
+    <a href="http://github.com/inca">
       <img src="http://www.gravatar.com/avatar/9646564df6dbd498185ee71f24e6a33a.png"
            class="avatar"
            alt="Boris S. Okunskiy"/>
     </a>
-    <h3><a href="mailto:incarnate@whiteants.net">Boris S. Okunskiy</a></h3>
+    <h3><a href="http://github.com/inca">Boris S. Okunskiy</a></h3>
     <ul class="roles">
       <li>founder,</li>
       <li>ideologist,</li>
@@ -25,24 +25,24 @@ If you wish to join the team, please contact one of the team members below.
     </ul>
   </li>
   <li>
-    <a href="mailto:sl@whiteants.net">
+    <a href="http://github.com/StanislavLakhtin">
       <img src="http://www.gravatar.com/avatar/e4e146ba3bd7808e9774899f6c708879"
            class="avatar"
            alt="Stanislav E. Lakhtin"/>
     </a>
-    <h3><a href="mailto:sl@whiteants.net">Stanislav E. Lakhtin</a></h3>
+    <h3><a href="http://github.com/StanislavLakhtin">Stanislav E. Lakhtin</a></h3>
     <ul class="roles">
       <li>project director,</li>
       <li>ideologist</li>
     </ul>
   </li>
   <li>
-    <a href="mailto:vazilla@gmail.com">
+    <a href="http://github.com/vast">
       <img src="http://www.gravatar.com/avatar/277212d5ad624fb5b0c6d23ca3841b06"
            class="avatar"
            alt="Vasily S. Polovnyov"/>
     </a>
-    <h3><a href="mailto:vazilla@gmail.com">Vasily S. Polovnyov</a></h3>
+    <h3><a href="http://github.com/vast">Vasily S. Polovnyov</a></h3>
     <ul class="roles">
       <li>steering committee,</li>
       <li>ideologist</li>
