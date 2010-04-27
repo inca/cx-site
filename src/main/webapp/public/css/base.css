@@ -337,7 +337,7 @@ pre .javadoctag, pre .annotation, pre .pi {
   color: #770;
 }
 pre .keyword, pre .class .keyword, pre .attribute {
-  color: #272;
+  color: #550;
 }
 pre .number, pre .hexcolor, pre .string, pre .attribute .value {
   color: #2a2
