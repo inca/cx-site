@@ -32,31 +32,6 @@ Here's a simple web application:
       }
     }
 
-
-And here's simple domain model:
-
-    lang:scala
-    // define records
-    class Person extends Record[Person] {
-      val login = field(Person.login)
-      val name = field(Person.name)
-      val accounts = oneToMany(Account.person)
-    }
-
-    // define a relation, where records are stored
-    object Person extends Table[Person] {
-      val login   = stringColumn("login")
-                    .notNull
-                    .unique
-                    .validatePattern("^[a-zA-Z0-9_-]{3,8}$")
-      val name    = stringColumn("name")
-                    .notNull
-                    .validateNotEmpty
-      primaryKey(login)
-    }
-
-Awesome, you say?
-
 ## Why Circumflex?
 
   * Circumflex components require minimum initial configuration, while still allowing

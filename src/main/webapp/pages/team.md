@@ -21,7 +21,6 @@ If you wish to join the team, please contact one of the team members below.
     <ul class="roles">
       <li>founder,</li>
       <li>ideologist,</li>
-      <li>project manager,</li>
       <li>committer</li>
     </ul>
   </li>
@@ -34,8 +33,7 @@ If you wish to join the team, please contact one of the team members below.
     <h3><a href="mailto:sl@whiteants.net">Stanislav E. Lakhtin</a></h3>
     <ul class="roles">
       <li>project director,</li>
-      <li>ideologist,</li>
-      <li>executive sponsor</li>
+      <li>ideologist</li>
     </ul>
   </li>
   <li>
@@ -46,19 +44,8 @@ If you wish to join the team, please contact one of the team members below.
     </a>
     <h3><a href="mailto:vazilla@gmail.com">Vasily S. Polovnyov</a></h3>
     <ul class="roles">
-      <li>ideologist,</li>
-      <li>steering committee</li>
-    </ul>
-  </li>
-  <li>
-    <a href="mailto:kirill.kosinov@gmail.com">
-      <img src="http://www.gravatar.com/avatar/a43103af774b6c4f598937a406e39a74"
-           class="avatar"
-           alt="Kirill V. Kosinov"/>
-    </a>
-    <h3><a href="mailto:kirill.kosinov@gmail.com">Kirill V. Kosinov</a></h3>
-    <ul class="roles">
-      <li>committer</li>
+      <li>steering committee,</li>
+      <li>ideologist</li>
     </ul>
   </li>
 </ul>
