@@ -20,7 +20,6 @@ If you wish to join the team, please contact one of the team members below.
     <h3><a href="http://github.com/inca">Boris S. Okunskiy</a></h3>
     <ul class="roles">
       <li>founder,</li>
-      <li>ideologist,</li>
       <li>committer</li>
     </ul>
   </li>
