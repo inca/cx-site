@@ -1,41 +1,44 @@
 package ru.circumflex.site
 
-import _root_.ru.circumflex.freemarker.FreemarkerHelper
-import java.text.SimpleDateFormat
-import java.util.Date
-import ru.circumflex.core.{Circumflex, RequestRouter}
+import ru.circumflex.core._
+import ru.circumflex.freemarker.FreemarkerHelper
 import ru.ciridiri.{Page, CiriDiri}
 import ru.circumflex.md.Markdown
+
+import java.text.SimpleDateFormat
+import java.util.Date
 import org.apache.commons.io.IOUtils
 
 class MainRouter extends RequestRouter
     with FreemarkerHelper {
-  ctx += "host" -> header("Host")
-  ctx += "currentYear" -> new SimpleDateFormat("yyyy").format(new Date)
-  // read sitemap
-  ctx += "sitemap" -> Page.findByUri("/sitemap")
-  // let ciridiri handle the rest
-  new CiriDiri()
+
+  context('host) = header("Host")
+  context('currentYear) = new SimpleDateFormat("yyyy").format(new Date)
+  context('sitemap) = Page.findByUri("/sitemap") // read sitemap
+
+  new CiriDiri // let ciridiri handle the rest
+  
   // now some rough stuff for Git
-  get("/\\.git") = {
+  get("/.git") = {
     val p = Runtime.getRuntime.exec(Array("git","status"))
     val in = p.getInputStream
     try {
       var status = new String(IOUtils.toCharArray(in))
           .replaceAll("(?:\\n|\\A)#", "\n")
           .replaceAll("\n(?! {4,})", "  \n")
-      ctx += "status" -> Markdown(status)
+      context('status) = Markdown(status)
     } finally {
       in.close
       p.waitFor
     }
     ftl("/git.ftl")
   }
-  post("/\\.git") = {
-    if (param("add") != None) {
+
+  post("/.git") = {
+    if (param('add).isDefined) {
       Runtime.getRuntime.exec(Array("git","add",".")).waitFor
-    } else if (param("commit") != None) {
-      val msg = param("message").get
+    } else if (param('commit).isDefined) {
+      val msg = param('message).get
       val p = Runtime.getRuntime.exec(Array("git","commit","-a","-m",msg))
       val out = p.getOutputStream
       try {
@@ -44,9 +47,9 @@ class MainRouter extends RequestRouter
         out.close
       }
       p.waitFor
-    } else if (param("push") != None) {
+    } else if (param('push).isDefined) {
       Runtime.getRuntime.exec(Array("git","push","origin","master")).waitFor
-    } else if (param("pull") != None) {
+    } else if (param('pull).isDefined) {
       Runtime.getRuntime.exec(Array("git","pull","origin","master")).waitFor
     }
     redirect("/.git")

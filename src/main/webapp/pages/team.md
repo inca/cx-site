@@ -47,4 +47,15 @@ If you wish to join the team, please contact one of the team members below.
       <li>ideologist</li>
     </ul>
   </li>
+  <li>
+    <a href="http://github.com/rationalem">
+      <img src="http://www.gravatar.com/avatar/278d1a8a007b0bc2dec940bd07567ecf.png"
+           class="avatar"
+           alt="Mauro Rocchi"/>
+    </a>
+    <h3><a href="http://github.com/rationalem">Mauro Rocchi</a></h3>
+    <ul class="roles">
+      <li>committer</li>
+    </ul>
+  </li>
 </ul>
