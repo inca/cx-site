@@ -12,9 +12,9 @@ import org.apache.commons.io.IOUtils
 class MainRouter extends RequestRouter
     with FreemarkerHelper {
 
-  context('host) = header("Host")
-  context('currentYear) = new SimpleDateFormat("yyyy").format(new Date)
-  context('sitemap) = Page.findByUri("/sitemap") // read sitemap
+  'host := header("Host")
+  'currentYear := new SimpleDateFormat("yyyy").format(new Date)
+  'sitemap := Page.findByUri("/sitemap") // read sitemap
 
   new CiriDiri // let ciridiri handle the rest
   
@@ -26,7 +26,7 @@ class MainRouter extends RequestRouter
       var status = new String(IOUtils.toCharArray(in))
           .replaceAll("(?:\\n|\\A)#", "\n")
           .replaceAll("\n(?! {4,})", "  \n")
-      context('status) = Markdown(status)
+      'status := Markdown(status)
     } finally {
       in.close
       p.waitFor
