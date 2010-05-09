@@ -1,4 +1,4 @@
-Introducing Circumflex
+Introducing Circumflex  {#intro}
 ======================
 
 Circumflex is a set of software components for quick and robust application development
@@ -6,18 +6,20 @@ using [Scala][] programming language.
 
 Circumflex consists of several separate projects:
 
-  * [Circumflex Web Framework](/web.html)
-  * [Circumflex ORM](/orm.html)
-  * [Circumflex FreeMarker Views](ftl.html) 
-  * [Circumflex Markdown](md.html)
-  * [Circumflex Docco](docco.html)
-  * [Circumflex Maven Plugin](plugin.html)
+  * [Circumflex Web Framework](#web)
+  * [Circumflex ORM](#orm)
+  * [Circumflex FreeMarker Views](#ftl)
+  * [Circumflex Markdown](#md)
+  * [Circumflex Docco](#docco)
+  * [Circumflex Maven Plugin](/plugin.html)
 
-## At a glance
+## At a glance  {#glance}
 
 All Circumflex components share the same phylosophy: the development process should be
 natural and intuitive. They rely on Scala support for domain-specific languages that make
 the development extremely efficient. And simple.
+
+### Web Framework  {#web}
 
 Here's a simple web application:
 
@@ -32,7 +34,76 @@ Here's a simple web application:
       }
     }
 
-## Why Circumflex?
+Of course, the capabilities of Web framework are not limited to responding to methods and URLs.
+Check out the [Circumflex Web Framework page](/web.html) for detailed overview.
+
+### ORM  {#orm}
+
+What can possibly be better than designing the domain model using the domain specific language
+that closely resembles the data definition language of SQL databases?
+
+    lang:scala
+    class City extends Record[City] {
+      val name = "name" TEXT
+      val country = "country_id" REFERENCES(Country) ON_DELETE CASCADE ON_UPDATE CASCADE
+      override def toString = name.getOrElse("Unknown")
+    }
+
+    object City extends Table[City]
+
+    class Country extends Record[Country] {
+      val code = "code" VARCHAR(2) DEFAULT("'ch'")
+      val name = "name" TEXT
+      def cities = inverse(City.country)
+      override def toString = name.getOrElse("Unknown")
+    }
+
+    object Country extends Table[Country] {
+      INDEX("country_code_idx", "LOWER(code)") USING "btree" UNIQUE
+    }
+
+But still it is nothing comparing to object-oriented querying:
+
+    lang:scala
+    // Prepare the relations that will participate in queries
+    val ci = City as "ci"
+    val co = Country as "co"
+    // Select all russian cities
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ru") ORDER_BY (ci.name ASC) list   // Seq[City]
+    // Select countries with corresponding cities
+    SELECT (co.*, ci.*) FROM (co JOIN ci) list                                              // Seq[(Country, City)]
+    // Select countries and count their cities
+    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list                      // Seq[(Country, Int)]
+
+Circumflex ORM also features lazy and eager fetching strategies for associations, complex queries,
+including subqueries of all kinds, data manipulation statements (`INSERT .. SELECT`, `UPDATE` and
+`DELETE`), set operations between queries (`UNION`, `INTERSECT`, `EXCEPT`),
+transaction-scoped caching, xml data import, schema generation with Maven plugin and arbitrary projections.
+
+For more information, please check out the [Circumflex ORM page](/orm.html).
+
+### Markdown  {#md}
+
+The infamous text-to-html conversion tool for writers, [Markdown][], is now available for Scala users
+with some extensions and improved performance. The usage is pretty simple:
+
+    lang:scala
+    val html = Markdown(source)
+
+### Freemarker  {#ftl}
+
+Circumflex Freemarker module brings the power of the most advanced Java templating language,
+[Freemarker][] to Scala. Due to the fact that Freemarker templates can effectively render any
+possible content, the Freemarker is considered the main view technology for
+[Circumflex Web Framework](#web).
+
+### Docco  {#docco}
+
+Circumflex Docco is a port of [Docco Project](http://jashkenas.github.com/docco) for Scala.
+The ideas of documenting open-source Scala programs in Docco style are under evaluation for now,
+but you still might want to try it and let us know, what you think about it.
+
+## Why Circumflex? {#why}
 
   * Circumflex components require minimum initial configuration, while still allowing
   developers to easily override defaults if necessary.
@@ -92,8 +163,8 @@ If you already have a project and wish to use one of the Circumflex components, 
       </dependency>
     </dependencies>
 
-Note, that all Circumflex components should have the same version. Check out the
-[Central Maven Repository][m2-central] to determine the latest version.
+Note that all Circumflex components should share the same version. Check out the
+[Central Maven Repository][m2-central] to determine the latest version of Circumflex.
 
 ### Create new project
 
@@ -187,3 +258,5 @@ We would highly appreciate your help!
   [gh-cx]: http://github.com/inca/circumflex
   [gh-issues]: http://github.com/inca/circumflex/issues
   [gh-cx-site]: http://github.com/inca/cx-site
+  [markdown]: http://daringfireball.net/projects/markdown/
+  [freemarker]: http://freemarker.org

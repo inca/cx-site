@@ -12,7 +12,7 @@
 
   <properties>
     <port>8888</port>
-    <cx.version>0.3</cx.version>
+    <cx.version>1.1</cx.version>
     <cx.router>ru.circumflex.site.MainRouter</cx.router>
   </properties>
 
@@ -20,7 +20,7 @@
     <dependency>
       <groupId>ru.ciridiri</groupId>
       <artifactId>ciridiri</artifactId>
-      <version>1.2</version>
+      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
