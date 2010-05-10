@@ -2,7 +2,7 @@ Introducing Circumflex  {#intro}
 ======================
 
 Circumflex is a set of software components for quick and robust application development
-using [Scala][] programming language.
+using the [Scala][] programming language.
 
 Circumflex consists of several separate projects:
 
@@ -15,9 +15,9 @@ Circumflex consists of several separate projects:
 
 ## At a glance  {#glance}
 
-All Circumflex components share the same phylosophy: the development process should be
-natural and intuitive. They rely on Scala support for domain-specific languages that make
-the development extremely efficient. And simple.
+All Circumflex components share the same philosophy: the development process should be
+natural and intuitive. They rely on Scala's support for domain-specific languages that make
+development extremely efficient. And simple.
 
 ### Web Framework  {#web}
 
@@ -108,20 +108,20 @@ but you still might want to try it and let us know, what you think about it.
   * Circumflex components require minimum initial configuration, while still allowing
   developers to easily override defaults if necessary.
   * Circumflex is based on Scala. It has all the benefits of Scala.
-  It runs on JVM. It is fast. It is concise.
-  * Circumflex does not try to solve all the problems the developer might ever face.
-  It keeps minimal features set, allowing developers to choose the tools and libraries
+  It runs on the JVM. It is fast. It is concise.
+  * Circumflex does not try to solve all the problems a developer might ever face.
+  It maintains a minimal features set, allowing developers to choose the tools and libraries
   that best suit their particular needs.
-  * Circumflex is designed to use the powers of Apache Maven 2 software management
+  * Circumflex is designed to use the powers of the Apache Maven 2 software management
   platform. Adding Circumflex components to your project is a matter of few more lines
   in your `pom.xml`.
-  * All Circumflex components are designed for ease-of-use and clarity of your code.
+  * All Circumflex components are designed to maximize the ease-of-use and clarity of your code.
   The development process with Circumflex is intuitive and extremely productive. 
-  * Circumflex is completely free, with BSD-style [license](/license.html).
+  * Circumflex is completely free, with a BSD-style [license](/license.html).
 
-## Quick start
+## Quick start  {#start}
 
-### Use with existing projects
+### Use With Wxisting Projects  {#existing-projects}
 
 If you already have a project and wish to use one of the Circumflex components, just
  add the corresponding dependency to your project's `pom.xml`:
@@ -166,10 +166,10 @@ If you already have a project and wish to use one of the Circumflex components, 
 Note that all Circumflex components should share the same version. Check out the
 [Central Maven Repository][m2-central] to determine the latest version of Circumflex.
 
-### Create new project
+### Create New Project  {#new-projects}
 
 As soon as Circumflex is built, you are ready to create your first project. Change
-to the directory where you store your projects and run:
+to the directory where you store your projects, and run:
 
     lang:no-highlight
     $ mvn archetype:generate
@@ -191,7 +191,7 @@ Provide basic information about your project:
     Define value for package:  com.myapp: :
 
 After you confirm your choice, a simple Circumflex application will be created. To run
-it, go to your project root (it matches `artifactId` that you have specified above)
+it, go to your project root (it matches the `artifactId` that you specified above)
 and execute the following:
 
     lang:no-highlight
@@ -205,21 +205,21 @@ The following lines indicate that your application is ready to serve requests:
 
 Now you may visit your application at <http://localhost:8180>.
 
-### Build from sources
+### Build From Sources  {#sources}
 
-You can obtain latest Circumflex sources at [GitHub][gh-cx]:
+You can obtain the latest Circumflex sources at [GitHub][gh-cx]:
 
     lang:no-highlight
     $ git clone git://github.com/inca/circumflex.git
 
 Circumflex, like all Scala applications, is compiled into Java VM bytecode. Make sure
-that latest [Java 6 SDK][jdk] is installed on your system.
+that the latest [Java 6 SDK][jdk] is installed on your system.
 
 Circumflex uses [Apache Maven 2][m2] for build management. If you don't already have
-Maven 2, [install it][m2-install]. Note, that some operating systems (e.g. Mac OS X
+Maven 2, [install it][m2-install]. Note that some operating systems (e.g. Mac OS X
 10.5 and higher) are shipped with Maven 2 by default. On some systems it is also
 preferrable to install Maven 2 via package managers. For example, on Debian or Ubuntu
-systems you may install Maven 2 by executing the following line:
+systems you can install Maven 2 by executing the following line:
 
     lang:no-highlight
     $ sudo apt-get install maven2
@@ -227,22 +227,24 @@ systems you may install Maven 2 by executing the following line:
 If you are unfamiliar with Maven, you should probably read the [Maven in 5 Minutes][m2-5min]
 article or [Getting Started Guide][m2-gsg].
 
-Once you are ready to build, execute the following in Circumflex root directory:
+Once you are ready to build, execute the following in the Circumflex root directory:
 
     lang:no-highlight
     $ mvn clean install
 
-After the build has successfully finished, Circumflex with all it's dependencies will
+After the build has successfully finished, Circumflex with all its dependencies will
 be available in your local Maven 2 repository (it may take a while to download
 dependencies the first time).
 
-## Contribute
+## Contribute  {#contribute}
 
-Circumflex is in active development stage. It is very young project and it needs your help and support to grow strong. You can help make Circumflex project better in following ways:
+Circumflex is actively being developed. It is very young project, and it needs your help and
+support to grow strong. You can help make the Circumflex project better in following ways:
 
   * fork [Circumflex on GitHub][gh-cx] and take part in development;
   * report [issues][gh-issues];
-  * fork [this site][gh-cx-site] and help us with documentation, FAQs, tutorials, examples and success stories;
+  * fork [this site][gh-cx-site] and help us with documentation, FAQs, tutorials,
+  examples and success stories;
   * blog about Circumflex and [let us know about it](/team);
   * contact [The Circumflex Team](/team) personally.
 
