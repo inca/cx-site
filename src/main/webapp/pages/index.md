@@ -65,15 +65,15 @@ that closely resembles the data definition language of SQL databases?
 But still it is nothing comparing to object-oriented querying:
 
     lang:scala
-    // Prepare the relations that will participate in queries
+    // Prepare the relations that will participate in queries:
     val ci = City as "ci"
     val co = Country as "co"
-    // Select all russian cities
-    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ru") ORDER_BY (ci.name ASC) list   // Seq[City]
-    // Select countries with corresponding cities
-    SELECT (co.*, ci.*) FROM (co JOIN ci) list                                              // Seq[(Country, City)]
-    // Select countries and count their cities
-    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list                      // Seq[(Country, Int)]
+    // Select all russian cities, return Seq[City]:
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ru") ORDER_BY (ci.name ASC) list
+    // Select countries with corresponding cities, return Seq[(Country, City)]:
+    SELECT (co.*, ci.*) FROM (co JOIN ci) list
+    // Select countries and count their cities, return Seq[(Country, Int)]:
+    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list
 
 Circumflex ORM also features lazy and eager fetching strategies for associations, complex queries,
 including subqueries of all kinds, data manipulation statements (`INSERT .. SELECT`, `UPDATE` and
