@@ -128,7 +128,7 @@ but you still might want to try it and let us know, what you think about it.
 
 ## Quick start  {#start}
 
-### Use With Wxisting Projects  {#existing-projects}
+### Use With Existing Projects  {#existing-projects}
 
 If you already have a project and wish to use one of the Circumflex components, just
  add the corresponding dependency to your project's `pom.xml`:
