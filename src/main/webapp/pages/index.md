@@ -21,21 +21,28 @@ development extremely efficient. And simple.
 
 ### Web Framework  {#web}
 
+[Circumflex Web Framework](/web.html) is a DSL for quick web application development.
+
+It is designed around the *route concept*. A route is an HTTP method with matching mechanism
+and attached block. The application itself is essentially a sequential set of routes: they are
+matched in the order they are defined, the first route that matches the request is invoked.
+
 Here's a simple web application:
 
     lang:scala
     class Main extends RequestRouter {
-      get("/") = "Hello world!"      // match GET /
-      post("/form") = {              // match POST /form
-        // do some work
+      get("/") = "Hello world!"
+      get("/posts/:id") = "Post #" + uri("id")
+      post("/form") = {
+        // Do some work
         // . . .
-        // render FreeMarker template
+        // Render FreeMarker template:
         ftl("/done.ftl")
       }
     }
 
-Of course, the capabilities of Web framework are not limited to responding to methods and URLs.
-Check out the [Circumflex Web Framework page](/web.html) for detailed overview.
+Of course, the capabilities of Web framework are not limited to responding to HTTP methods and
+matching URLs. Check out the [Circumflex Web Framework page](/web.html) for detailed overview.
 
 ### ORM  {#orm}
 
@@ -262,3 +269,4 @@ We would highly appreciate your help!
   [gh-cx-site]: http://github.com/inca/cx-site
   [markdown]: http://daringfireball.net/projects/markdown/
   [freemarker]: http://freemarker.org
+  [sinatra]: http://sinatrarb.com
