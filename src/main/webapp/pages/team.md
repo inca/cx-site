@@ -8,7 +8,8 @@ If you wish to join the team, please contact one of the team members below.
 
   [whiteants]: http://whiteants.net
 
-## Team members
+Team Members
+------------
 
 <ul class="team">
   <li>
@@ -59,3 +60,9 @@ If you wish to join the team, please contact one of the team members below.
     </ul>
   </li>
 </ul>
+
+Special Thanks
+--------------
+
+* [crank](http://github.com/crank)
+* [chocolateboy](http://github.com/chocolateboy)
