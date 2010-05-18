@@ -55,4 +55,7 @@ class MainRouter extends RequestRouter
     redirect("/.git")
   }
 
+  get("/.mdwn") = ftl("/mdwn.ftl")
+  post("/.mdwn") = Markdown(param('md))
+
 }
