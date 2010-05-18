@@ -219,10 +219,10 @@ blockquote p{
 blockquote p cite{
   font-style:normal;
 }
-.generic strong{
+strong{
   font-variant:small-caps;
 }
-.generic em{
+em{
   font-style:italic;
   font-weight:inherit;
 }
