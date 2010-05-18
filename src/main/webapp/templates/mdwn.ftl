@@ -7,8 +7,10 @@
     <textarea rows="20" cols="30" style="width: 100%" name="md" id="md-source"></textarea>
   </fieldset>
 </form>
+<p>&nbsp;</p>
+<h3>Result <a href="javascript:;" id="html-result-view" class="right-float inplace">Show source</a></h3>
 <div id="md-preview"></div>
-<script>
+<script type="text/javascript">
 $("#md-source").focus();
 var timeout;
 var needs_update = '';
@@ -39,6 +41,10 @@ function scheduleUpdate() {
 
 $("#md-source").keyup(function(){
   scheduleUpdate();
+});
+
+$("#html-result-view").click(function() {
+  $.fn.colorbox({html:'<pre><code>' + $('<div/>').text($("#md-preview").html()).html() + '</code></pre>'});
 });
 </script>
 [/@page]
