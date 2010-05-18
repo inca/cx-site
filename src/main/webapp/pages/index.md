@@ -97,6 +97,8 @@ with some extensions and improved performance. The usage is pretty simple:
     lang:scala
     val html = Markdown(text)
 
+You are welcome to try it [online](/.mdwn)!
+
 ### Freemarker  {#ftl}
 
 Circumflex Freemarker module brings the power of the most advanced Java templating language,
