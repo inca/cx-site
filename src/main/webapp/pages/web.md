@@ -8,7 +8,7 @@ Here's a simple web application:
     lang:scala
     class Main extends RequestRouter {
       get("/") = "Hello world!"
-      get("/posts/:id") = "Post #" + uri.get("id")
+      get("/posts/:id") = "Post #" + uri("id")
       post("/form") = {
         // Do some work
         // . . .
