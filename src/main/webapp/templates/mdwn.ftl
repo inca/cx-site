@@ -8,8 +8,10 @@
   </fieldset>
 </form>
 <p>&nbsp;</p>
-<h3 id="results"><a href="javascript:;" id="html-result-view" class="right-float inplace">show source</a></h3>
+<div id="results">
+<h3><a href="javascript:;" id="html-result-view" class="right-float inplace">show source</a></h3>
 <div id="md-preview"></div>
+</div>
 <script type="text/javascript">
 $("#md-source").focus();
 var timeout;
@@ -41,7 +43,8 @@ function scheduleUpdate() {
 }
 
 $("#md-source").keyup(function(){
-  scheduleUpdate();
+  if ($("#md-source").val().trim() != "") scheduleUpdate();
+  else $("#results").hide();
 });
 
 $("#html-result-view").click(function() {
