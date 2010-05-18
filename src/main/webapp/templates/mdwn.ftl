@@ -4,7 +4,7 @@
 <h2>Circumflex-md live preview <a href="/.md-cheatsheet" id="md-markup-help" class="right-float inplace">Markup help</a></h2>
 <form action="/.mdwn" method="post" id="md-form">
   <fieldset>
-    <textarea rows="20" cols="30" style="width: 100%" name="md" id="md-source"></textarea>
+    <textarea rows="20" cols="30" style="width: 100%" name="md" id="md-source" placeholder="Type something here"></textarea>
   </fieldset>
 </form>
 <p>&nbsp;</p>
