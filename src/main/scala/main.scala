@@ -56,6 +56,13 @@ class MainRouter extends RequestRouter
   }
 
   get("/.mdwn") = ftl("/mdwn.ftl")
+  get("/.md-cheatsheet") = {
+     if (isXhr) {
+       Page.findByUriOrEmpty("/.md-cheatsheet").toHtml()
+     } else {
+       rewrite("/.md-cheatsheet.html")
+     }
+  }
   post("/.mdwn") = Markdown(param('md))
 
 }
