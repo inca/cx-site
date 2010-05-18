@@ -5,6 +5,7 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
   <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
   <meta name='yandex-verification' content='443ed98406777aa4' />
@@ -14,6 +15,7 @@
   <script src="/js/application.js"></script>
   <script src="/js/highlight.pack.js"></script>
   <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
   <script type="text/javascript">
     hljs.initHighlightingOnLoad();
     $(document).ready(function(){

@@ -219,10 +219,10 @@ blockquote p{
 blockquote p cite{
   font-style:normal;
 }
-.generic strong{
+strong{
   font-variant:small-caps;
 }
-.generic em{
+em{
   font-style:italic;
   font-weight:inherit;
 }
@@ -310,6 +310,11 @@ ol li{
 }
 .submits {margin: 1em 0}
 .submits input {font-size: 112%}
+
+#md-markup-help-contents {background: #fff; padding: 12px}
+#colorbox #md-markup-help-contents pre {margin: 0 -12px}
+
+.inplace, .inplace:visited {text-decoration: none; border-bottom: 1px dashed}
 
 /* Code highlighting */
 pre, code {
