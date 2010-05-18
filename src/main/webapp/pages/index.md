@@ -95,7 +95,7 @@ The infamous text-to-html conversion tool for writers, [Markdown][], is now avai
 with some extensions and improved performance. The usage is pretty simple:
 
     lang:scala
-    val html = Markdown(source)
+    val html = Markdown(text)
 
 ### Freemarker  {#ftl}
 
