@@ -161,4 +161,4 @@ Route patterns may also include wildcard parameters (`*` for zero or more charac
 `+` for one or more characters):
 
     lang:scala
-    get("/files/*") = "Downloading file " + uri(1)
+    get("/files/+") = "Downloading file " + uri(1)
