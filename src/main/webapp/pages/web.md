@@ -20,7 +20,7 @@ Here's the sample web application:
 ## Installation & Configuration
 
 Circumflex web application runs in standard Servlet 2.5 Containers. There's a couple of things
-you should do in order to start using Circumflex Web Framework.
+you should do in order to start using [Circumflex Web Framework](#web).
 
 First, make sure that `circumflex-core-<version>.jar` is in the classpath (add `<dependency>` to
 `circumflex-core` as described in [quick start guide](/index.html#start) or just copy the
@@ -71,12 +71,12 @@ Third, configure the [main request router](#main) of your application by setting
 ## Sample Applications
 
 There's a couple of projects hosted on [GitHub](http://github.com) that can help you understand
-Circumflex Web Framework better:
+[Circumflex Web Framework](#web) better:
 
   * [vast/ciridiri][] -- dead simple wiki engine;
   * [inca/cx-site][] -- source code of this site;
   * [inca/sandbox-blog][] -- sample Circumflex application which demonstrates the basics of
-  Circumflex Web Framework and [ORM](/orm.html).
+  [Circumflex Web Framework](#web) and [ORM](/orm.html).
 
 ## Request Routers {#routers}
 
@@ -96,7 +96,7 @@ directly within it's body:
       }
     }
 
-Request routers are essentially the controllers of the application. Since Circumflex Web Framework
+Request routers are essentially the controllers of the application. Since [Circumflex Web Framework](#web)
 employs the Front Controller pattern, each web application should have a single
 <em id="main">main router</em> -- a special `RequestRouter` that gets executed on every request.
 It dispatches all requests of web application.
@@ -116,7 +116,7 @@ modular, more organized and easier to maintain.
 
 ## Routes   {#routes}
 
-Circumflex Web Framework is designed around the *route concept*. A route is an HTTP method with
+[Circumflex Web Framework](#web) is designed around the *route concept*. A route is an HTTP method with
 matching mechanism and attached block.
 
 Routes are defined using one of the following members of `RequestRouter`:
@@ -304,7 +304,7 @@ This is a great way of dealing with notices and alerts which only need to be sho
     
 ## Advanced concepts   {#advanced}
 
-This topic reveals some nitty-gritty details about Circumflex Web Framework.
+This topic reveals some nitty-gritty details about [Circumflex Web Framework](#web).
 
 ### The Circumflex Context   {#adv-context}
 
@@ -445,7 +445,7 @@ of your web application); if you use Maven, just place it into `src/main/resourc
 However, there is a more convenient and robust way to set Circumflex configuration parameters using
 [Circumflex Maven Plugin](/plguin.html#cfg).
 
-The following parameters are recognized by Circumflex Web Framework:
+The following parameters are recognized by [Circumflex Web Framework][]:
 
   * `cx.router` -- fully-qualified class name of the [main request router](#main) for application;
   * `cx.public` -- directory (relative to web application root) for serving static
@@ -457,3 +457,4 @@ The following parameters are recognized by Circumflex Web Framework:
   [vast/ciridiri]: http://github.com/vast/ciridiri "ciridiri -- dead simple wiki engine"
   [inca/cx-site]: http://github.com/inca/cx-site "Source code of site http://circumflex.ru"
   [inca/sandbox-blog]: http://github.com/inca/sandbox-blog "Sample Circumflex application"
+  [Circumflex Web Framework]: #web
