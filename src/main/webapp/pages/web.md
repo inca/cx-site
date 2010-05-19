@@ -101,9 +101,23 @@ directly within it's body:
       }
     }
 
-Each web application should also have a single <em id="main">main router</em> -- a special
-`RequestRouter` that gets executed on every request. It serves as an entry point for web
-application.
+Request routers are essentially the controllers of the application. Since Circumflex Web Framework
+employs the Front Controller pattern, each web application should have a single
+<em id="main">main router</em> -- a special `RequestRouter` that gets executed on every request.
+It dispatches all requests of web application.
+
+Request routers can also be easily nested:
+
+    lang:scala
+    class MainRouter extends RequestRouter {
+      new UsersRouter
+      new PostsRouter
+      new MailRouter
+      new DownloadsRouter
+    }
+
+It is generally a good practice to have different routers for different tasks -- it makes the code
+modular, more organized and easier to maintain.
 
 ## Routes   {#routes}
 
@@ -151,14 +165,109 @@ You can combine several matchers in one route using the `&` method:
 ## Parameters  {#params}
 
 Routes can include patterns with named parameters that can be accessed in the attached block.
-The following route matches `GET /posts/43` or `GET /posts/foo`; `uri("id")` is used to
-capture the parameter from request URI:
+The following route matches `GET /posts/43` or `GET /posts/foo`; the construct `uri("id")`
+is used to capture the parameter from request URI:
 
     lang:scala
     get("/posts/:id") = "Post #" + uri("id")
 
 Route patterns may also include wildcard parameters (`*` for zero or more characters,
-`+` for one or more characters):
+`+` for one or more characters), they are accessible via index:
 
     lang:scala
     get("/files/+") = "Downloading file " + uri(1)
+
+You may also refer to the whole match with `0` index:
+
+    lang:scala
+    get("/files/:name.:ext") = {
+      println("The URI is: " + uri(0))
+      "Filename is " + uri("name") + ", extension is " + uri("ext")
+    }
+
+Named parameters are indexed too:
+
+    lang:scala
+    get("*/:two/+/:four") = {
+      // uri(2) == uri("two")
+      // uri(4) == uri("four")
+      (1 to 4).map(i => i + " -> " + uri(i)).mkString("\n")
+    }
+
+Parameters can also be extracted using the `param` helper. Unlike `uri`, which represents a match
+from URI only, the `param` helper can extract named parameters from headers:
+
+    lang:scala
+    get("/" & Accept("text/:format")) = "The format is " + param("format")
+
+You can also extract request parameters using `param`:
+
+    lang:scala
+    get("/") = "Limit is " + param("limit") + ", offset is " + param("offset")
+
+In the above example, request `GET /?limit=50&offset=10` will result in following response: 
+
+    lang:no-highlight
+    Limit is 50, offset is 10
+
+## Advanced concepts   {#advanced}
+
+This topic reveals some nitty-gritty details about Circumflex Web Framework.
+
+### The Circumflex Context   {#adv-context}
+
+`CircumflexContext` maintains the current state of the request. It is instantiated thread-locally
+on every request and can be accessed via `ctx` method inside routers:
+
+    lang:scala
+    get("/") = ctx.toString
+
+It holds low-level `HttpServletRequest` and `HttpServletResponse` objects just in case you
+might need them:
+
+    lang:scala
+    get("/") = {
+      val req = ctx.request   // do something with raw request
+      val res = ctx.response  // do something with raw response
+      ""
+    }
+
+But the most important role of `CircumflexContext` is to various parameters so that data from
+controllers can be accessed in views:
+
+    lang:scala
+    get("/") = {
+      // add some parameters to context to show them in template:
+      ctx("phrase") = "Roses are red, violets are blue."
+      // this neat syntax is also available:
+      "someList" := List("one","two","three")
+      // finally, render the template:
+      ftl("/index.ftl")
+    }
+
+In the example above `CircumflexContext` acts as a data-carrier unit to deliver objects to the
+[Freemarker view](/ftl.html). Here's the sample view:
+
+    lang:no-highlight
+    [#ftl]
+    <p id="phrase">${phrase}</p>
+    <ul>
+    [#list someList as l]
+      <li>${l}</li>
+    [/#list]
+    </li>
+
+The rendered response would look like this:
+
+    lang:xml
+    <p id="phrase">Roses are red, violets are blue.</p>
+    <ul>
+      <li>one</li>
+      <li>two</li>
+      <li>three</li>
+    </ul>
+
+### Matching   {#adv-matching}
+
+Each `Matcher` yields a sequence of `Match` objects.
+
