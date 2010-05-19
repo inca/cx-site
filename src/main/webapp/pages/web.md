@@ -68,6 +68,16 @@ Third, configure the [main request router](#main) of your application by setting
     Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your
     `pom.xml`, see the [Circumflex Maven Plugin documentation](/plugin.html#cfg) for more details.
 
+## Sample Applications
+
+There's a couple of projects hosted on [GitHub](http://github.com) that can help you understand
+Circumflex Web Framework better:
+
+  * [vast/ciridiri][] -- dead simple wiki engine;
+  * [inca/cx-site][] -- source code of this site;
+  * [inca/sandbox-blog][] -- sample Circumflex application which demonstrates the basics of
+  Circumflex Web Framework and [ORM](/orm.html).
+
 ## Request Routers {#routers}
 
 Each Circumflex web application is composed of one or more *request routers*.
@@ -412,7 +422,7 @@ router will be prepended by this prefix:
       get("/show/:id") = "Post " + param("id")    // matches GET /posts/show/149
     }
 
-Alternatively, you can let the enclosing router to specify a prefix for subrouter:
+Alternatively, you can let the enclosing router specify a prefix for subrouter:
 
     lang:scala
     class SubRouter(prefix: String) extends RequestRouter(prefix)
@@ -442,4 +452,8 @@ The following parameters are recognized by Circumflex Web Framework:
   files;
   * `cx.XSendFileHeader` -- fully-qualified class name of the `XSendFileHeader` implementation
   that will be used by `xSendFile` helper.
-  
+
+
+  [vast/ciridiri]: http://github.com/vast/ciridiri "ciridiri -- dead simple wiki engine"
+  [inca/cx-site]: http://github.com/inca/cx-site "Source code of site http://circumflex.ru"
+  [inca/sandbox-blog]: http://github.com/inca/sandbox-blog "Sample Circumflex application"
