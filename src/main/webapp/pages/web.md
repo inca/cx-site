@@ -412,7 +412,9 @@ However, there is a more convenient and robust way to set Circumflex configurati
 
 The following parameters are recognized by Circumflex Web Framework:
 
-  * `cx.router` -- specifies the [main request router](#main) for application;
-  * `cx.public` -- specifies the directory (relative to web application root) for serving static
+  * `cx.router` -- fully-qualified class name of the [main request router](#main) for application;
+  * `cx.public` -- directory (relative to web application root) for serving static
   files;
+  * `cx.XSendFileHeader` -- fully-qualified class name of the `XSendFileHeader` implementation
+  that will be used by `xSendFile` helper.
   
