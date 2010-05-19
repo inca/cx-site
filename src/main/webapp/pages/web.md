@@ -3,7 +3,7 @@ Circumflex Web Framework   {#web}
 
 Circumflex Web Framework is a DSL for quick and robust web application development.
 
-Here's a simple web application:
+Here's the sample web application:
 
     lang:scala
     class Main extends RequestRouter {
@@ -400,6 +400,31 @@ accessible from `Match` by their index:
       // lookup the post by id and render response
       "..."
     }
+
+### Router Prefix   {#prefix}
+
+You may optionally specify the `prefix` for request router. All URI-based matchers inside the
+router will be prepended by this prefix:
+
+    lang:scala
+    class PostsRouter extends RequestRouter("/posts") {
+      get("/") = "Showing posts"                  // matches GET /posts/
+      get("/show/:id") = "Post " + param("id")    // matches GET /posts/show/149
+    }
+
+Alternatively, you can let the enclosing router to specify a prefix for subrouter:
+
+    lang:scala
+    class SubRouter(prefix: String) extends RequestRouter(prefix)
+
+    class MainRouter extends RequestRouter {
+      new SubRouter("/prefix-a")
+      new SubRouter("/prefix-b")
+    }
+
+Note that [main request routers](#main) should have the default zero-arguments constructor,
+so the prefix *must* be hardcoded. Generally, main routers have `""` prefix (unless different
+filter mappings are specified in `web.xml`).
 
 ### Configuration Parameters   {#cfg}
 
