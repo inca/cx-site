@@ -7,6 +7,7 @@
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
   <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcuticon" href="/favicon.ico"/>
   <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
   <meta name='yandex-verification' content='443ed98406777aa4' />
   <meta name='yandex-verification' content='59d4a20bb51bbfea' />
