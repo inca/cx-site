@@ -443,7 +443,7 @@ read from `cx.properties` file, it should be in the classpath, (typically in `/W
 of your web application); if you use Maven, just place it into `src/main/resources` directory.
 
 However, there is a more convenient and robust way to set Circumflex configuration parameters using
-[Circumflex Maven Plugin](/plguin.html#cfg).
+[Circumflex Maven Plugin](/plugin.html#cfg).
 
 The following parameters are recognized by [Circumflex Web Framework][]:
 
