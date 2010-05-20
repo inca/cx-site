@@ -213,7 +213,7 @@ by setting `cx.public` [configuration parameter](#cfg).
 
 ## Helpers   {#helpers}
 
-### Redirecting and URI Rewriting   {#redirect-rewrite}
+### Redirecting & Rewriting   {#redirect-rewrite}
 
 You can send `302 Found` HTTP redirect:
 
