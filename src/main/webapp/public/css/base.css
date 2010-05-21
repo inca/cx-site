@@ -134,6 +134,23 @@ body{
   text-decoration:none;
   text-shadow:0 1px 0 #aaeeaa;
 }
+#toc {
+  position:fixed;
+  left:0;
+  top:200px;
+  background:rgba(60,60,60,.5);
+  padding:8px 12px 8px 0;
+  border-top-right-radius:8px;
+  border-bottom-right-radius:8px;
+}
+#toc, #toc a, #toc span {
+  color:#fff;
+  font-size:11px;
+}
+#toc ul {
+  list-style:none;
+  margin:0 0 0 12px
+}
 .team {
   list-style-type: none;
   padding:0 !important;

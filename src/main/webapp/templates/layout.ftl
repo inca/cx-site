@@ -53,6 +53,11 @@
 <div id="header">
   <h1><a href="/" title="Home">Circumflex</a></h1>
 </div>
+[#if toc?? && toc.toHtml != '']
+<div id="toc">
+  ${toc.toHtml}
+</div>
+[/#if]
 <div id="outer">
   [#if sitemap??]
   [@bar id="nav"]

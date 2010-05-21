@@ -17,7 +17,7 @@ Here's the sample web application:
       }
     }
 
-## Installation & Configuration
+## Installation & Configuration  {#install}
 
 Circumflex web application runs in standard Servlet 2.5 Containers. There's a couple of things
 you should do in order to start using [Circumflex Web Framework](#web).
@@ -68,7 +68,7 @@ Third, configure the [main request router](#main) of your application by setting
     Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your
     `pom.xml`, see the [Circumflex Maven Plugin documentation](/plugin.html#cfg) for more details.
 
-## Sample Applications
+## Sample Applications   {#samples}
 
 There's a couple of projects hosted on [GitHub](http://github.com) that can help you understand
 [Circumflex Web Framework](#web) better:
@@ -260,7 +260,7 @@ You can also use the more efficient `xSendFile` helper to delegate the file tran
 web server. This feature is configured via `cx.XSendFileHeader` [configuration parameter](#cfg).
 Consult your web server documentation to obtain more information on this feature.
 
-### Handling AJAX Requests
+### Handling AJAX Requests   {#xhr}
 
 You can determine if current request is `XmlHttpRequest`:
 
