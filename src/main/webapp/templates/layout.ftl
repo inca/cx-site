@@ -64,11 +64,11 @@
   <h1><a href="/" title="Home">Circumflex</a></h1>
 </div>
   [#if toc?? && toc.toHtml != '']
-  <a id="toc-show" class="toc" href="#" title="Show Table of Contents">TOC &raquo;</a>
+  <a id="toc-show" class="toc" href="javascript:;" title="Show Table of Contents">table of contents &raquo;</a>
   <div id="toc" class="toc">
   ${toc.toHtml}
     <hr/>
-    <a id="toc-hide" class="right-float" href="#">&laquo; hide</a>
+    <a id="toc-hide" class="right-float" href="javascript:;">&laquo; hide</a>
   </div>
   [/#if]
 <div id="outer">

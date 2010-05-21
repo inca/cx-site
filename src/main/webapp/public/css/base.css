@@ -144,15 +144,17 @@ body{
   border-bottom-right-radius:8px;
   -webkit-border-bottom-right-radius:8px;
   -moz-border-radius-bottomright:8px;
-  border-right:3px solid rgba(127,127,127,.5);
-  border-bottom:3px solid rgba(127,127,127,.5);
+  border-right:2px solid rgba(127,127,127,.5);
+  border-bottom:2px solid rgba(127,127,127,.5);
   overflow:hidden;
 }
 .toc, .toc a, .toc span, .toc {
   color:#fff;
-  font:12px/1.5 Lucida Grande, Lucida Sans Unicode, Arial, sans-serif;
+  font:13px/1.5 Lucida Grande, Lucida Sans Unicode, Arial, sans-serif;
+  font-variant:small-caps;
   text-decoration:none;
 }
+#toc-show, #toc-hide {font-weight:bold}
 .toc a:hover {text-decoration:underline; color:#fff}
 .toc li > span, .toc li > span * {color:#aaa}
 .toc ul {
