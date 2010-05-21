@@ -23,7 +23,7 @@ There's a couple of things you need to do in order to get started with Circumfle
 First, make sure that `circumflex-orm-<version>.jar` is in the classpath. The easiest way
 to do so is to add corresponding `dependency` to your `pom.xml`:
 
-    lang:scala
+    lang:xml
     <properties>
       <cx.version><!-- desired version --></cx.version>
     </properties>
@@ -116,6 +116,8 @@ It usually involves following steps:
   * defining, what *fields* shall a record have;
   * creating corresponding companion object, a subclass of `Relation` (typically, more specific
   `Table` and `View` classes are used);
+  * adding [constraints](#constraints), [indexes](#indexes) and other auxiliary database objects;
+
 
 ## Querying   {#sql}
 
