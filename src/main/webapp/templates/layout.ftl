@@ -7,7 +7,8 @@
   <link rel="stylesheet" media="screen, projection" href="/css/base.css" />
   <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
-  <link rel="shortcuticon" href="/favicon.ico"/>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
   <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
   <meta name='yandex-verification' content='443ed98406777aa4' />
   <meta name='yandex-verification' content='59d4a20bb51bbfea' />
@@ -53,6 +54,11 @@
 <div id="header">
   <h1><a href="/" title="Home">Circumflex</a></h1>
 </div>
+[#if toc?? && toc.toHtml != '']
+<div id="toc">
+  ${toc.toHtml}
+</div>
+[/#if]
 <div id="outer">
   [#if sitemap??]
   [@bar id="nav"]
