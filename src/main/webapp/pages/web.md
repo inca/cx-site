@@ -228,14 +228,14 @@ You can also perform URI rewriting (the request will be dispatched again, but wi
 Note that you should add `<dispatcher>FORWARD</dispatcher>` to `CircumflexFilter` mapping in
 your `web.xml` tomake rewrites work. You should also avoid infinite rewrite loops.
 
-### Sending errors   {#errors}
+### Sending Errors   {#errors}
 
 You can send errors with specific status code and optional message:
 
     lang:scala
     get("/") = error(500, "We don't work yet.")
 
-### Sending files   {#send-file}
+### Sending Files   {#send-file}
 
 You can use the `sendFile` helper to send arbitrary file to client:
 

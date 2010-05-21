@@ -137,18 +137,19 @@ body{
 #toc {
   position:fixed;
   left:0;
-  top:200px;
-  background:rgba(64,64,64,.5);
-  padding:8px 12px 8px 0;
+  top:12px;
+  padding:8px 12px;
+  background:rgba(0,0,0,.5);
   border-top-right-radius:8px;
   border-bottom-right-radius:8px;
   -webkit-border-top-right-radius:8px;
   -webkit-border-bottom-right-radius:8px;
   -moz-border-radius-topright:8px;
   -moz-border-radius-bottomright:8px;
-  border-top:2px solid rgba(128,128,128,.5);
-  border-right:2px solid rgba(128,128,128,.5);
-  border-bottom:2px solid rgba(128,128,128,.5);
+  border-top:3px solid rgba(127,127,127,.5);
+  border-right:3px solid rgba(127,127,127,.5);
+  border-bottom:3px solid rgba(127,127,127,.5);
+  overflow:hidden;
 }
 #toc, #toc a, #toc span {
   color:#fff;
@@ -160,6 +161,10 @@ body{
 #toc ul {
   list-style:none;
   margin:0 0 0 12px
+}
+#toc hr {
+  margin-left:12px;
+  opacity:.5;
 }
 .team {
   list-style-type: none;

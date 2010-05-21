@@ -21,6 +21,7 @@
   <script type="text/javascript">
     hljs.initHighlightingOnLoad();
     $(document).ready(function(){
+      // syntax highlighting
       $('a[href*=#]').click(function() {
         if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'')
                 && location.hostname == this.hostname) {
@@ -32,6 +33,14 @@
             return false;
           }
         }
+      });
+      // show/hide TOC
+      $('#toc-body').hide();
+      $('#toc-show').click(function() {
+        $('#toc-show').fadeOut(200, function(){$('#toc-body').fadeIn(400);});
+      });
+      $('#toc-hide').click(function() {
+        $('#toc-body').fadeOut(400, function(){$('#toc-show').fadeIn(200);});
       });
     });
   </script>
@@ -54,11 +63,16 @@
 <div id="header">
   <h1><a href="/" title="Home">Circumflex</a></h1>
 </div>
-[#if toc?? && toc.toHtml != '']
-<div id="toc">
-  ${toc.toHtml}
-</div>
-[/#if]
+  [#if toc?? && toc.toHtml != '']
+  <div id="toc">
+    <div id="toc-body">
+      ${toc.toHtml}
+      <hr/>
+      <a id="toc-hide" class="right-float" href="#">&laquo; hide</a>
+    </div>
+    <a id="toc-show" href="#" title="Show Table of Contents">TOC &raquo;</a>
+  </div>
+  [/#if]
 <div id="outer">
   [#if sitemap??]
   [@bar id="nav"]
