@@ -226,7 +226,7 @@ You can also perform URI rewriting (the request will be dispatched again, but wi
     get("/") = rewrite("/index.html")
 
 Note that you should add `<dispatcher>FORWARD</dispatcher>` to `CircumflexFilter` mapping in
-your `web.xml` tomake rewrites work. You should also avoid infinite rewrite loops.
+your `web.xml` to make rewrites work. You should also avoid infinite rewrite loops.
 
 ### Sending errors   {#errors}
 
