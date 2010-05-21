@@ -95,33 +95,71 @@ All code examples assume that you have following `import` statement in code wher
 
 Applications built with Circumflex ORM usually operate with following abstractions:
 
-  * `Record` -- wraps a row in a database `Table` or `View`, encapsulates the database
+  * [`Record`](#record) -- wraps a row in a database `Table` or `View`, encapsulates the database
   access and adds domain logic on that data;
-  * `Relation` -- encapsulates database object (`Table` or `View`) for corresponding `Record`
-  and adds methods for [querying](#sql), [manipulating](#dml) and [validating](#validation)
-  it's data;
+  * [`Relation`](#relation) -- encapsulates database object (`Table` or `View`) for
+  corresponding `Record` and adds methods for [querying](#sql), [manipulating](#dml)
+  and [validating](#validation) it's data;
   * `Field` -- corresponds to database column iside `Record`;
-  * `Association` -- links one type of `Record` with another, this relationship is expressed
-  by foreign keys in the database;
+  * [`Association`](#association) -- links one type of `Record` with another, this relationship
+  is expressed by foreign keys in the database;
   * `Query` -- communicates with database either for [data retrieval](#sql) or
   [data manipulation](#dml);
-  * `SchemaObject` -- represents an abstract database object (such as trigger or stored procedure).
+  * `SchemaObject` -- represents an abstract [database object](#aux) (such as trigger or
+  stored procedure).
 
 ## Data definition   {#ddl}
 
 The process of creating the domain model of application is refered to as *data definition*.
 It usually involves following steps:
 
-  * creating a *record*, a subclass of `Record`;
-  * defining, what *fields* shall a record have;
-  * creating corresponding companion object, a subclass of `Relation` (typically, more specific
-  `Table` and `View` classes are used);
-  * adding [constraints](#constraints), [indexes](#indexes) and other auxiliary database objects;
+  * creating a [record](#record), a subclass of `Record`;
+  * defining *fields* and [associations](#association) of the record;
+  * creating relation, a companion object for the record subclassed from `Relation` (typically,
+  more specific `Table` and `View` classes are subclassed);
+  * adding [constraints](#constraint), [indexes](#index) and other [auxiliary database objects](#aux);
+  * adding methods for [querying](#sql) and [manipulating](#dml) records;
+  * specifying, how the record should be [validated](#validation).
 
+### Records   {#record}
+
+### Relations   {#relation}
+
+### Constraints   {#constraint}
+
+### Indexes   {#index}
+
+### Associations   {#associaton}
+
+### Validation   {#validation}
+
+### Export Database Schema   {#export-schema}
 
 ## Querying   {#sql}
 
+### Select Queries   {#select}
+
+### Predicates   {#predicate}
+
+### Projections   {#projection}
+
+### Ordering   {#order-by}
+
+### Grouping & Having   {#group-by}
+
+### Limit & Offset   {#limit-offset}
+
 ## Data manipulation   {#dml}
+
+### Insert, Update, Delete & Save   {#iuds}
+
+### Insert-Select   {#insert-select}
+
+### Bulk Update   {#update}
+
+### Bulk Delete   {#delete}
+
+## Criteria API   {#criteria}
 
 ## Advanced concepts   {#advanced}
 
@@ -129,3 +167,6 @@ It usually involves following steps:
 
 ### Transaction-Scoped Cache   {#cache}
 
+### Auxiliary Database Objects   {#aux}
+
+### Configuration Parameters   {#cfg}
