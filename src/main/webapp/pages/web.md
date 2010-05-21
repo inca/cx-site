@@ -17,7 +17,7 @@ Here's the sample web application:
       }
     }
 
-## Installation & Configuration  {#install}
+## Installation & Configuration   {#install}
 
 Circumflex web application runs in standard Servlet 2.5 Containers. There's a couple of things
 you should do in order to start using [Circumflex Web Framework](#web).
