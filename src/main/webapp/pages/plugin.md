@@ -26,7 +26,6 @@ All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                                  http://maven.apache.org/maven-v4_0_0.xsd">
-      ...
       <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
         <plugins>
@@ -56,11 +55,9 @@ your `pom.xml`:
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/maven-v4_0_0.xsd">
-      ...
       <properties>
          <cx.router>com.myapp.web.MainRouter</cx.router>
          <cx.public>/static</cx.public>
-         ...
       </properties>
     </project>
 

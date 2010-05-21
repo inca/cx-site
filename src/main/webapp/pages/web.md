@@ -10,9 +10,8 @@ Here's the sample web application:
       get("/") = "Hello world!"
       get("/posts/:id") = "Post #" + uri("id")
       post("/form") = {
-        // Do some work
-        // . . .
-        // Render FreeMarker template:
+        // do some work
+        // render FreeMarker template:
         ftl("/done.ftl")
       }
     }
@@ -58,11 +57,9 @@ Third, configure the [main request router](#main) of your application by setting
 
         lang:xml
         <project xmlns="http://maven.apache.org/POM/4.0.0">
-          ...
           <properties>
             <cx.router>com.myapp.web.MainRouter</cx.router>
           </properties>
-          ...
         </project>
 
     Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your

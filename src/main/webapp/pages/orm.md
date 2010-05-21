@@ -61,18 +61,28 @@ There are a couple of ways you can provide configuration parameters:
 
         lang:xml
         <project xmlns="http://maven.apache.org/POM/4.0.0">
-          ...
           <properties>
             <orm.connection.driver>org.postgresql.Driver</orm.connection.driver>
             <orm.connection.url>jdbc:postgresql://localhost:5432/inca</orm.connection.url>
             <orm.connection.username>inca</orm.connection.username>
             <orm.connection.password>incainca</orm.connection.password>
           </properties>
-          ...
         </project>
 
     Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your
     `pom.xml`, see the [Circumflex Maven Plugin documentation](/plugin.html#cfg) for more details.
+
+If you are writing a web application, configure `TransactionManagementListener` in your `web.xml`:
+
+    lang:xml
+    <web-app version="2.5">
+      <listener>
+        <listener-class>ru.circumflex.orm.TransactionManagementListener</listener-class>
+      </listener>
+    </web-app>
+
+Note that there are different approaches to transaction demarcation in web applications.
+Read [transaction demarcation](#demarcation) for more information. 
 
 ## Central abstractions   {#abstractions}
 
