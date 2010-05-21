@@ -65,6 +65,13 @@ Third, configure the [main request router](#main) of your application by setting
     Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your
     `pom.xml`, see the [Circumflex Maven Plugin documentation](/plugin.html#cfg) for more details.
 
+### Imports   {#import}
+
+All code examples assume that you have following `import` statement in code where necessary:
+
+    lang:scala
+    import ru.circumflex.core._
+
 ## Sample Applications   {#samples}
 
 There's a couple of projects hosted on [GitHub](http://github.com) that can help you understand

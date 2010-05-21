@@ -50,9 +50,9 @@ There are a couple of ways you can provide configuration parameters:
 
         lang:no-highlight
         orm.connection.driver=org.postgresql.Driver
-        orm.connection.url=jdbc:postgresql://localhost:5432/inca
-        orm.connection.username=inca
-        orm.connection.password=incainca
+        orm.connection.url=jdbc:postgresql://localhost:5432/mydb
+        orm.connection.username=myuser
+        orm.connection.password=mypassword
 
     This file should be in the classpath, (typically in `/WEB-INF/classes` of your web application);
     if you use Maven, just place it into `src/main/resources` directory.
@@ -63,9 +63,9 @@ There are a couple of ways you can provide configuration parameters:
         <project xmlns="http://maven.apache.org/POM/4.0.0">
           <properties>
             <orm.connection.driver>org.postgresql.Driver</orm.connection.driver>
-            <orm.connection.url>jdbc:postgresql://localhost:5432/inca</orm.connection.url>
-            <orm.connection.username>inca</orm.connection.username>
-            <orm.connection.password>incainca</orm.connection.password>
+            <orm.connection.url>jdbc:postgresql://localhost:5432/mydb</orm.connection.url>
+            <orm.connection.username>myuser</orm.connection.username>
+            <orm.connection.password>mypassword</orm.connection.password>
           </properties>
         </project>
 
@@ -82,7 +82,14 @@ If you are writing a web application, configure `TransactionManagementListener` 
     </web-app>
 
 Note that there are different approaches to transaction demarcation in web applications.
-Read [transaction demarcation](#demarcation) for more information. 
+Read [transaction demarcation](#demarcation) for more information.
+
+### Imports   {#import}
+
+All code examples assume that you have following `import` statement in code where necessary:
+
+    lang:scala
+    import ru.circumflex.orm._
 
 ## Central abstractions   {#abstractions}
 
@@ -101,6 +108,14 @@ Applications built with Circumflex ORM usually operate with following abstractio
   * `SchemaObject` -- represents an abstract database object (such as trigger or stored procedure).
 
 ## Data definition   {#ddl}
+
+The process of creating the domain model of application is refered to as *data definition*.
+It usually involves following steps:
+
+  * creating a *record*, a subclass of `Record`;
+  * defining, what *fields* shall a record have;
+  * creating corresponding companion object, a subclass of `Relation` (typically, more specific
+  `Table` and `View` classes are used);
 
 ## Querying   {#sql}
 
