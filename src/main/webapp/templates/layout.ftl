@@ -35,12 +35,12 @@
         }
       });
       // show/hide TOC
-      $('#toc-body').hide();
+      $('#toc').hide();
       $('#toc-show').click(function() {
-        $('#toc-show').fadeOut(200, function(){$('#toc-body').fadeIn(400);});
+        $('#toc-show').fadeOut(200, function(){$('#toc').fadeIn(400);});
       });
       $('#toc-hide').click(function() {
-        $('#toc-body').fadeOut(400, function(){$('#toc-show').fadeIn(200);});
+        $('#toc').fadeOut(400, function(){$('#toc-show').fadeIn(200);});
       });
     });
   </script>
@@ -64,13 +64,11 @@
   <h1><a href="/" title="Home">Circumflex</a></h1>
 </div>
   [#if toc?? && toc.toHtml != '']
-  <div id="toc">
-    <div id="toc-body">
-      ${toc.toHtml}
-      <hr/>
-      <a id="toc-hide" class="right-float" href="#">&laquo; hide</a>
-    </div>
-    <a id="toc-show" href="#" title="Show Table of Contents">TOC &raquo;</a>
+  <a id="toc-show" class="toc" href="#" title="Show Table of Contents">TOC &raquo;</a>
+  <div id="toc" class="toc">
+  ${toc.toHtml}
+    <hr/>
+    <a id="toc-hide" class="right-float" href="#">&laquo; hide</a>
   </div>
   [/#if]
 <div id="outer">
