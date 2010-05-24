@@ -19,19 +19,21 @@
   <script src="/js/jquery-1.4.2.min.js"></script>
   <script src="/js/jquery.colorbox-min.js"></script>
   <script type="text/javascript">
+    // syntax highlighting
     hljs.initHighlightingOnLoad();
+    // other stuff
     $(document).ready(function(){
-      // syntax highlighting
+      // smooth scrolling
       $('a[href*=#]').click(function() {
-        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'')
-                && location.hostname == this.hostname) {
-          var $target = $(this.hash);
-          $target = $target.length && $target || $('[name=' + this.hash.slice(1) +']');
-          if ($target.length) {
-            var targetOffset = $target.offset().top;
-            $('html,body').animate({scrollTop: targetOffset}, 1000);
-            return false;
-          }
+        var $target = $(this.hash);
+        $target = $target.length && $target || $('[name=' + this.hash.slice(1) +']');
+        if ($target.length) {
+          var $elem = this.hash.slice(1);
+          var $loc = document.location.href.replace(/#.*$/, "") + "#" + $elem;
+          var targetOffset = $target.offset().top;
+          $('html,body').animate({scrollTop: targetOffset}, 750,
+                  function() {document.location = $loc;});
+          return false;
         }
       });
       // show/hide TOC

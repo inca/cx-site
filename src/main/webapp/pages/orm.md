@@ -333,7 +333,7 @@ You can place the definitions of constraints and indexes inside the body of rela
       // create a named FOREIGN KEY constraint:
       CONSTRAINT "eurozone_code_fkey" FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
       // create a FOREIGN KEY constraint with default name:
-      FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
+      FOREIGN_KEY(EuroZone, this.code -> EuroZone.code).ON_DELETE(CASCADE)
       // create an index:
       INDEX("country_code_idx", "LOWER(code)") USING "btree" UNIQUE
     }
@@ -345,10 +345,68 @@ The relation object is also the right place for various querying methods:
       def byLogin(l: String): Option[User] = criteria.add(this.login LIKE l).unique
     }
 
-See the [querying](#sql), [data manipulation](#dml) and [Criteria API](#criteria) sections for
+See [querying](#sql), [data manipulation](#dml) and [Criteria API](#criteria) sections for
 more information.
 
-### Associations   {#associaton}
+### Associations   {#association}
+
+An *association* provides a way to link one [relation](#relation) with another.
+
+    lang:scala
+    class City extends Record[City] {
+      val country = "country_id" REFERENCES(Country) ON_DELETE CASCADE ON_UPDATE NO_ACTION
+    }
+
+As the example above shows, the syntax for association definition is similar to fields definition,
+except that the `REFERENCES(relation: Relation[R])` method is used. Associations also implicitly
+add foreign key constraint to table's definition, so the cascading actions can be specified by
+invoking `ON_DELETE` and `ON_UPDATE` with one of the following arguments:
+
+  * `NO_ACTION` (default),
+  * `CASCADE`,
+  * `RESTRICT`,
+  * `SET_NULL`,
+  * `SET_DEFAULT`.
+
+Associations are directed: the relation that owns an association is often refered to as a
+*child relation*, while the relation to which an associations references is often refered to
+as a *parent relation*.
+
+Like with regular field, you can set an retrieve the association's value:
+
+    lang:scala
+    // set the value
+    country := russia
+    country() = russia
+    country.setValue(russia)
+    // retrieve the value
+    country()
+    country.apply
+    country.getValue
+    // pattern match the value
+    country.get match {
+      case Some(c: Country) =>
+      case None =>
+    }
+    // get or default
+    country.getOrElse(new Country)
+    // set null
+    country.NULL_!
+    // check for null
+    country.NULL_?
+
+An association's value is initilialized the first time you access it inside a persistent
+[record](#record). This technique is usually refered to as *lazy initialization* or *lazy fetching*:
+
+    lang:scala
+    val c = new City
+    c.id := 16
+    c.country()   // a SELECT query is executed to retrieve a Country
+                  // for the City with id = 16
+    // ...
+    c.country()   // further selects are not issued
+
+You may also perform the *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
 
 ### Validation   {#validation}
 
