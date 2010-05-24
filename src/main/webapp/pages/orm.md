@@ -406,9 +406,15 @@ An association's value is initilialized the first time you access it inside a pe
     // ...
     c.country()   // further selects are not issued
 
-You may also perform the *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
+You can also perform the *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
 
 ### Validation   {#validation}
+
+A record can be optionally validated before it is saved into database. You specify how a record
+is validated right inside the body of a record class by adding one or more *validators* to
+it's `RecordValidator`.
+
+<!-- TODO write about validators -->
 
 ### Export Database Schema   {#export-schema}
 

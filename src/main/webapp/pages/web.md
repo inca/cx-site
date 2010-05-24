@@ -205,7 +205,7 @@ You can also extract request parameters using `param`:
     lang:scala
     get("/") = "Limit is " + param("limit") + ", offset is " + param("offset")
 
-In the above example, request `GET /?limit=50&offset=10` will result in following response: 
+In the above example, request `GET /?limit=50&offset=10` will result in following response:
 
     lang:no-highlight
     Limit is 50, offset is 10
@@ -305,7 +305,58 @@ Flashes provide a way to pass temporary objects between requests:
 
 Anything you place in `flash` helper will be exposed until the first lookup and then cleared out.
 This is a great way of dealing with notices and alerts which only need to be shown once.
-    
+
+### Messages   {#messages}
+
+A helper for messages is placed into `CircumflexContext` on every request. It helps you deal with
+internationalization in your project. Simply place the `Messages.properties` file into your
+classpath and put some messages in there:
+
+    lang:no-highlight
+    # Messages.properties
+    hello=Hello!
+    goodbye=Goodbye!
+
+You may then override this messages in locale-specific files:
+
+    lang:no-highlight
+    # Messages_pt.properties
+    hello=Holá!
+    goodbye=Adeus!
+
+Then you can access your localized messages in your routers:
+
+    lang:scala
+    msg("hello")    // "Holá!" for português, "Hello!" for others
+
+Or in your views:
+
+    lang:no-highlight
+    [#ftl]
+    ${msg['hello']}
+
+Pattern matching and `getOrElse` are also available:
+
+    lang:scala
+    msg.get("hello") match {
+      case Some(m) => ...
+      case _ => ...
+    }
+    msg.getOrElse("hello", "Generic hello for unknown race!")
+
+You can also interpolate one or more parameters of your message. Specify the parameters in
+curly braces:
+
+    lang:no-highlight
+    # Messages.properties
+    parameterizedHello=Hello, {name}!
+
+And then pass the pairs (`String -> String`) with corresponding parameters into
+`apply` or `get` methods:
+
+    lang:scala
+    get("/hello/:name") = msg("parameterizedHello", "name" -> uri("name"))
+
 ## Advanced concepts   {#advanced}
 
 This topic reveals some nitty-gritty details about [Circumflex Web Framework](#web).
