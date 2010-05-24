@@ -32,7 +32,7 @@
           var $loc = document.location.href.replace(/#.*$/, "") + "#" + $elem;
           var targetOffset = $target.offset().top;
           $('html,body').animate({scrollTop: targetOffset}, 750,
-                  function() {document.location = $loc;});
+                  function() {document.location.href = $loc;});
           return false;
         }
       });

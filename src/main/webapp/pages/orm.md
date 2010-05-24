@@ -117,7 +117,7 @@ It usually involves following steps:
   * defining *fields* and [associations](#association) of the record;
   * cdefining relation, a companion object for the record subclassed from `Relation` (typically,
   more specific `Table` and `View` classes are subclassed);
-  * adding [constraints](#constraint), [indexes](#index) and other [auxiliary database objects](#aux);
+  * adding constraints, indexes and other [auxiliary database objects](#aux);
   * adding methods for [querying](#sql) and [manipulating](#dml) records;
   * specifying, how the record should be [validated](#validation).
 
