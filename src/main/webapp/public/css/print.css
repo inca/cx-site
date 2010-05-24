@@ -1,21 +1,40 @@
 body {
-  color: #666;
   margin: 0;
-  padding: 0
+  padding: 0;
+  color: #252525;
+  font: normal 12pt/1.5  Cambria, Georgia, serif
 }
-a {
-  color: #666;
-  text-decoration: none;
-}
-a img {
-  border: 0
-}
+
+a {text-decoration: none; color: #252525}
+a img {border: 0}
 h1, h2, h3, h4 {
-  margin: 1em 0 .5em
+  margin: .8em 0 8px;
+  font-weight: normal;
+  color: #000;
+  line-height: 1.2
 }
-p {
-  margin: 0 0 .5em
+h1 {font-size: 250%}
+h2 {font-size: 200%}
+h3 {font-size: 150%}
+h4 {font-size: 125%}
+h5 {font-size: 110%}
+p {margin: 0 0 .6em}
+blockquote {font-style: italic}
+pre, code {
+  font-family: monaco, lucida console, bitstream vera sans mono, monospace;
+  font-size: 10pt
 }
-.noprint, form, #header, #nav {
+h3+blockquote, h2+blockquote, p+ul, h2+ul, h3+ul {margin-top: .2em}
+/* magic */
+a[href]:after {
+  content: " (" attr(href) ") ";
+	font-size: 90%
+}
+a[href^="/"]:after {
+  content: " (http://circumflex.ru" attr(href) ") "
+}
+a[href^="#"]:after {content: ""}
+
+.noprint, form, #header, #nav, #footer, #toc, #toc-show {
   display: none
 }
