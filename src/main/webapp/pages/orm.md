@@ -81,8 +81,8 @@ If you are writing a web application, configure `TransactionManagementListener` 
       </listener>
     </web-app>
 
-Note that there are different approaches to transaction demarcation in web applications.
-Read [transaction demarcation](#demarcation) for more information.
+Note that there are different approaches to transaction demarcation in web applications, read more
+in the [transaction demarcation](#demarcation) section.
 
 ### Imports   {#import}
 
@@ -137,13 +137,94 @@ immutable (`val`) member of record class, each field will correspond to a column
       val name = "name" TEXT
     }
 
-As the example shows, the syntax of field definition closely resembles classic DDL for generating database schema for tables. However, sometimes Scala compiler forces you to use dot-notation instead of delimiting method calls with spaces:
+As the example shows, the syntax of field definition closely resembles classic DDL for generating
+database schema for tables: you specify the column name with `String`, then you call one of the
+methods to create a field of certain type, then you optionally call one of methods that change the
+definition of target column.
+
+Generally, spaces may be used to delimit method calls and improve readability of column definitions.
+However, sometimes Scala compiler forces you to use dot-notation:
 
     lang:scala
     val name = "name".TEXT.NOT_NULL
 
-The columns are generated with `NOT NULL` constraint by default, so `NOT_NULL` is used only for
-clarity:
+Following methods are used to create field definitions:
+
+<table width="100%">
+  <thead>
+  <tr>
+    <th>Method</th>
+    <th>Default SQL type</th>
+    <th>Scala type</th>
+    <th>Implementing class</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>INTEGER</code></td>
+    <td><code>INTEGER</code></td>
+    <td><code>Int</code></td>
+    <td><code>IntField</code></td>
+  </tr>
+  <tr>
+    <td><code>BIGINT</code></td>
+    <td><code>BIGINT</code></td>
+    <td><code>Long</code></td>
+    <td><code>LongField</code></td>
+  </tr>
+  <tr>
+    <td><code>NUMERIC(precision: Int, scale: Int)</code></td>
+    <td><code>NUMERIC(p, s)</code></td>
+    <td><code>Double</code></td>
+    <td><code>DoubleField</code></td>
+  </tr>
+  <tr>
+    <td><code>TEXT</code></td>
+    <td><code>TEXT</code></td>
+    <td><code>String</code></td>
+    <td><code>StringField</code></td>
+  </tr>
+  <tr>
+    <td><code>VARCHAR(length: Int)</code></td>
+    <td><code>VARCHAR(l)</code></td>
+    <td><code>String</code></td>
+    <td><code>StringField</code></td>
+  </tr>
+  <tr>
+    <td><code>BOOLEAN</code></td>
+    <td><code>BOOLEAN</code></td>
+    <td><code>Boolean</code></td>
+    <td><code>BooleanField</code></td>
+  </tr>
+  <tr>
+    <td><code>DATE</code></td>
+    <td><code>DATE</code></td>
+    <td><code>java.lang.Date</code></td>
+    <td><code>DateField</code></td>
+  </tr>
+  <tr>
+    <td><code>TIME</code></td>
+    <td><code>TIME</code></td>
+    <td><code>java.lang.Date</code></td>
+    <td><code>DateField</code></td>
+  </tr>
+  <tr>
+    <td><code>TIMESTAMP</code></td>
+    <td><code>TIMESTAMP</code></td>
+    <td><code>java.lang.Date</code></td>
+    <td><code>DateField</code></td>
+  </tr>
+  </tbody>
+</table>
+
+In the table above the default SQL types show the types defined in default [dialect](#dialect),
+which can be overriden in vendor-specific dialect. Besides it is possible to define a field with
+custom SQL type using the `field(name: String, sqlType: String)` method:
+
+    lang:scala
+    val myCustomField = field("custom", "NVARCHAR(32)").NOT_NULL
+
+The columns are generated with `NOT NULL` constraint by default, so `NOT_NULL` call can be omitted:
 
     lang:scala
     // following definitions are equivalent:
@@ -155,11 +236,117 @@ If you need a column without `NOT NULL` constraint, you should express this usin
     lang:scala
     val optionalField = "optional".TEXT.NULLABLE
 
+Each record also has an implicit auto-incremented primary key field -- `id`.
+
+Fields operate with values. You may set the value of a field:
+
+    lang:scala
+    val age = "age" INTEGER
+    // following statements are equivalent:
+    age := 25
+    age.setValue(25)
+    age() = 25
+
+You may also retrieve the value of a field:
+
+    lang:scala
+    // following statements are equivalent:
+    age()           // 25
+    age.apply       // 25
+    age.getValue    // 25
+
+You may also use the `get` method for pattern matching:
+
+    lang:scala
+    age.get match {
+      case Some(a) => ...
+      case None => ...
+    }
+
+Or use the `getOrElse` method, which returns specified `default` instead of `null`:
+
+    lang:scala
+    age.getOrElse(18)
+
+There are also shortcut methods for setting or checking the `null` value:
+
+    lang:scala
+    // set null:
+    age.NULL_!
+    age.setNull
+    // check, if value is null:
+    if (age.NULL_?) ...
+    if (age.empty_?) ...
+
+You may specify the default expression for a field:
+
+    lang:scala
+    class Circle extends Record[Circle] {
+      val radius = "radius".NUMERIC
+      val square = "square".NUMERIC.DEFAULT("PI() * (radius ^ 2)")
+    }
+
+If a record is inserted and the field with default expression is empty, then it's value will be
+generated by the database.
+
+You can also create a single-column unique constraint using the `UNIQUE` method:
+
+    lang:scala
+    val login = "login".VARCHAR(64).NOT_NULL.UNIQUE
+
+You should place domain-specific logic inside record classes. The following example shows the most
+trivial case: overriding `toString` and providing alternative constructor:
+
+    lang:scala
+    class Country extends Record[Country] {
+      // Constructor shortcuts
+      def this(code: String, name: String) = {
+        this()
+        this.code := code
+        this.name := name
+      }
+      // Fields
+      val code = "code" VARCHAR(2) DEFAULT("'ch'")
+      val name = "name" TEXT
+      // Miscellaneous
+      override def toString = name.getOrElse("Unknown")
+    }
+
 ### Relations   {#relation}
 
-### Constraints   {#constraint}
+The relation is defined as a companion object of corresponding [record](#record) subclassed from
+either `Table` or `View`:
 
-### Indexes   {#index}
+    lang:scala
+    object Country extends Table[Country]
+
+You can place the definitions of constraints and indexes inside the body of relation:
+
+    lang:scala
+    object Country extends Table[Country] {
+      // create a named UNIQUE constraint:
+      CONSTRAINT "code_uniq" UNIQUE(this.code)   // relations are converted to records implicitly
+      // create a UNIQUE constraint with default name:
+      UNIQUE(this.code)
+      // create a named CHECK constraint:
+      CONSTRAINT "code_chk" CHECK("code IN ('ch', 'us', 'uk', 'fr', 'es', 'it', 'pt')")
+      // create a named FOREIGN KEY constraint:
+      CONSTRAINT "eurozone_code_fkey" FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
+      // create a FOREIGN KEY constraint with default name:
+      FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
+      // create an index:
+      INDEX("country_code_idx", "LOWER(code)") USING "btree" UNIQUE
+    }
+
+The relation object is also the right place for various querying methods:
+
+    lang:scala
+    object User extends Table[User] {
+      def byLogin(l: String): Option[User] = criteria.add(this.login LIKE l).unique
+    }
+
+See the [querying](#sql), [data manipulation](#dml) and [Criteria API](#criteria) sections for
+more information.
 
 ### Associations   {#associaton}
 

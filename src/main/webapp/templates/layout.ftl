@@ -66,9 +66,8 @@
   [#if toc?? && toc.toHtml != '']
   <a id="toc-show" class="toc" href="javascript:;" title="Show Table of Contents">table of contents &raquo;</a>
   <div id="toc" class="toc">
+    <a id="toc-hide" class="right-float" href="javascript:;" title="Hide Table of Contents">&times;</a>
   ${toc.toHtml}
-    <hr/>
-    <a id="toc-hide" class="right-float" href="javascript:;">&laquo; hide</a>
   </div>
   [/#if]
 <div id="outer">

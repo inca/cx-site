@@ -21,6 +21,7 @@ caption,th {
   text-align:left;
 }
 h1,h2,h3,h4,h5,h6 {
+  color:#000;
   font-size:100%;
   font-weight:normal;
 }
@@ -64,7 +65,7 @@ body{
   margin:-36px auto 0;
   width:800px;
 }
-#content {
+.content {
   color:#333;
   text-align:justify;
 }
@@ -157,12 +158,8 @@ body{
 #toc-show, #toc-hide {font-weight:bold}
 .toc a:hover {text-decoration:underline; color:#fff}
 .toc li > span, .toc li > span * {color:#aaa}
-.toc ul {
-  list-style:none;
-  margin:0 0 0 12px
-}
-.toc > ul { margin-left:0 }
-.toc hr { opacity:.5 }
+.toc ul {list-style:none;margin:0 0 0 12px}
+.toc > ul {margin-left:0}
 /* Team page */
 .team {
   list-style-type: none;
@@ -190,7 +187,11 @@ body{
   float:left;
   margin-right:4px;
 }
-
+/* Tables inside content */
+.content table td, .content table th {padding:4px 8px}
+.content table td {border-bottom: 1px solid #f3f8f3}
+table tr:hover {background: #F3F8F3}
+.content table th {border-bottom: 2px solid #333; background: #fff}
 /* Typefaces */
 p {
   line-height:1.5em;
@@ -222,7 +223,7 @@ h3{
   font-variant:small-caps;
 }
 h4{
-  font-size:1.3em;
+  font-size:1.2em;
   line-height:1.2em;
   font-variant:small-caps;
 }
