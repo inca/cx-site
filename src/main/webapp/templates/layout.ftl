@@ -84,7 +84,7 @@
     [#nested/]
   </div>
   <div id="footer">
-    <span class="years">2008-${currentYear}</span>
+    <span class="years">2009-${currentYear}</span>
     <a class="home" href="http://${host}">${host}</a>
   </div>
 </div>
