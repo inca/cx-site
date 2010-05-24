@@ -113,15 +113,47 @@ Applications built with Circumflex ORM usually operate with following abstractio
 The process of creating the domain model of application is refered to as *data definition*.
 It usually involves following steps:
 
-  * creating a [record](#record), a subclass of `Record`;
+  * defining a [record](#record), a subclass of `Record`;
   * defining *fields* and [associations](#association) of the record;
-  * creating relation, a companion object for the record subclassed from `Relation` (typically,
+  * cdefining relation, a companion object for the record subclassed from `Relation` (typically,
   more specific `Table` and `View` classes are subclassed);
   * adding [constraints](#constraint), [indexes](#index) and other [auxiliary database objects](#aux);
   * adding methods for [querying](#sql) and [manipulating](#dml) records;
   * specifying, how the record should be [validated](#validation).
 
 ### Records   {#record}
+
+A record is definied by subclassing `Record` and supplying self-type as it's type parameter:
+
+    lang:scala
+    class Account extends Record[Account]
+
+The body of record class should contain definitions of it's *fields*. A field should be an
+immutable (`val`) member of record class, each field will correspond to a column in database table:
+
+    lang:scala
+    class Country extends Record[Country] {
+      val code = "code" VARCHAR(2) DEFAULT("'ch'") NOT_NULL
+      val name = "name" TEXT
+    }
+
+As the example shows, the syntax of field definition closely resembles classic DDL for generating database schema for tables. However, sometimes Scala compiler forces you to use dot-notation instead of delimiting method calls with spaces:
+
+    lang:scala
+    val name = "name".TEXT.NOT_NULL
+
+The columns are generated with `NOT NULL` constraint by default, so `NOT_NULL` is used only for
+clarity:
+
+    lang:scala
+    // following definitions are equivalent:
+    val name = "name".TEXT.NOT_NULL
+    val name = "name".TEXT
+
+If you need a column without `NOT NULL` constraint, you should express this using `NULLABLE` method:
+
+    lang:scala
+    val optionalField = "optional".TEXT.NULLABLE
 
 ### Relations   {#relation}
 
@@ -168,5 +200,7 @@ It usually involves following steps:
 ### Transaction-Scoped Cache   {#cache}
 
 ### Auxiliary Database Objects   {#aux}
+
+### Dialects   {#dialect}
 
 ### Configuration Parameters   {#cfg}
