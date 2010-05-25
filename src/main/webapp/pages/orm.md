@@ -521,10 +521,21 @@ Finally, let's play with them a bit:
     //    Map(src -> com.myapp.model.Country.code, regex -> (?:[a-z]{2}), value -> 11))
     // ))
     c.validate.get.apply(0).toMsg
-    // The value 11 doesn't look like a valid country code.
+    // "The value 11 doesn't look like a valid country code."
     c.code := "ch"
     c.validate
     // None
+
+It is also fairly easy to implement custom validators:
+
+    lang:scala
+    class Person extends Record[Person] {
+      val age = "age" INTEGER
+      validation.add(r =>
+          if (age() < 21)
+            Some(ValidationError(age.uuid, "mature", "age" -> age()))
+          else None)
+    }
 
 ### Export Database Schema   {#export-schema}
 

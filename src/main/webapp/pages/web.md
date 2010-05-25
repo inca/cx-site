@@ -128,6 +128,7 @@ Routes are defined using one of the following members of `RequestRouter`:
   * `get` (matches HTTP `GET`);
   * `post` (matches HTTP `POST`);
   * `put` (matches HTTP `PUT`);
+  * `patch` (matches HTTP `PATCH`);
   * `delete` (matches HTTP `DELETE`);
   * `options` (matches HTTP `OPTIONS`);
   * `head` (matches HTTP `HEAD`);
