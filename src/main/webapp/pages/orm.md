@@ -410,11 +410,121 @@ You can also perform the *eager initialization*, or *prefetching*, using [Criter
 
 ### Validation   {#validation}
 
-A record can be optionally validated before it is saved into database. You specify how a record
-is validated right inside the body of a record class by adding one or more *validators* to
-it's `RecordValidator`.
+A record can be optionally validated before it is saved into database.
 
-<!-- TODO write about validators -->
+The validation is performed using one or more *validators*, functions which take a `Record`
+and return `Option[ValidationError]`: `None` if validation succeeds or `Some[ValidationError]`
+otherwise. They are added to the `validation` object inside record class:
+
+    lang:scala
+    class Country extends Record[Country] {
+      validation.add(r => ...)
+          .add(r => ...)
+    }
+
+There are several predefined validators available for your convenience:
+
+    lang:scala
+    class Country extends Record[Country] {
+      val code = "code" VARCHAR(2) DEFAULT("'ch'")
+      validation.notNull(code)
+          .notEmpty(code)
+          .pattern(code, "(?i:[a-z]{2})")
+    }
+
+A record is validated when either `validate` or `validate_!` is invoked.
+The first one returns `Option[Seq[ValidationError]]`:
+
+    lang:scala
+    rec.validate match {
+      case None => ...            // validation succeeded
+      case Some(errors) => ...    // validation failed
+    }
+
+The second one does not return anything, but throws `ValidationException` if validation fails.
+
+The `validate_!` method is also called when a record is being saved into database, read
+more in [Insert, Update, Delete & Save](#iuds) section.
+
+Each `ValidationError` could be resolved into a message from [Circumflex `Messages` helper](/web.html#msg).
+Following members of `ValidationError` are involved in message resolution:
+
+  * `source` describes a place where error occured, most obvious field-based validators return
+  `ValidationError` instances with field's `uuid` as their source;
+  * `errorKey` describes the nature of the error, for example, `"null"` for `notNull` validator,
+  or `"empty"` for `notEmpty` validator;
+  * `params` provide additional information about validation, this params are
+  [interpolated](/web.html#msg) inside resolved message.
+
+The `toMsg` method resolves the message:
+
+  * first, it tries to resolve a message with following key: `source + "." + errorKey`;
+  * if no such message exist in the `Messages` bundle, it tries to resolve a message with
+  the `errorKey` key;
+  * if no message found, it simply returns `errorKey`;
+  * finally, the `params` are interpolated into the resolved message.
+
+`ValidationException` also takes some effort to group validation errors by sources and error keys:
+
+    lang:scala
+    try {
+      rec.validate_!
+    } catch {
+      case ve: ValidationException =>
+        ve.byKey      // Map[String, Seq[ValidationError]]
+        ve.bySource   // Map[String, Seq[ValidationError]]
+    }
+
+Let's take a look at example. First, let's define a simple model with validation:
+
+    lang:scala
+    package com.myapp.model
+
+    class Country extends Record[Country] {
+      def this(code: String) = {
+        this()
+        this.code := code
+      }
+      val code = "code" VARCHAR(2) DEFAULT("'ch'")
+      validation.notNull(code)
+          .notEmpty(code)
+          .pattern(code, "(?i:[a-z]{2})")
+    }
+
+    object Country extends Table[Country]
+
+Now let's provide some messages for validators:
+
+    lang:no-highlight
+    # Messages.properties
+    com.myapp.model.Country.code.null=Null value in country code is not allowed.
+    com.myapp.model.Country.code.empty=Empty value is country code is not allowed.
+    com.myapp.model.Country.code.pattern=The value {value} doesn't look like a valid country code.
+
+Finally, let's play with them a bit:
+
+    lang:scala
+    val c = new Country
+    c.validate
+    // Some(List(
+    //  ValidationError(
+    //    com.myapp.model.Country.code,
+    //    null,
+    //    Map(src -> com.myapp.model.Country.code))
+    // ))
+    c.code := "11"
+    c.validate
+    // Some(List(
+    //  ValidationError(
+    //    com.myapp.model.Country.code,
+    //    pattern,
+    //    Map(src -> com.myapp.model.Country.code, regex -> (?:[a-z]{2}), value -> 11))
+    // ))
+    c.validate.get.apply(0).toMsg
+    // The value 11 doesn't look like a valid country code.
+    c.code := "ch"
+    c.validate
+    // None
 
 ### Export Database Schema   {#export-schema}
 
