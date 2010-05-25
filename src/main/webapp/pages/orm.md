@@ -542,6 +542,8 @@ Finally, let's play with them a bit:
 
 ### Limit & Offset   {#limit-offset}
 
+### Union, Intersect & Except
+
 ## Data manipulation   {#dml}
 
 ### Insert, Update, Delete & Save   {#iuds}
