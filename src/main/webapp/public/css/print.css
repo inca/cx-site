@@ -4,6 +4,9 @@ body {
   color: #252525;
   font: normal 12pt/1.5  Cambria, Georgia, serif
 }
+.noprint, form, #header, #nav, #footer, #toc, #toc-show {
+  display: none
+}
 
 a {text-decoration: none; color: #252525}
 a img {border: 0}
@@ -28,13 +31,9 @@ h3+blockquote, h2+blockquote, p+ul, h2+ul, h3+ul {margin-top: .2em}
 /* magic */
 a[href]:after {
   content: " (" attr(href) ") ";
-	font-size: 90%
+  font-size: 90%
 }
 a[href^="/"]:after {
   content: " (http://circumflex.ru" attr(href) ") "
 }
 a[href^="#"]:after {content: ""}
-
-.noprint, form, #header, #nav, #footer, #toc, #toc-show {
-  display: none
-}
