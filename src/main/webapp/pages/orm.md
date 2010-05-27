@@ -588,7 +588,14 @@ There are various ways you can query your data with Circumflex ORM:
   * using [native SQL queries](#native-sql) for executing vendor-specific queries for
   [records](#record) or arbitrary [projections](#projection).
 
-All data retrieval queries derive from `SQLQuery`.
+All data retrieval queries derive from the `SQLQuery[T]` class. It defines following methods
+for query execution:
+
+  * `list()` executes a query and returns `Seq[T]`;
+  * `unique()` executes a query and returns `Option[T]`, an exception is thrown if more than one
+  row is returned from database;
+  * `resultSet[A](actions: ResultSet => A)` executes a query and passes JDBC `ResultSet` object
+  to specified `actions` function, the result is determined by that function.
 
 ### Select Queries   {#select}
 
