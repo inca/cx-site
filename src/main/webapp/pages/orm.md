@@ -745,28 +745,28 @@ Following helper methods are available in `SimpleExpressionHelper`:
   <tbody>
     <tr>
       <td rowspan="7">Comparison operators</td>
-      <td><code>EQ</code></td>
-      <td><code>=</code></td>
+      <td><code>EQ(value: Any)</code></td>
+      <td><code>= ?</code></td>
     </tr>
     <tr>
-      <td><code>NE</code></td>
-      <td><code>&lt;&gt;</code></td>
+      <td><code>NE(value: Any)</code></td>
+      <td><code>&lt;&gt; ?</code></td>
     </tr>
     <tr>
-      <td><code>GT</code></td>
-      <td><code>&gt;</code></td>
+      <td><code>GT(value: Any)</code></td>
+      <td><code>&gt; ?</code></td>
     </tr>
     <tr>
-      <td><code>GE</code></td>
-      <td><code>&gt;=</code></td>
+      <td><code>GE(value: Any)</code></td>
+      <td><code>&gt;= ?</code></td>
     </tr>
     <tr>
-      <td><code>LT</code></td>
-      <td><code>&lt;</code></td>
+      <td><code>LT(value: Any)</code></td>
+      <td><code>&lt; ?</code></td>
     </tr>
     <tr>
-      <td><code>LE</code></td>
-      <td><code>&lt;=</code></td>
+      <td><code>LE(value: Any)</code></td>
+      <td><code>&lt;= ?</code></td>
     </tr>
     <tr>
       <td><code>BETWEEN(lower: Any, upper: Any)</code></td>
