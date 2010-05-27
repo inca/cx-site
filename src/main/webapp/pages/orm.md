@@ -783,59 +783,59 @@ Following helper methods are available in `SimpleExpressionHelper`:
     </tr>
     <tr>
       <td rowspan="14">Subqueries</td>
-      <td><code>IN(subquery: SQLQuery[_])</code></td>
+      <td><code>IN(query: SQLQuery[_])</code></td>
       <td><code>IN (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>NOT_IN(subquery: SQLQuery[_])</code></td>
+      <td><code>NOT_IN(query: SQLQuery[_])</code></td>
       <td><code>NOT IN (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>EQ_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>EQ_ALL(query: SQLQuery[_])</code></td>
       <td><code>= ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>NE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>NE_ALL(query: SQLQuery[_])</code></td>
       <td><code>&lt;&gt; ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>GT_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>GT_ALL(query: SQLQuery[_])</code></td>
       <td><code>&gt; ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>GE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>GE_ALL(query: SQLQuery[_])</code></td>
       <td><code>&gt;= ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>LT_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>LT_ALL(query: SQLQuery[_])</code></td>
       <td><code>&lt; ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>LE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>LE_ALL(query: SQLQuery[_])</code></td>
       <td><code>&lt;= ALL (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>EQ_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>EQ_SOME(query: SQLQuery[_])</code></td>
       <td><code>= SOME (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>NE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>NE_SOME(query: SQLQuery[_])</code></td>
       <td><code>&lt;&gt; SOME (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>GT_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>GT_SOME(query: SQLQuery[_])</code></td>
       <td><code>&gt; SOME (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>GE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>GE_SOME(query: SQLQuery[_])</code></td>
       <td><code>&gt;= SOME (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>LT_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>LT_SOME(query: SQLQuery[_])</code></td>
       <td><code>&lt; SOME (SELECT ...)</code></td>
     </tr>
     <tr>
-      <td><code>LE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>LE_SOME(query: SQLQuery[_])</code></td>
       <td><code>&lt;= SOME (SELECT ...)</code></td>
     </tr>
     <tr>
