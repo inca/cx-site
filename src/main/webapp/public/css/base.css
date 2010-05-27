@@ -330,7 +330,7 @@ ul li.caption {
 }
 li > ul, li > ol{
   margin-bottom:0;
-  margin-left:5em;
+  margin-left:2.5em;
 }
 li > ul li, li > ol li{
   font-size:1em;

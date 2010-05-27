@@ -408,6 +408,8 @@ An association's value is initilialized the first time you access it inside a pe
 
 You can also perform the *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
 
+<!--TODO write about inverse associations -->
+
 ### Validation   {#validation}
 
 A record can be optionally validated before it is saved into database.
@@ -603,7 +605,7 @@ Select queries are used to retrieve [records](#record) or arbitrary [projections
 with neat object-oriented DSL which closely resembles SQL syntax:
 
     lang:scala
-    // prepare relations which will participate in query:
+    // prepare relation nodes which will participate in query:
     val co = Country as "co"
     val ci = City as "ci"
     // prepare a query:
@@ -613,25 +615,248 @@ with neat object-oriented DSL which closely resembles SQL syntax:
 
 The `Select` class provides functionality for select queries. It has following structure:
 
-  * [`SELECT` clause](#projection) specifies a [projection](#projection) which determines
+  * [`SELECT` clause](#projection) -- specifies a [projection](#projection) which determines
   the actual result of query execution;
-  * `FROM` clause specifies relations which will participate in query;
-  * [`WHERE` clause](#predicate) specifies a [predicate](#predicate) which will be used by
+  * [`FROM` clause](#node) -- specifies [relation nodes](#node) which will participate in query;
+  * [`WHERE` clause](#predicate) -- specifies a [predicate](#predicate) which will be used by
   database to filter the records in result set;
-  * [`ORDER_BY` clause](#order-by) tells database how the result set should be [sorted](#order-by);
-  * [`GROUP_BY` clause](#group_by) specifies a subset of [projections](#projection) which will
+  * [`ORDER_BY` clause](#order-by) -- tells database how the result set should be [sorted](#order-by);
+  * [`GROUP_BY` clause](#group_by) -- specifies a subset of [projections](#projection) which will
   be used by database for [grouping](#group-by);
-  * [`HAVING` clause](#group-by) specifies additional [predicate](#predicate) which will be
+  * [`HAVING` clause](#group-by) -- specifies additional [predicate](#predicate) which will be
   applied by database after [grouping](#group-by);
-  * [`LIMIT` clause and `OFFSET` clause](#limit-offset) tell database to return a subset of result
+  * [`LIMIT` clause and `OFFSET` clause](#limit-offset) -- tell database to return a subset of result
    set and specify it's boundaries;
-  * [set operations](#set-ops) allow to combine the results of two or more [SQL queries](#sql).
+  * [set operations](#set-ops) -- allow to combine the results of two or more [SQL queries](#sql).
+
+### Relation Nodes   {#node}
+
+*Relation node* wraps a [`Relation`](#relation) with an `alias` so that it can be a part of
+`FROM` clause of database query.
+
+Relation nodes are represented by the `RelationNode` class, they are created by calling the
+`as` method of [`Relation`](#relation):
+
+    lang:scala
+    val co = Country as "co"
+
+Relation nodes can be organized into *query trees* using [joins](#join).
 
 ### Projections   {#projection}
 
+*Projection* reflects the type of data returned by query. Generally, it consists of expression
+which can be understood in the `SELECT` clause of database and a logic to translate the
+corresponding part of result set into specific type.
+
+Projections are represented by the `Projection[T]` trait, where `T` denotes to the type of objects
+which should be read from result set. Projections which only read from single database column
+are refered to as *atomic projections*, they are subclassed from the `AtomicProjection` trait.
+Projections which span across multiple database columns are refered to as *composite projections*,
+they are subclassed from the `CompositeProjection` trait and consist of one or more
+`subProjections`.
+
+The most popular projection is `RecordProjection`, it is designed to retrieve [records](#record):
+
+    lang:scala
+    val co = Country as "co"
+    (SELECT (co.*) FROM co).list    // returns Seq[Country]
+
+As the example above shows, the `*` method of [`RelationNode`](#node) returns a `RecordProjection`
+instance which corresponds to the [record](#record) class of node.
+
+You can also query single fields of [records](#record), `Field` is converted to
+`FieldProjection` implicitly:
+
+    lang:scala
+    val co = Country as "co"
+    (SELECT (co.id) FROM co).list      // returns Seq[Long]
+    (SELECT (co.name) FROM co).list    // returns Seq[String]
+
+Another useful projection type is `Tuple<X>Projection`, where `<X>` is the size of expected tuple
+(currently Circumflex ORM provides support for up to `Tuple10Projection`), `Tuple<X>` of `Projection`
+is converted to `Tuple<X>Projection` implicitly:
+
+    lang:scala
+    val co = Country as "co"
+    val ci = City as "ci"
+    (SELECT (ci.*, co.*) FROM (co JOIN ci)).list    // returns Seq[(City, Country)]
+
+You can even use arbitrary expression which your database understands as long as you specify
+the expected type:
+
+    lang:scala
+    SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]
+
+There are also some predefined projection helpers for your convenience:
+
+  * `COUNT`;
+  * `COUNT_DISTINCT`;
+  * `MAX`;
+  * `MIN`;
+  * `SUM`;
+  * `AVG`.
+
+You can easily implement your own projection helper. For example, you use SQL `substring` function
+a lot and you want to be able to select substrings of your record's text fields. Here's the code
+you should place somewhere in your library (or utility singleton):
+
+    lang:scala
+    object MyOrmUtils {
+      def SUBSTR(f: TextField, from: Int = 0, length: Int = 0) = {
+        var sql = "substring(" + f.name
+        if (from > 0) sql += " from " + from
+        if (length > 0) sql += " for " + length
+        sql += ")"
+        new ExpressionProjection[String](sql)
+      }
+    }
+
+And here's the code to use it:
+
+    lang:scala
+    import MyOrmUtils._
+    val co = Country as "co"
+    (SELECT (SUBSTR(co.code, 1, 1)) FROM co).list    // returns Seq[String]
+
 ### Predicates   {#predicate}
 
+*Predicate* is a parameterized expression which is resolved by database into a boolean-value
+function. Generally, predicates are used inside `WHERE` or `HAVING` clauses of SQL queries
+to filter the rows in result set.
+
+Predicates are represented by the `Predicate` class. The easiest way to compose a `Predicate`
+instance is to use implicit conversion from `String` or `Field` to `SimpleExpressionHelper`
+and call one of it's methods:
+
+    lang:scala
+    val co = Country as "co"
+    SELECT (SUBSTR(co.code, 1, 1)) FROM (co) WHERE (co.name LIKE "Switz%")
+
+Following helper methods are available in `SimpleExpressionHelper`:
+
+<table width="100%">
+  <thead>
+    <tr>
+      <td>Group</td>
+      <td>Method</td>
+      <td>SQL equivalent</td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="7">Comparison operators</td>
+      <td><code>EQ</code></td>
+      <td><code>=</code></td>
+    </tr>
+    <tr>
+      <td><code>NE</code></td>
+      <td><code>&lt;&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>GT</code></td>
+      <td><code>&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>GE</code></td>
+      <td><code>&gt;=</code></td>
+    </tr>
+    <tr>
+      <td><code>LT</code></td>
+      <td><code>&lt;</code></td>
+    </tr>
+    <tr>
+      <td><code>LE</code></td>
+      <td><code>&lt;=</code></td>
+    </tr>
+    <tr>
+      <td><code>BETWEEN(lower: Any, upper: Any)</code></td>
+      <td><code>BETWEEN ? AND ?</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Null handling</td>
+      <td><code>IS_NULL</code></td>
+      <td><code>IS NULL</code></td>
+    </tr>
+    <tr>
+      <td><code>IS_NOT_NULL</code></td>
+      <td><code>IS NOT NULL</code></td>
+    </tr>
+    <tr>
+      <td rowspan="14">Subqueries</td>
+      <td><code>IN(subquery: SQLQuery[_])</code></td>
+      <td><code>IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NOT_IN(subquery: SQLQuery[_])</code></td>
+      <td><code>NOT IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>&gt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_ALL(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>&gt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_SOME(subquery: SQLQuery[_])</code></td>
+      <td><code>&lt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td rowspan="3">Miscellaneous</td>
+      <td><code>LIKE(value: String)</code></td>
+      <td><code>LIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>ILIKE(value: String)</code></td>
+      <td><code>ILIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>IN(params: Any*)</code></td>
+      <td><code>IN (?, ?, ...)</code></td>
+    </tr>
+  </tbody>
+</table>
+
 ### Ordering   {#order-by}
+
+### Joins   {#join}
 
 ### Grouping & Having   {#group-by}
 
