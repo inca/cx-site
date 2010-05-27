@@ -537,15 +537,92 @@ It is also fairly easy to implement custom validators:
           else None)
     }
 
-### Export Database Schema   {#export-schema}
+### Exporting Database Schema   {#export-schema}
+
+You can use `DDLUnit` to create or drop database objects programmaticaly:
+
+    lang:scala
+    val ddl = new DDLUnit(Country, City)
+    // drop objects
+    ddl.drop
+    // create objects
+    ddl.create
+    // drop and then create objects
+    ddl.dropCreate
+
+`DDLUnit` creates objects in the following order:
+
+  * preliminary [auxiliary objects](#aux);
+  * tables;
+  * constraints;
+  * views;
+  * posterior [auxiliary objects](#aux).
+
+Respectively, drop script works with objects in a reverse order.
+
+After the execution, `DDLUnit` produces `messages`: `InfoMsg` for succeeded statements,
+`ErrorMsg` for failed ones. Here's the example:
+
+    lang:scala
+    ddl.messages(0).sql
+    // CREATE TABLE public.country (
+    //   id BIGINT NOT NULL DEFAULT NEXTVAL('public.country_id_seq'),
+    //   code VARCHAR(2) NOT NULL DEFAULT 'ch',
+    //   name TEXT NOT NULL,
+    //   PRIMARY KEY (id))
+    ddl.messages(0).body
+    // CREATE TABLE public.country: OK
+
+You can also setup `maven-cx-plugin` to export the schema for your Maven project within a
+build profile. Read more on [Circumflex Maven Plugin page](/plugin.html#schema).
 
 ## Querying   {#sql}
 
+A precise request for information retrieval from database is often refered to as *query*.
+There are various ways you can query your data with Circumflex ORM:
+
+  * using [select queries](#select), a neat object-oriented DSL for retrieving [records](#record)
+  as well as arbitrary [projections](#projection) with SQL-like syntax;
+  * using the [Criteria API](#criteria), an alternative DSL for retrieving [records](#record)
+  with associations prefetching capabilities;
+  * using [native SQL queries](#native-sql) for executing vendor-specific queries for
+  [records](#record) or arbitrary [projections](#projection).
+
+All data retrieval queries derive from `SQLQuery`.
+
 ### Select Queries   {#select}
 
-### Predicates   {#predicate}
+Select queries are used to retrieve [records](#record) or arbitrary [projections](#projection)
+with neat object-oriented DSL which closely resembles SQL syntax:
+
+    lang:scala
+    // prepare relations which will participate in query:
+    val co = Country as "co"
+    val ci = City as "ci"
+    // prepare a query:
+    val q = SELECT (co.*) FROM (co JOIN ci) WHERE (ci.name LIKE "Moscow) ORDER_BY (co.name ASC)
+    // execute a query:
+    q.list    // returns Seq[Country]
+
+The `Select` class provides functionality for select queries. It has following structure:
+
+  * [`SELECT` clause](#projection) specifies a [projection](#projection) which determines
+  the actual result of query execution;
+  * `FROM` clause specifies relations which will participate in query;
+  * [`WHERE` clause](#predicate) specifies a [predicate](#predicate) which will be used by
+  database to filter the records in result set;
+  * [`ORDER_BY` clause](#order-by) tells database how the result set should be [sorted](#order-by);
+  * [`GROUP_BY` clause](#group_by) specifies a subset of [projections](#projection) which will
+  be used by database for [grouping](#group-by);
+  * [`HAVING` clause](#group-by) specifies additional [predicate](#predicate) which will be
+  applied by database after [grouping](#group-by);
+  * [`LIMIT` clause and `OFFSET` clause](#limit-offset) tell database to return a subset of result
+   set and specify it's boundaries;
+  * [set operations](#set-ops) allow to combine the results of two or more [SQL queries](#sql).
 
 ### Projections   {#projection}
+
+### Predicates   {#predicate}
 
 ### Ordering   {#order-by}
 
@@ -553,7 +630,9 @@ It is also fairly easy to implement custom validators:
 
 ### Limit & Offset   {#limit-offset}
 
-### Union, Intersect & Except
+### Union, Intersect & Except   {#set-ops}
+
+### Native SQL Queries {#native}
 
 ## Data manipulation   {#dml}
 
@@ -564,6 +643,8 @@ It is also fairly easy to implement custom validators:
 ### Bulk Update   {#update}
 
 ### Bulk Delete   {#delete}
+
+### Native DML Queries   {#native-dml}
 
 ## Criteria API   {#criteria}
 

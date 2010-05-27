@@ -37,7 +37,6 @@
         }
       });
       // show/hide TOC
-      $('#toc').hide();
       $('#toc-show').click(function() {
         $('#toc-show').fadeOut(200, function(){$('#toc').fadeIn(400);});
       });
@@ -67,7 +66,7 @@
 </div>
   [#if toc?? && toc.toHtml != '']
   <a id="toc-show" class="toc" href="javascript:;" title="Show Table of Contents">table of contents &raquo;</a>
-  <div id="toc" class="toc">
+  <div id="toc" class="toc" style="display:none">
     <a id="toc-hide" class="right-float" href="javascript:;" title="Hide Table of Contents">&times;</a>
   ${toc.toHtml}
   </div>

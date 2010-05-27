@@ -3,11 +3,11 @@ Circumflex Maven Plugin
 
 Circumflex comes shipped with handy Maven plugin that can help you with following tasks:
 
-  * [provide Circumflex configuration parameters](#cfg) in `pom.xml` instead of `cx.properties`;
-  * [create database schema](#schema) on build;
-  * generate source code documentation with [Docco](/index.html#docco).
+  * [configuring Circumflex application](#cfg) using `pom.xml` instead of `cx.properties`;
+  * [exporting database schema](#schema) of [Circumflex ORM](/orm.html) project on build;
+  * generating source code documentation with [Docco](/index.html#docco).
 
-## Configuration     {#cfg}
+## Configuring Circumflex Application    {#cfg}
 
 The `cfg` goal is used to create `cx.properties` file filled with properties defined in
 the `properties` section of your `pom.xml`. It is a very convenient way to configure Circumflex:
@@ -69,6 +69,5 @@ Of course, nothing stops you from using Circumflex to deal with your own configu
       case _ => ...
     }
 
-## Database Schema   {#schema}
+## Exporting Database Schema   {#schema}
 
-Coming soon...
