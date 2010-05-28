@@ -730,7 +730,7 @@ and call one of it's methods:
 
     lang:scala
     val co = Country as "co"
-    SELECT (SUBSTR(co.code, 1, 1)) FROM (co) WHERE (co.name LIKE "Switz%")
+    SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")
 
 Following helper methods are available in `SimpleExpressionHelper`:
 
@@ -853,6 +853,29 @@ Following helper methods are available in `SimpleExpressionHelper`:
     </tr>
   </tbody>
 </table>
+
+You can combine several predicates into `AggregatePredicate` using either `OR` or `AND` methods:
+
+    lang:scala
+    AND(co.name LIKE "Switz%", co.code EQ "ch")
+    // or in infix notation:
+    (co.name LIKE "Switz%") OR (co.code EQ "ch")
+
+You can negotiate a predicate using the `NOT` method:
+
+    lang:scala
+    NOT(co.name LIKE "Switz%")
+
+`String` values are implicitly converted into `SimpleExpression` predicate without parameters:
+
+    lang:scala
+    val co = Country as "co"
+    SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'")
+
+You can also use `prepareExpr` to compose a custom expression with parameters:
+
+    lang:scala
+    prepareExpr("co.name like :name or co.code like :code", "name" -> "Switz%", "code" -> "ch")
 
 ### Ordering   {#order-by}
 

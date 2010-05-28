@@ -192,6 +192,7 @@ body{
 .content table td {border-bottom: 1px solid #f3f8f3}
 table tr:hover {background: #F3F8F3}
 .content table th {border-bottom: 2px solid #333; background: #fff}
+.content table {margin-bottom:2em}
 /* Typefaces */
 p {
   line-height:1.5em;
