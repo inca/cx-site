@@ -737,9 +737,9 @@ Following helper methods are available in `SimpleExpressionHelper`:
 <table width="100%">
   <thead>
     <tr>
-      <td>Group</td>
-      <td>Method</td>
-      <td>SQL equivalent</td>
+      <th>Group</th>
+      <th>Method</th>
+      <th>SQL equivalent</th>
     </tr>
   </thead>
   <tbody>
