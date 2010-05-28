@@ -879,6 +879,23 @@ You can also use `prepareExpr` to compose a custom expression with parameters:
 
 ### Ordering   {#order-by}
 
+Ordering expressions appear in `ORDER_BY` clause of `Select`, they determine how rows in
+result set will be sorted. The easiest way to specify ordering expressions is to use implicit
+convertions from `String` or `Field` into `Order`:
+
+    lang:scala
+    val co = Country as "co"
+    SELECT (co.*) FROM (co) ORDER_BY (co.name)
+
+You can also add either `ASC` or `DESC` ordering specificator to explicitly set the direction of
+sorting:
+
+    lang:scala
+    val co = Country as "co"
+    SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)
+
+If no specificator given, ascending sorting is assumed by default.
+
 ### Joins   {#join}
 
 ### Grouping & Having   {#group-by}
