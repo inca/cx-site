@@ -907,31 +907,90 @@ Joins allow you to build queries between several associated relations:
     // find cities by the name of their corresponding countries:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
 
-As the example above shows, joins are primarily used in the `FROM` clause of query. However, nothing
-stops you from intoducing a variable with `JoinNode`:
+As the example above shows, joins are primarily used in the `FROM` clause of query. The result of
+calling `JOIN` is `JoinNode`:
 
     lang:scala
-    val co2ci = (Country as "co") JOIN (City as "ci")
+    val co2ci = (Country as "co") JOIN (City as "ci")   // JoinNode[Country, City]
 
-You can specify the type of join:
+Every `JoinNode` has it's left side and right side, so `co JOIN ci` is **not** equivalent to
+`ci JOIN co`.
 
-    lang:scala
-    (Country as "co").JOIN(City as "ci", INNER_JOIN)
+An important thing to know is that join operation is **left-associative**. It means that subsequent
+joins are always delegated to the `left` sides of join nodes.
 
-As in SQL databases, joins can be of several types:
-
-  * `INNER_JOIN`;
-  * `LEFT_JOIN`;
-  * `RIGHT_JOIN`;
-  * `FULL_JOIN`;
-  * cross join, achieved by passing multiple `RelationNode` arguments to `FROM`.
-
-If no join type specified, `LEFT_JOIN` is assumed by default.
-
-You can also specify the *joining predicate* (the `ON` subclause of SQL joins):
+For example, we have three associated tables, `Country`, `City` and `Street`:
 
     lang:scala
-    (Country as "co").JOIN(City as "ci", "co.id = ci.country_id", INNER_JOIN)
+    val co = Country as "co"
+    val ci = City as "ci"
+    val st = Street as "st"
+
+We want to join them in following order: `Country &rarr; (City &rarr; Street)`.
+Since join operation is left-associative, we need extra parentheses:
+
+    lang:scala
+    co JOIN (ci JOIN st)
+
+Now let's join the same tables in following order: `(City &rarr; Street) &rarr; Country`. In this
+case the parentheses can be omitted:
+
+    lang:scala
+    ci JOIN st JOIN co
+
+You can specify the *joining predicate* (the `ON` subclause of SQL joins) -- it will be used as
+joining condition by database:
+
+    lang:scala
+    (Country as "co").JOIN(City as "ci", "co.id = ci.country_id")
+
+If you do not specify joining predicate explicitly, Circumflex ORM will try to determine it
+by searching the associations between relations. Let's say we have two associated relations:
+
+    lang:scala
+    class Country extends Record[Country]
+    object Country extends Table[Country]
+    class City extends Record[City] {
+      val country = "country_id" REFERENCES Country ON_DELETE CASCADE
+    }
+    object City extends Table[City]
+
+Now we can use implicit joins between `Country` and `City`:
+
+    lang:scala
+    Country as "co" JOIN (City as "ci")
+    // country AS co LEFT JOIN city AS ci ON ci.country_id = co.id
+    City as "ci" JOIN (Country as "co")
+    // city AS ci LEFT JOIN country AS co ON ci.country_id = co.id
+
+Depending on the type of join, rows which do not match the joining predicate will be eliminated
+from one of the sides of join. Following join types are available:
+
+  * `INNER` joins eliminate unmatched rows from both sides;
+  * `LEFT` joins return all matched rows plus one copy for each row in the left side relation
+  for which there was no matching right-hand row (extended with `NULL`s on the right);
+  * `RIGHT` joins, conversely, return all matched rows plus one copy for each row in the right side
+  relation for which there was no matching right-hand row (extended with `NULL`s on the left);
+  * `FULL` joins return all the joined rows, plus one row for each unmatched left-hand row
+  (extended with `NULL`s on the right), plus one row for each unmatched right-hand row
+  (extended with `NULL`s on the left).;
+  * cross joins are achieved by passing multiple `RelationNode` arguments to `FROM`, they produce
+   the Cartesian product of records, no join conditions are applied to them.
+
+If no join type specified, `LEFT` join is assumed by default.
+
+You can specify the join type by passing and argument to the `JOIN` method:
+
+    lang:scala
+    (Country as "co").JOIN(City as "ci", INNER)
+
+Or you may call one of the specific methods:
+
+    lang:scala
+    Country as "co" INNER_JOIN (City as "ci")
+    Country as "co" LEFT_JOIN (City as "ci")
+    Country as "co" RIGHT_JOIN (City as "ci")
+    Country as "co" FULL_JOIN (City as "ci")
 
 ### Grouping & Having   {#group-by}
 

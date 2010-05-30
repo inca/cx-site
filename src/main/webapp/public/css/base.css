@@ -252,7 +252,7 @@ blockquote p cite{
   font-style:normal;
 }
 strong{
-  font-variant:small-caps;
+  font-weight:bold;
 }
 em{
   font-style:italic;
