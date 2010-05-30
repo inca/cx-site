@@ -11,11 +11,6 @@ significantly speed up development by eliminating boilerplates for common
 incapsulating vendor-specific SQL dialects, providing object-oriented API for querying,
 allowing transparent navigation between object associations and much more.
 
-  [orm-wiki]: http://en.wikipedia.org/wiki/Object-relational_mapping
-              "ORM definition on Wikipedia"
-  [crud-wiki]: http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
-               "CRUD definition on Wikipedia"
-
 ## Installation & Configuration   {#install}
 
 There's a couple of things you need to do in order to get started with Circumflex ORM.
@@ -898,6 +893,46 @@ If no specificator given, ascending sorting is assumed by default.
 
 ### Joins   {#join}
 
+*Joins* are used combine records from two or more relations within a query.
+
+Joins concept is a part of [relational algebra][rel-algebra-wiki]. If you are not familiar with
+joins in relational databases, consider spending some time to learn a bit about them. A good place
+to start will be the [Join_(SQL) article on Wikipedia][joins-wiki].
+
+Joins allow you to build queries between several associated relations:
+
+    lang:scala
+    val co = Country as "co"
+    val ci = City as "ci"
+    // find cities by the name of their corresponding countries:
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
+
+As the example above shows, joins are primarily used in the `FROM` clause of query. However, nothing
+stops you from intoducing a variable with `JoinNode`:
+
+    lang:scala
+    val co2ci = (Country as "co") JOIN (City as "ci")
+
+You can specify the type of join:
+
+    lang:scala
+    (Country as "co").JOIN(City as "ci", INNER_JOIN)
+
+As in SQL databases, joins can be of several types:
+
+  * `INNER_JOIN`;
+  * `LEFT_JOIN`;
+  * `RIGHT_JOIN`;
+  * `FULL_JOIN`;
+  * cross join, achieved by passing multiple `RelationNode` arguments to `FROM`.
+
+If no join type specified, `LEFT_JOIN` is assumed by default.
+
+You can also specify the *joining predicate* (the `ON` subclause of SQL joins):
+
+    lang:scala
+    (Country as "co").JOIN(City as "ci", "co.id = ci.country_id", INNER_JOIN)
+
 ### Grouping & Having   {#group-by}
 
 ### Limit & Offset   {#limit-offset}
@@ -931,3 +966,13 @@ If no specificator given, ascending sorting is assumed by default.
 ### Dialects   {#dialect}
 
 ### Configuration Parameters   {#cfg}
+
+
+   [orm-wiki]:          http://en.wikipedia.org/wiki/Object-relational_mapping
+                        "ORM definition on Wikipedia"
+   [crud-wiki]:         http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+                        "CRUD definition on Wikipedia"
+   [joins-wiki]:        http://en.wikipedia.org/wiki/Join_(SQL)
+                        "SQL Join definition on Wikipedia"\
+   [rel-algebra-wiki]:  http://en.wikipedia.org/wiki/Relational_algebra
+                        "Relational algebra definition on Wikipedia"
