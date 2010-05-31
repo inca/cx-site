@@ -1034,6 +1034,6 @@ Or you may call one of specific methods instead:
    [crud-wiki]:         http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
                         "CRUD definition on Wikipedia"
    [joins-wiki]:        http://en.wikipedia.org/wiki/Join_(SQL)
-                        "SQL Join definition on Wikipedia"\
+                        "SQL Join definition on Wikipedia"
    [rel-algebra-wiki]:  http://en.wikipedia.org/wiki/Relational_algebra
                         "Relational algebra definition on Wikipedia"
