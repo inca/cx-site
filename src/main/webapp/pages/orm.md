@@ -401,7 +401,7 @@ An association's value is initilialized the first time you access it inside a pe
     // ...
     c.country()   // further selects are not issued
 
-You can also perform the *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
+You can also perform *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
 
 <!--TODO write about inverse associations -->
 
@@ -893,7 +893,7 @@ If no specificator given, ascending sorting is assumed by default.
 
 ### Joins   {#join}
 
-*Joins* are used combine records from two or more relations within a query.
+*Joins* are used to combine records from two or more relations within a query.
 
 Joins concept is a part of [relational algebra][rel-algebra-wiki]. If you are not familiar with
 joins in relational databases, consider spending some time to learn a bit about them. A good place
@@ -907,42 +907,49 @@ Joins allow you to build queries which span across several associated relations:
     // find cities by the name of their corresponding countries:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
 
-As the example above shows, joins are intended to be used in the `FROM` clause of query.
-The result of calling the `JOIN` method is a `JoinNode` object:
+As the example above shows, joins are intended used in the `FROM` clause of query.
+The result of calling the `JOIN` method is an instance of `JoinNode` class:
 
     lang:scala
     val co2ci = (Country as "co") JOIN (City as "ci")   // JoinNode[Country, City]
 
+#### Left-Associative    {#joins-left-ass}
+
 Every `JoinNode` has it's left side and right side. `co JOIN ci` is **not** equivalent to
 `ci JOIN co`.
 
-An important thing to know is that the join operation is **left-associative**.
-Subsequent joins are always delegated to the `left` sides of join nodes.
+An important thing to know is that the join operation is **left-associative**: if join
+operation is applied to `JoinNode` instance, it will be delegated to the `left` side
+of `JoinNode`.
 
-For example, we have three associated tables, `Country`, `City` and `Street`:
+To illustrate this, imagine three associated tables, `Country`, `City` and `Street`:
 
     lang:scala
     val co = Country as "co"
     val ci = City as "ci"
     val st = Street as "st"
 
-We want to join them in following order: `Country &rarr; (City &rarr; Street)`.
+We want to join them in following order: `Country` -> (`City` -> `Street`).
 Since join operation is left-associative, we need extra parentheses:
 
     lang:scala
     co JOIN (ci JOIN st)
 
-Now let's join the same tables in following order: `(City &rarr; Street) &rarr; Country`. In this
+Now let's join the same tables in following order: (`City` -> `Street`) -> `Country`. In this
 case the parentheses can be omitted:
 
     lang:scala
     ci JOIN st JOIN co
+
+#### Joining Predicate    {#joins-predicate}
 
 You can specify the *joining predicate* (the `ON` subclause of SQL joins) -- it will be used as
 a joining condition by database:
 
     lang:scala
     (Country as "co").JOIN(City as "ci", "co.id = ci.country_id")
+
+#### Automatic Joins    {#joins-auto}
 
 If you do not specify joining predicate explicitly, Circumflex ORM will try to determine it
 by searching the [associations](#association) between relations.
@@ -963,6 +970,8 @@ We can use implicit joins between `Country` and `City`:
     // country AS co LEFT JOIN city AS ci ON ci.country_id = co.id
     City as "ci" JOIN (Country as "co")
     // city AS ci LEFT JOIN country AS co ON ci.country_id = co.id
+
+#### Join Types    {#joins-type}
 
 Like in SQL, joins can be of several types. Depending on the type of join, rows which do not
 match the joining predicate will be eliminated from one of the sides of join. Following join
