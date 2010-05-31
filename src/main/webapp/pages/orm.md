@@ -584,7 +584,7 @@ There are various ways you can query your data with Circumflex ORM:
   as well as arbitrary [projections](#projection) with SQL-like syntax;
   * using the [Criteria API](#criteria), an alternative DSL for retrieving [records](#record)
   with associations prefetching capabilities;
-  * using [native SQL queries](#native-sql) for executing vendor-specific queries for
+  * using [native queries](#native) for executing vendor-specific queries for
   [records](#record) or arbitrary [projections](#projection).
 
 All data retrieval queries derive from the `SQLQuery[T]` class. It defines following methods
@@ -1095,9 +1095,48 @@ Following will **not** compile:
     lang:scala
     SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)
 
-### Native SQL Queries {#native}
-
 ### Reusing Query Objects   {#query-reuse}
+
+When working with data-centric applications, you often need the same query to be executed with
+different parameters. The most obvious solution is to build `Query` objects dynamically:
+
+    lang:scala
+    object Country extends Table[Country] {
+      def findByCode(code: String): Option[Country] = {
+        val co = this as "co"
+        val q = SELECT (co.*) FROM co WHERE (co.code LIKE code)
+        reutrn q.unique
+      }
+    }
+
+However, you can use *named parameters* to reuse the same `Query` object:
+
+    lang:scala
+    object Country extends Table[Country] {
+      val co = as("co")
+      val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
+      def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
+    }
+
+As the example above shows, named parameters are `String`s which start with colon (`:`).
+You can also use `Symbol`s instead:
+
+    lang:scala
+    object Country extends Table[Country] {
+      val co = as("co")
+      val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE 'code)
+      def findByCode(c: String): Option[Country] = byCode.set('code, c).unique
+    }
+
+There are several syntactic ways to use queries with named parameters:
+
+    lang:scala
+    // following lines are equivalent:
+    byCode.set('code, c)
+    byCode('code) = c
+    // or with Strings instead of Symbols:
+    byCode.set("code", c)
+    byCode("code") = c
 
 ## Data manipulation   {#dml}
 
@@ -1108,8 +1147,6 @@ Following will **not** compile:
 ### Bulk Update   {#update}
 
 ### Bulk Delete   {#delete}
-
-### Native DML Queries   {#native-dml}
 
 ## Criteria API   {#criteria}
 
@@ -1122,6 +1159,8 @@ Following will **not** compile:
 ### Auxiliary Database Objects   {#aux}
 
 ### Dialects   {#dialect}
+
+### Native Queries   {#native}
 
 ### Configuration Parameters   {#cfg}
 
