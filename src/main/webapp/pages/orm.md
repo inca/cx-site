@@ -88,7 +88,7 @@ All code examples assume that you have following `import` statement in code wher
 
 ## Central abstractions   {#abstractions}
 
-Applications built with Circumflex ORM usually operate with following abstractions:
+Applications built with Circumflex ORM usually operate on following abstractions:
 
   * [`Record`](#record) -- wraps a row in a database `Table` or `View`, encapsulates the database
   access and adds domain logic on that data;
@@ -231,7 +231,10 @@ If you need a column without `NOT NULL` constraint, you should express this usin
     lang:scala
     val optionalField = "optional".TEXT.NULLABLE
 
-Each record also has an implicit auto-incremented primary key field -- `id`.
+Each record also has an implicit auto-incremented primary key field -- `id`. It is used to look up
+records in [transaction-scoped cache](#cache), for various [data manipulation queries](#dml)
+and other things. A record is refered to *transient* if it's `id` value is empty, otherwise it is
+considered `persistent`.
 
 Fields operate with values. You may set the value of a field:
 
@@ -442,7 +445,7 @@ The first one returns `Option[Seq[ValidationError]]`:
 The second one does not return anything, but throws `ValidationException` if validation fails.
 
 The `validate_!` method is also called when a record is being saved into database, read
-more in [Insert, Update, Delete & Save](#iuds) section.
+more in [Insert, Update & Delete](#iud) section.
 
 Each `ValidationError` could be resolved into a message from
 [Circumflex `Messages` helper](/web.html#msg).
@@ -452,7 +455,7 @@ Following members of `ValidationError` are involved in message resolution:
   `ValidationError` instances with field's `uuid` as their source;
   * `errorKey` describes the nature of the error, for example, `"null"` for `notNull` validator,
   or `"empty"` for `notEmpty` validator;
-  * `params` provide additional information about validation, this params are
+  * `params` provide additional information about validation, these params are
   [interpolated](/web.html#msg) inside resolved message.
 
 The `toMsg` method resolves the message:
@@ -1140,7 +1143,50 @@ There are several syntactic ways to use queries with named parameters:
 
 ## Data manipulation   {#dml}
 
-### Insert, Update, Delete & Save   {#iuds}
+Aside from information retrieval tasks, queries may be intended to change data in some way:
+
+  * add new records;
+  * update existing records (either partially or fully);
+  * delete existing records.
+
+Such queries are often refered to as *data manipulation queries*.
+
+### Insert, Update & Delete   {#iud}
+
+Circumflex ORM employs Active Record design pattern. Each `Record` has following data manipulation
+methods which correspond to their SQL analogues:
+
+  * `INSERT_!(fields: Field[_]*)` -- executes an SQL `INSERT` statement for the record, that is,
+  persists that record into database table. You can optionally specify `fields` which will appear
+  in the statement; if no `fields` specified, then only non-empty fields will be used (they will
+  be populated with `NULL`s or default values by database).
+  * `INSERT(fields: Field[_]*)` -- same as `INSERT_!`, but runs record [validation](#validation) before
+  actual execution;
+  * `UDPATE_!(fields: Field[_]*)` -- executes an SQL `UPDATE` statement for the record, that is,
+  updates all record's fields (or only specified `fields`, if any). The record is being looked up
+  by it's `id`, so this method does not make any sense with transient records.
+  * `UPDATE(fields: Field[_]*)` -- same as `UPDATE_!`, but runs record [validation](#validation) before
+  actual execution;
+  * `DELETE_!()` -- executes an SQL `DELETE` statement for the record, that is, removes that record
+  from database. The record is being looked up by it's `id`, so this method does not make any sense
+  with transient records.
+
+### Save   {#save}
+
+Circumflex ORM provides higher abstraction for persisting records -- the `save_!` method.
+It's algorithm is trivial:
+
+  * if record is persistent (`id` is not empty), it is updated using the `update_!` method;
+  * otherwise the `insert_!` method is called, which causes database to generate an `id` value
+  for the record and to store the corresponding row; the record is then immediately selected from
+  database using vendor-specific `LAST_INSERT_ID`-based [predicate](#predicate) -- this logic ensures
+  that all fields are up-to-date with actual database row, which could be affected by trigger or
+  something else.
+
+There is also a handy `save()` method, which runs record [validation](#validation) and then delegates
+to `save_!()`.
+
+It is advisable to use the `save()` methods on a regular basis.
 
 ### Insert-Select   {#insert-select}
 
