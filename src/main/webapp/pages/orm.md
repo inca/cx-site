@@ -391,7 +391,8 @@ Like with regular field, you can set an retrieve the association's value:
     country.NULL_?
 
 An association's value is initilialized the first time you access it inside a persistent
-[record](#record). This technique is usually refered to as *lazy initialization* or *lazy fetching*:
+[record](#record). This technique is usually refered to as *lazy initialization* or
+*lazy fetching*:
 
     lang:scala
     val c = new City
@@ -443,7 +444,8 @@ The second one does not return anything, but throws `ValidationException` if val
 The `validate_!` method is also called when a record is being saved into database, read
 more in [Insert, Update, Delete & Save](#iuds) section.
 
-Each `ValidationError` could be resolved into a message from [Circumflex `Messages` helper](/web.html#msg).
+Each `ValidationError` could be resolved into a message from
+[Circumflex `Messages` helper](/web.html#msg).
 Following members of `ValidationError` are involved in message resolution:
 
   * `source` describes a place where error occured, most obvious field-based validators return
@@ -615,13 +617,14 @@ The `Select` class provides functionality for select queries. It has following s
   * [`FROM` clause](#node) -- specifies [relation nodes](#node) which will participate in query;
   * [`WHERE` clause](#predicate) -- specifies a [predicate](#predicate) which will be used by
   database to filter the records in result set;
-  * [`ORDER_BY` clause](#order-by) -- tells database how the result set should be [sorted](#order-by);
+  * [`ORDER_BY` clause](#order-by) -- tells database how the result set should be
+  [sorted](#order-by);
   * [`GROUP_BY` clause](#group_by) -- specifies a subset of [projections](#projection) which will
   be used by database for [grouping](#group-by);
   * [`HAVING` clause](#group-by) -- specifies additional [predicate](#predicate) which will be
   applied by database after [grouping](#group-by);
-  * [`LIMIT` clause and `OFFSET` clause](#limit-offset) -- tell database to return a subset of result
-   set and specify it's boundaries;
+  * [`LIMIT` clause and `OFFSET` clause](#limit-offset) -- tell database to return a subset of
+  result set and specify it's boundaries;
   * [set operations](#set-ops) -- allow to combine the results of two or more [SQL queries](#sql).
 
 ### Relation Nodes   {#node}
@@ -668,8 +671,8 @@ You can also query single fields of [records](#record), `Field` is converted to
     (SELECT (co.name) FROM co).list    // returns Seq[String]
 
 Another useful projection type is `Tuple<X>Projection`, where `<X>` is the size of expected tuple
-(currently Circumflex ORM provides support for up to `Tuple10Projection`), `Tuple<X>` of `Projection`
-is converted to `Tuple<X>Projection` implicitly:
+(currently Circumflex ORM provides support for up to `Tuple10Projection`), `Tuple<X>`
+of `Projection` is converted to `Tuple<X>Projection` implicitly:
 
     lang:scala
     val co = Country as "co"
@@ -725,7 +728,7 @@ and call one of it's methods:
 
     lang:scala
     val co = Country as "co"
-    SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")
+    SELECT (co.*) FROM co WHERE (co.name LIKE "Switz%")
 
 Following helper methods are available in `SimpleExpressionHelper`:
 
@@ -835,11 +838,11 @@ Following helper methods are available in `SimpleExpressionHelper`:
     </tr>
     <tr>
       <td rowspan="3">Miscellaneous</td>
-      <td><code>LIKE(value: String)</code></td>
+      <td><code>LIKE(value: Any)</code></td>
       <td><code>LIKE ?</code></td>
     </tr>
     <tr>
-      <td><code>ILIKE(value: String)</code></td>
+      <td><code>ILIKE(value: Any)</code></td>
       <td><code>ILIKE ?</code></td>
     </tr>
     <tr>
@@ -865,7 +868,7 @@ You can negotiate a predicate using the `NOT` method:
 
     lang:scala
     val co = Country as "co"
-    SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'")
+    SELECT (co.*) FROM co WHERE ("co.code like 'ch'")
 
 You can also use `prepareExpr` to compose a custom expression with parameters:
 
@@ -880,14 +883,14 @@ convertions from `String` or `Field` into `Order`:
 
     lang:scala
     val co = Country as "co"
-    SELECT (co.*) FROM (co) ORDER_BY (co.name)
+    SELECT (co.*) FROM co ORDER_BY (co.name)
 
 You can also add either `ASC` or `DESC` ordering specificator to explicitly set the direction of
 sorting:
 
     lang:scala
     val co = Country as "co"
-    SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)
+    SELECT (co.*) FROM co ORDER_BY (co.name ASC)
 
 If no specificator given, ascending sorting is assumed by default.
 
@@ -1005,11 +1008,96 @@ Or you may call one of specific methods instead:
 
 ### Grouping & Having   {#group-by}
 
+A query can optionally condense into a single row all selected rows that share the same value for
+a subset of query [projections](#projection). Such queries are often refered to as *grouping
+queries* and the projections are usually refered to as *grouping projections*.
+
+Grouping queries are built using the `GROUP_BY` clause:
+
+    lang:scala
+    val co = Country as "co"
+    SELECT (co.*) FROM co GROUP_BY (co.*)
+
+As the example above shows, grouping projections are specified as arguments to the `GROUP_BY`
+method.
+
+Grouping queries are often used in conjunction with aggregate functions. If aggregate functions
+are used, they are computed across all rows making up each group, producing separate value for
+each group, whereas without `GROUP_BY` an aggregate produces a single value computed across all
+the selected rows:
+
+    lang:scala
+    val co = Country as "co"
+    val ci = City as "ci"
+    // how many cities correspond to each selected country?
+    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*)
+
+Groups can be optionally filtered using the `HAVING` clause. It accepts a [predicate](#predicate):
+
+    lang:scala
+    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) HAVING (co.code LIKE "c_")
+
+Note that `HAVING` is different from `WHERE`: `WHERE` filters individual rows before the
+application of `GROUP_BY`, while `HAVING` filters group rows created by `GROUP_BY`.
+
 ### Limit & Offset   {#limit-offset}
+
+The `LIMIT` clause specifies the maximum number of rows a query will return:
+
+    lang:scala
+    // select 10 first countries:
+    SELECT (co.*) FROM co LIMIT 10
+
+The `OFFSET` clause specifies the number of rows to skip before starting to return results.
+When both are specified, the amount of rows specified in the `OFFSET` clause is skipped before
+starting to count the maximum amount of returned rows specified in the `LIMIT` clause:
+
+    lang:scala
+    // select 5 countries starting from 10th:
+    SELECT (co.*) FROM co LIMIT 5 OFFSET 10
+
+Note that query planners in database engines often take `LIMIT` and `OFFSET` into account when
+generating a query plan, so you are very likely to get different row orders for different
+`LIMIT`/`OFFSET` values. Thus, you should use explicit [ordering](#order-by) to achieve
+consistent and predictable results when selecting different subsets of a query result with
+`LIMIT`/`OFFSET`.
 
 ### Union, Intersect & Except   {#set-ops}
 
+Most database engines allow to comine the results of two queries using the *set operations*.
+Following set operations are available:
+
+  * `UNION` -- appends the result of one query to another, eliminating duplicate rows from
+  its result;
+  * `UNION_ALL` -- same as `UNION`, but leaves duplicate rows in result set;
+  * `INTERSECT` -- returns all rows that are in the result of both queries, duplicate rows are
+  eliminated;
+  * `INTERSECT_ALL` -- same as `INTERSECT`, but no duplicate rows are eliminated;
+  * `EXCEPT` -- returns all rows that are in the result of left-hand query, but not in the result
+  of right-hand query; again, the duplicates are eliminated;
+  * `EXCEPT_ALL` -- same as `EXCEPT`, but duplicates are left in the result set.
+
+The syntax for using set operations is:
+
+    lang:scala
+    // select the names of both countries and cities in a single result set:
+    SELECT (co.name) FROM co UNION (SELECT (ci.name) FROM ci)
+
+Set operations can also be nested and chained:
+
+    lang:scala
+    q1 INTERSECT q2 EXCEPT q3
+    (q1 UNION q2) INTERSECT q3
+
+The queries combined using set operations should have matching [projections](#projection).
+Following will **not** compile:
+
+    lang:scala
+    SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)
+
 ### Native SQL Queries {#native}
+
+### Reusing Query Objects   {#query-reuse}
 
 ## Data manipulation   {#dml}
 
