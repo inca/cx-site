@@ -913,16 +913,16 @@ The result of calling the `JOIN` method is an instance of `JoinNode` class:
     lang:scala
     val co2ci = (Country as "co") JOIN (City as "ci")   // JoinNode[Country, City]
 
-#### Left-Associative    {#joins-left-ass}
-
 Every `JoinNode` has it's left side and right side. `co JOIN ci` is **not** equivalent to
 `ci JOIN co`.
 
+#### Left Associativity    {#joins-left-ass}
+
 An important thing to know is that the join operation is **left-associative**: if join
-operation is applied to `JoinNode` instance, it will be delegated to the `left` side
+is applied to `JoinNode` instance, the operation will be delegated to the `left` side
 of `JoinNode`.
 
-To illustrate this, imagine three associated tables, `Country`, `City` and `Street`:
+To illustrate this, let's take three associated tables, `Country`, `City` and `Street`:
 
     lang:scala
     val co = Country as "co"
