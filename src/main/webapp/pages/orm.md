@@ -899,7 +899,7 @@ Joins concept is a part of [relational algebra][rel-algebra-wiki]. If you are no
 joins in relational databases, consider spending some time to learn a bit about them. A good place
 to start will be the [Join_(SQL) article on Wikipedia][joins-wiki].
 
-Joins allow you to build queries between several associated relations:
+Joins allow you to build queries which span across several associated relations:
 
     lang:scala
     val co = Country as "co"
@@ -907,17 +907,17 @@ Joins allow you to build queries between several associated relations:
     // find cities by the name of their corresponding countries:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
 
-As the example above shows, joins are primarily used in the `FROM` clause of query. The result of
-calling `JOIN` is `JoinNode`:
+As the example above shows, joins are intended to be used in the `FROM` clause of query.
+The result of calling the `JOIN` method is a `JoinNode` object:
 
     lang:scala
     val co2ci = (Country as "co") JOIN (City as "ci")   // JoinNode[Country, City]
 
-Every `JoinNode` has it's left side and right side, so `co JOIN ci` is **not** equivalent to
+Every `JoinNode` has it's left side and right side. `co JOIN ci` is **not** equivalent to
 `ci JOIN co`.
 
-An important thing to know is that join operation is **left-associative**. It means that subsequent
-joins are always delegated to the `left` sides of join nodes.
+An important thing to know is that the join operation is **left-associative**.
+Subsequent joins are always delegated to the `left` sides of join nodes.
 
 For example, we have three associated tables, `Country`, `City` and `Street`:
 
@@ -939,13 +939,14 @@ case the parentheses can be omitted:
     ci JOIN st JOIN co
 
 You can specify the *joining predicate* (the `ON` subclause of SQL joins) -- it will be used as
-joining condition by database:
+a joining condition by database:
 
     lang:scala
     (Country as "co").JOIN(City as "ci", "co.id = ci.country_id")
 
 If you do not specify joining predicate explicitly, Circumflex ORM will try to determine it
-by searching the associations between relations. Let's say we have two associated relations:
+by searching the [associations](#association) between relations.
+Let's say we have two associated relations:
 
     lang:scala
     class Country extends Record[Country]
@@ -955,7 +956,7 @@ by searching the associations between relations. Let's say we have two associate
     }
     object City extends Table[City]
 
-Now we can use implicit joins between `Country` and `City`:
+We can use implicit joins between `Country` and `City`:
 
     lang:scala
     Country as "co" JOIN (City as "ci")
@@ -963,8 +964,9 @@ Now we can use implicit joins between `Country` and `City`:
     City as "ci" JOIN (Country as "co")
     // city AS ci LEFT JOIN country AS co ON ci.country_id = co.id
 
-Depending on the type of join, rows which do not match the joining predicate will be eliminated
-from one of the sides of join. Following join types are available:
+Like in SQL, joins can be of several types. Depending on the type of join, rows which do not
+match the joining predicate will be eliminated from one of the sides of join. Following join
+types are available:
 
   * `INNER` joins eliminate unmatched rows from both sides;
   * `LEFT` joins return all matched rows plus one copy for each row in the left side relation
@@ -977,14 +979,14 @@ from one of the sides of join. Following join types are available:
   * cross joins are achieved by passing multiple `RelationNode` arguments to `FROM`, they produce
    the Cartesian product of records, no join conditions are applied to them.
 
-If no join type specified, `LEFT` join is assumed by default.
+If no join type specified explicitly, `LEFT` join is assumed by default.
 
-You can specify the join type by passing and argument to the `JOIN` method:
+You can specify the type of join by passing an argument to the `JOIN` method:
 
     lang:scala
     (Country as "co").JOIN(City as "ci", INNER)
 
-Or you may call one of the specific methods:
+Or you may call one of specific methods instead:
 
     lang:scala
     Country as "co" INNER_JOIN (City as "ci")
