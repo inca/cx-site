@@ -1186,13 +1186,66 @@ It's algorithm is trivial:
 There is also a handy `save()` method, which runs record [validation](#validation) and then delegates
 to `save_!()`.
 
-It is advisable to use the `save()` methods on a regular basis.
+We advise you to use the `save()` method whenever you want to insert or update a record.
 
-### Insert-Select   {#insert-select}
+### Bulk Queries   {#bulk}
 
-### Bulk Update   {#update}
+Circumflex ORM provides support for the following bulk data manipulation queries:
 
-### Bulk Delete   {#delete}
+  * [`INSERT ... SELECT`](#insert-select) -- inserts the result set of specified [`SQLQuery`](#sql)
+  into specified [`Relation`](#relation);
+  * [`UPDATE`](#update) -- updates certain rows in specified [`Relation`](#relation);
+  * [`DELETE`](#delete) -- removes certain rows from specified [`Relation`](#relation).
+
+All data manipulation queries derive from the `DMLQuery` class. It defines a single method for
+execution, `execute()`, which executes corresponding statement and returns the number of
+affected rows.
+
+Each execution of any data manipulation query evicts all records
+from [transaction-scoped cache](#cache).
+
+#### Insert-Select   {#insert-select}
+
+The `InsertSelect` query has following syntax:
+
+    lang:scala
+    val co = Country as "co"
+    INSERT_INTO (co) SELECT ...
+
+Note that [projections](#projection) of specified [`SQLQuery`](#sql) must match the columns of the
+[`Relation`](#relation).
+
+#### Bulk Update   {#update}
+
+The `Update` query has following syntax:
+
+    lang:scala
+    val co = Country as "co"
+    UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk")
+
+An optional `WHERE` clause specifies [predicate](#predicate) for searched update:
+
+    lang:scala
+    UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
+
+Many database vendors also allow `USING` clause in `UPDATE` statements. Circumflex ORM does not
+support this clause yet.
+
+#### Bulk Delete   {#delete}
+
+The `Delete` query has following syntax:
+
+    lang:scala
+    val co = Country as "co"
+    DELETE (co)
+
+An optional `WHERE` clause specifies [predicate](#predicate) for searched delete:
+
+    lang:scala
+    DELETE (co) WHERE (co.code LIKE 'uk')
+
+Many database vendors also allow `USING` clause in `DELETE` statements. Circumflex ORM does not
+support this clause yet.
 
 ## Criteria API   {#criteria}
 
