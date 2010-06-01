@@ -606,8 +606,8 @@ with neat object-oriented DSL which closely resembles SQL syntax:
 
     lang:scala
     // prepare relation nodes which will participate in query:
-    val co = Country as "co"
-    val ci = City as "ci"
+    val co = Country AS "co"
+    val ci = City AS "ci"
     // prepare a query:
     val q = SELECT (co.*) FROM (co JOIN ci) WHERE (ci.name LIKE "Moscow) ORDER_BY (co.name ASC)
     // execute a query:
@@ -636,10 +636,10 @@ The `Select` class provides functionality for select queries. It has following s
 `FROM` clause of database query.
 
 Relation nodes are represented by the `RelationNode` class, they are created by calling the
-`as` method of [`Relation`](#relation):
+`AS` method of [`Relation`](#relation):
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
 
 Relation nodes can be organized into *query trees* using [joins](#join).
 
@@ -659,7 +659,7 @@ they are subclassed from the `CompositeProjection` trait and consist of one or m
 The most popular projection is `RecordProjection`, it is designed to retrieve [records](#record):
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     (SELECT (co.*) FROM co).list    // returns Seq[Country]
 
 As the example above shows, the `*` method of [`RelationNode`](#node) returns a `RecordProjection`
@@ -669,7 +669,7 @@ You can also query single fields of [records](#record), `Field` is converted to
 `FieldProjection` implicitly:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     (SELECT (co.id) FROM co).list      // returns Seq[Long]
     (SELECT (co.name) FROM co).list    // returns Seq[String]
 
@@ -678,8 +678,8 @@ Another useful projection type is `Tuple<X>Projection`, where `<X>` is the size 
 of `Projection` is converted to `Tuple<X>Projection` implicitly:
 
     lang:scala
-    val co = Country as "co"
-    val ci = City as "ci"
+    val co = Country AS "co"
+    val ci = City AS "ci"
     (SELECT (ci.*, co.*) FROM (co JOIN ci)).list    // returns Seq[(City, Country)]
 
 You can even use arbitrary expression which your database understands as long as you specify
@@ -716,7 +716,7 @@ And here's the code to use it:
 
     lang:scala
     import MyOrmUtils._
-    val co = Country as "co"
+    val co = Country AS "co"
     (SELECT (SUBSTR(co.code, 1, 1)) FROM co).list    // returns Seq[String]
 
 ### Predicates   {#predicate}
@@ -730,7 +730,7 @@ instance is to use implicit conversion from `String` or `Field` to `SimpleExpres
 and call one of it's methods:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     SELECT (co.*) FROM co WHERE (co.name LIKE "Switz%")
 
 Following helper methods are available in `SimpleExpressionHelper`:
@@ -870,7 +870,7 @@ You can negotiate a predicate using the `NOT` method:
 `String` values are implicitly converted into `SimpleExpression` predicate without parameters:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     SELECT (co.*) FROM co WHERE ("co.code like 'ch'")
 
 You can also use `prepareExpr` to compose a custom expression with parameters:
@@ -885,14 +885,14 @@ result set will be sorted. The easiest way to specify ordering expressions is to
 convertions from `String` or `Field` into `Order`:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     SELECT (co.*) FROM co ORDER_BY (co.name)
 
 You can also add either `ASC` or `DESC` ordering specificator to explicitly set the direction of
 sorting:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     SELECT (co.*) FROM co ORDER_BY (co.name ASC)
 
 If no specificator given, ascending sorting is assumed by default.
@@ -908,8 +908,8 @@ to start will be the [Join_(SQL) article on Wikipedia][joins-wiki].
 Joins allow you to build queries which span across several associated relations:
 
     lang:scala
-    val co = Country as "co"
-    val ci = City as "ci"
+    val co = Country AS "co"
+    val ci = City AS "ci"
     // find cities by the name of their corresponding countries:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
 
@@ -917,7 +917,7 @@ As the example above shows, joins are intended used in the `FROM` clause of quer
 The result of calling the `JOIN` method is an instance of `JoinNode` class:
 
     lang:scala
-    val co2ci = (Country as "co") JOIN (City as "ci")   // JoinNode[Country, City]
+    val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]
 
 Every `JoinNode` has it's left side and right side. `co JOIN ci` is **not** equivalent to
 `ci JOIN co`.
@@ -931,9 +931,9 @@ of `JoinNode`.
 To illustrate this, let's take three associated tables, `Country`, `City` and `Street`:
 
     lang:scala
-    val co = Country as "co"
-    val ci = City as "ci"
-    val st = Street as "st"
+    val co = Country AS "co"
+    val ci = City AS "ci"
+    val st = Street AS "st"
 
 We want to join them in following order: `Country` -> (`City` -> `Street`).
 Since join operation is left-associative, we need extra parentheses:
@@ -953,7 +953,7 @@ You can specify the *joining predicate* (the `ON` subclause of SQL joins) -- it 
 a joining condition by database:
 
     lang:scala
-    (Country as "co").JOIN(City as "ci", "co.id = ci.country_id")
+    (Country AS "co").JOIN(City AS "ci", "co.id = ci.country_id")
 
 #### Automatic Joins    {#joins-auto}
 
@@ -972,9 +972,9 @@ Let's say we have two associated relations:
 We can use implicit joins between `Country` and `City`:
 
     lang:scala
-    Country as "co" JOIN (City as "ci")
+    Country AS "co" JOIN (City AS "ci")
     // country AS co LEFT JOIN city AS ci ON ci.country_id = co.id
-    City as "ci" JOIN (Country as "co")
+    City AS "ci" JOIN (Country AS "co")
     // city AS ci LEFT JOIN country AS co ON ci.country_id = co.id
 
 #### Join Types    {#joins-type}
@@ -999,15 +999,15 @@ If no join type specified explicitly, `LEFT` join is assumed by default.
 You can specify the type of join by passing an argument to the `JOIN` method:
 
     lang:scala
-    (Country as "co").JOIN(City as "ci", INNER)
+    (Country AS "co").JOIN(City AS "ci", INNER)
 
 Or you may call one of specific methods instead:
 
     lang:scala
-    Country as "co" INNER_JOIN (City as "ci")
-    Country as "co" LEFT_JOIN (City as "ci")
-    Country as "co" RIGHT_JOIN (City as "ci")
-    Country as "co" FULL_JOIN (City as "ci")
+    Country AS "co" INNER_JOIN (City AS "ci")
+    Country AS "co" LEFT_JOIN (City AS "ci")
+    Country AS "co" RIGHT_JOIN (City AS "ci")
+    Country AS "co" FULL_JOIN (City AS "ci")
 
 ### Grouping & Having   {#group-by}
 
@@ -1018,7 +1018,7 @@ queries* and the projections are usually refered to as *grouping projections*.
 Grouping queries are built using the `GROUP_BY` clause:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     SELECT (co.*) FROM co GROUP_BY (co.*)
 
 As the example above shows, grouping projections are specified as arguments to the `GROUP_BY`
@@ -1030,8 +1030,8 @@ each group, whereas without `GROUP_BY` an aggregate produces a single value comp
 the selected rows:
 
     lang:scala
-    val co = Country as "co"
-    val ci = City as "ci"
+    val co = Country AS "co"
+    val ci = City AS "ci"
     // how many cities correspond to each selected country?
     SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*)
 
@@ -1106,7 +1106,7 @@ different parameters. The most obvious solution is to build `Query` objects dyna
     lang:scala
     object Country extends Table[Country] {
       def findByCode(code: String): Option[Country] = {
-        val co = this as "co"
+        val co = this AS "co"
         val q = SELECT (co.*) FROM co WHERE (co.code LIKE code)
         reutrn q.unique
       }
@@ -1116,7 +1116,7 @@ However, you can use *named parameters* to reuse the same `Query` object:
 
     lang:scala
     object Country extends Table[Country] {
-      val co = as("co")
+      val co = AS("co")
       val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
       def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
     }
@@ -1126,7 +1126,7 @@ You can also use `Symbol`s instead:
 
     lang:scala
     object Country extends Table[Country] {
-      val co = as("co")
+      val co = AS("co")
       val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE 'code)
       def findByCode(c: String): Option[Country] = byCode.set('code, c).unique
     }
@@ -1140,6 +1140,24 @@ There are several syntactic ways to use queries with named parameters:
     // or with Strings instead of Symbols:
     byCode.set("code", c)
     byCode("code") = c
+
+## Criteria API   {#criteria}
+
+Most (if not all) of your data retrieval queries will be focused to retrieve only one type of
+[records](#record). *Criteria API* aims to minimize your effort on writing such queries.
+Following snippet shows two equivalents of the same query:
+
+    lang:scala
+    // Select query:
+    val co = Country as "co"
+    val countries = SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list
+    // Criteria query:
+    Country.criteria.add(Country.name LIKE "Sw%").list
+    // or with RelationNode:
+    co.criteria.add(co.name LIKE "Sw%").list
+
+As you can see, `Criteria` queries are more compact because boilerplate `SELECT` and `FROM` clauses
+are omitted.
 
 ## Data manipulation   {#dml}
 
@@ -1209,7 +1227,7 @@ from [transaction-scoped cache](#cache).
 The `InsertSelect` query has following syntax:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     INSERT_INTO (co) SELECT ...
 
 Note that [projections](#projection) of specified [`SQLQuery`](#sql) must match the columns of the
@@ -1220,7 +1238,7 @@ Note that [projections](#projection) of specified [`SQLQuery`](#sql) must match 
 The `Update` query has following syntax:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk")
 
 An optional `WHERE` clause specifies [predicate](#predicate) for searched update:
@@ -1236,7 +1254,7 @@ support this clause yet.
 The `Delete` query has following syntax:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     DELETE (co)
 
 An optional `WHERE` clause specifies [predicate](#predicate) for searched delete:
@@ -1246,8 +1264,6 @@ An optional `WHERE` clause specifies [predicate](#predicate) for searched delete
 
 Many database vendors also allow `USING` clause in `DELETE` statements. Circumflex ORM does not
 support this clause yet.
-
-## Criteria API   {#criteria}
 
 ## Advanced concepts   {#advanced}
 
