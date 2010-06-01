@@ -234,7 +234,7 @@ If you need a column without `NOT NULL` constraint, you should express this usin
 Each record also has an implicit auto-incremented primary key field -- `id`. It is used to look up
 records in [transaction-scoped cache](#cache), for various [data manipulation queries](#dml)
 and other things. A record is refered to *transient* if it's `id` value is empty, otherwise it is
-considered `persistent`.
+considered *persistent*.
 
 Fields operate with values. You may set the value of a field:
 
@@ -1181,7 +1181,7 @@ It's algorithm is trivial:
   for the record and to store the corresponding row; the record is then immediately selected from
   database using vendor-specific `LAST_INSERT_ID`-based [predicate](#predicate) -- this logic ensures
   that all fields are up-to-date with actual database row, which could be affected by trigger or
-  something else.
+  something else at backend.
 
 There is also a handy `save()` method, which runs record [validation](#validation) and then delegates
 to `save_!()`.

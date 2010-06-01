@@ -5,7 +5,7 @@ body {
   font: normal 12pt/1.5  Cambria, Georgia, serif
 }
 .noprint, form, #header, #nav, #footer, #toc, #toc-show {
-  display: none
+  display: none !important
 }
 
 a {text-decoration: none; color: #252525}
