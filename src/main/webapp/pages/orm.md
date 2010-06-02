@@ -1233,7 +1233,7 @@ The `InsertSelect` query has following syntax:
 Note that [projections](#projection) of specified [`SQLQuery`](#sql) must match the columns of the
 [`Relation`](#relation).
 
-#### Bulk Update & Delete  {#update-delete}
+#### Update & Delete  {#update-delete}
 
 SQL databases support `UPDATE` and `DELETE` statements for bulk operations. Circumflex ORM provides
 equivalent abstractions for these operations, `Update` and `Delete` respectively.
