@@ -405,7 +405,7 @@ An association's value is initilialized the first time you access it inside a pe
     // ...
     c.country()   // further selects are not issued
 
-You can also perform *eager initialization*, or *prefetching*, using [Criteria API](#criteria).
+You can also perform [association prefetching](#prefetch) instead, using [Criteria API](#criteria).
 
 <!--TODO write about inverse associations -->
 
@@ -1144,11 +1144,11 @@ There are several syntactic ways to use queries with named parameters:
 ## Criteria API   {#criteria}
 
 Most (if not all) of your data retrieval queries will be focused to retrieve only one type of
-[records](#record). *Criteria API* aims to minimize your effort on writing such queries.
-Following snippet shows three equivalents of the same query:
+[records](#record). *Criteria API* aims to minimize your effort on writing such queries. Following
+snippet shows three equivalents of the same query:
 
     lang:scala
-    val co = Country as "co"
+    val co = Country AS "co"
     // Select query:
     val countries = SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list
     // Criteria query:
@@ -1158,6 +1158,59 @@ Following snippet shows three equivalents of the same query:
 
 As you can see, `Criteria` queries are more compact because boilerplate `SELECT` and `FROM` clauses
 are omitted.
+
+But aside from shortening the syntax, Criteria API offers unique functionality --
+[associations prefetching](#prefetch), which can greatly speed up your application when working
+with graphs of associated objects.
+
+The `Criteria[R]` object has following methods for execution:
+
+  * `list()` executes a query and returns `Seq[R]`;
+  * `unique()` executes a query and returns `Option[R]`, an exception is thrown if more than one
+  row is returned from database;
+  * `mkSelect` transforms a `Criteria` into the [`Select` query](#select);
+  * `mkUpdate` transforms a `Criteria` into the [`Update` query](#update-delete);
+  * `mkSelect` transforms a `Criteria` into the [`Delete` query](#update-delete);
+  * `toString` shows query tree for debugging.
+
+
+You can use [predicates](#predicate) to narrow the result set. Unlike [`Select` queries](#select),
+predicates are added to `Criteria` object using the `add` method and then are assembled into the
+conjunction:
+
+    lang:scala
+    co.criteria.add(co.name LIKE "Sw%").add(co.code LIKE "ch").list
+
+You can apply [ordering](#order-by) using the `addOrder` method:
+
+    lang:scala
+    co.criteria.addOrder(co.name).addOrder(co.code).list
+
+You can also add one or more [associated](#association) [relations](#relation) to the query plan
+using the `join` method so that you can specify constraints upon them:
+
+    lang:scala
+    val co = Country AS "co"
+    val ci = City AS "ci"
+    co.criteria.join(ci).add(ci.name LIKE "Lausanne").list
+
+[Automatic joins](#joins-auto) are used to update query plan properly. There is no limitation on
+the depth of association path used in a single query.
+
+You can also use `limit` and `offset` methods to specify the maximum number of returned records and
+the amount of skipped records.
+
+### Prefetching Associations   {#prefetch}
+
+When working with [associated](#association) [records](#record) you often need a whole graph of
+associations to be fetched.
+
+Normally associations are fetched eagerly first time they are accessed, but when it is done for
+every record in a possibly big result set, it would result in significant performance degradation
+(see the [n + 1 selects problem explained][n+1] blogpost).
+
+With Criteria API you have an option to fetch as many associations as you want in a single query.
+This technique is refered to as *associations prefetching* or *lazy fetching*.
 
 ## Data manipulation   {#dml}
 
@@ -1284,3 +1337,5 @@ Circumflex ORM does not support this feature yet.
                         "SQL Join definition on Wikipedia"
    [rel-algebra-wiki]:  http://en.wikipedia.org/wiki/Relational_algebra
                         "Relational algebra definition on Wikipedia"
+   [n+1]:               http://www.pramatr.com/blog/2009/02/05/sql-n-1-selects-explained/
+                        "n+1 selects explained"
