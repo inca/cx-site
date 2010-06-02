@@ -259,10 +259,10 @@ em{
   font-weight:inherit;
 }
 .amp {
-  font-family:Baskerville, "Goudy Old Style", "Palatino", "Book Antiqua", serif;
-  font-style:italic;
-  font-weight:normal;
-  line-height:inherit;
+  font-family:Baskerville, "Goudy Old Style", "Palatino", "Book Antiqua", serif !important;
+  font-style:italic !important;
+  font-weight:normal !important;
+  line-height:inherit !important;
 }
 abbr{
   border-bottom:1px dotted #444;
