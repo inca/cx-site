@@ -254,8 +254,8 @@ support to grow strong. You can help make the Circumflex project better in follo
   * report [issues][gh-issues];
   * fork [this site][gh-cx-site] and help us with documentation, FAQs, tutorials,
   examples and success stories;
-  * blog about Circumflex and [let us know about it](/team);
-  * contact [The Circumflex Team](/team) personally.
+  * blog about Circumflex and [let us know about it](/team.html);
+  * contact [The Circumflex Team](/team.html) personally.
 
 We would highly appreciate your help! 
 
