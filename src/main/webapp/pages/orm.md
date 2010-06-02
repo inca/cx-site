@@ -622,7 +622,7 @@ The `Select` class provides functionality for select queries. It has following s
   database to filter the records in result set;
   * [`ORDER_BY` clause](#order-by) -- tells database how the result set should be
   [sorted](#order-by);
-  * [`GROUP_BY` clause](#group_by) -- specifies a subset of [projections](#projection) which will
+  * [`GROUP_BY` clause](#group-by) -- specifies a subset of [projections](#projection) which will
   be used by database for [grouping](#group-by);
   * [`HAVING` clause](#group-by) -- specifies additional [predicate](#predicate) which will be
   applied by database after [grouping](#group-by);
