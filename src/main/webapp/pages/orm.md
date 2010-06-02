@@ -1212,8 +1212,8 @@ Circumflex ORM provides support for the following bulk data manipulation queries
 
   * [`INSERT ... SELECT`](#insert-select) -- inserts the result set of specified [`SQLQuery`](#sql)
   into specified [`Relation`](#relation);
-  * [`UPDATE`](#update) -- updates certain rows in specified [`Relation`](#relation);
-  * [`DELETE`](#delete) -- removes certain rows from specified [`Relation`](#relation).
+  * [`UPDATE`](#update-delete) -- updates certain rows in specified [`Relation`](#relation);
+  * [`DELETE`](#update-delete) -- removes certain rows from specified [`Relation`](#relation).
 
 All data manipulation queries derive from the `DMLQuery` class. It defines a single method for
 execution, `execute()`, which executes corresponding statement and returns the number of
@@ -1233,37 +1233,31 @@ The `InsertSelect` query has following syntax:
 Note that [projections](#projection) of specified [`SQLQuery`](#sql) must match the columns of the
 [`Relation`](#relation).
 
-#### Bulk Update   {#update}
+#### Bulk Update & Delete  {#update-delete}
 
-The `Update` query has following syntax:
+SQL databases support `UPDATE` and `DELETE` statements for bulk operations. Circumflex ORM provides
+equivalent abstractions for these operations, `Update` and `Delete` respectively.
+
+The `Update` query allows you to use DSL for updating fields of multiple records at a time:
 
     lang:scala
     val co = Country AS "co"
     UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk")
 
-An optional `WHERE` clause specifies [predicate](#predicate) for searched update:
-
-    lang:scala
-    UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
-
-Many database vendors also allow `USING` clause in `UPDATE` statements. Circumflex ORM does not
-support this clause yet.
-
-#### Bulk Delete   {#delete}
-
-The `Delete` query has following syntax:
+The `Delete` query allows you to delete multiple records from a single [relation](#relation):
 
     lang:scala
     val co = Country AS "co"
     DELETE (co)
 
-An optional `WHERE` clause specifies [predicate](#predicate) for searched delete:
+An optional `WHERE` clause specifies [predicate](#predicate) for searched update or delete:
 
     lang:scala
+    UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
     DELETE (co) WHERE (co.code LIKE 'uk')
 
-Many database vendors also allow `USING` clause in `DELETE` statements. Circumflex ORM does not
-support this clause yet.
+Many database vendors also allow `USING` clause in `UPDATE` and `DELETE` statements.
+Circumflex ORM does not support this feature yet.
 
 ## Advanced concepts   {#advanced}
 
