@@ -1145,11 +1145,11 @@ There are several syntactic ways to use queries with named parameters:
 
 Most (if not all) of your data retrieval queries will be focused to retrieve only one type of
 [records](#record). *Criteria API* aims to minimize your effort on writing such queries.
-Following snippet shows two equivalents of the same query:
+Following snippet shows three equivalents of the same query:
 
     lang:scala
-    // Select query:
     val co = Country as "co"
+    // Select query:
     val countries = SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list
     // Criteria query:
     Country.criteria.add(Country.name LIKE "Sw%").list
@@ -1268,6 +1268,8 @@ Circumflex ORM does not support this feature yet.
 ### Auxiliary Database Objects   {#aux}
 
 ### Dialects   {#dialect}
+
+### Alias Resolution   {#alias}
 
 ### Native Queries   {#native}
 
