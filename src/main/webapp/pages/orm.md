@@ -1012,8 +1012,8 @@ Or you may call one of specific methods instead:
 ### Grouping & Having   {#group-by}
 
 A query can optionally condense into a single row all selected rows that share the same value for
-a subset of query [projections](#projection). Such queries are often refered to as *grouping
-queries* and the projections are usually refered to as *grouping projections*.
+a subset of query [projections](#projection). Such queries are often refered to as *grouping queries*
+and the projections are usually refered to as *grouping projections*.
 
 Grouping queries are built using the `GROUP_BY` clause:
 
