@@ -77,7 +77,7 @@ If you are writing a web application, configure `TransactionManagementListener` 
     </web-app>
 
 Note that there are different approaches to transaction demarcation in web applications, read more
-in the [transaction demarcation](#demarcation) section.
+in the [transaction demarcation](#transaction) section.
 
 ### Imports   {#import}
 
@@ -402,12 +402,30 @@ An association's value is initilialized the first time you access it inside a pe
     c.id := 16
     c.country()   // a SELECT query is executed to retrieve a Country
                   // for the City with id = 16
-    // ...
     c.country()   // further selects are not issued
 
-You can also perform [association prefetching](#prefetch) instead, using [Criteria API](#criteria).
+The other side of association can optionally define an *inverse association* using following syntax:
 
-<!--TODO write about inverse associations -->
+    lang:scala
+    class Country extends Record[Country] {
+      val cities = inverse(City.country)
+    }
+
+Inverse associations are not represented by field in their relation, they are initialized by
+issuing the `SELECT` statement against child relation:
+
+    lang:scala
+    val c = new Country
+    c.id := 5
+    c.cities()   // a SELECT query is executed to retrieve a set of City objects
+                 // which have country_id = 5
+    c.cities()   // further selects are not issued
+
+You can also perform [association prefetching](#prefetch) for both straight and inverse
+associations, using the [Criteria API](#criteria).
+
+Note that associations hold their state in [transaction-scoped cache](#cache), it is invalidated
+by any [data manipulation](#dml) statement or [transaction control](#transaction) command.
 
 ### Validation   {#validation}
 
@@ -1173,7 +1191,6 @@ The `Criteria[R]` object has following methods for execution:
   * `mkSelect` transforms a `Criteria` into the [`Delete` query](#update-delete);
   * `toString` shows query tree for debugging.
 
-
 You can use [predicates](#predicate) to narrow the result set. Unlike [`Select` queries](#select),
 predicates are added to `Criteria` object using the `add` method and then are assembled into the
 conjunction:
@@ -1186,7 +1203,7 @@ You can apply [ordering](#order-by) using the `addOrder` method:
     lang:scala
     co.criteria.addOrder(co.name).addOrder(co.code).list
 
-You can also add one or more [associated](#association) [relations](#relation) to the query plan
+Also you can add one or more [associated](#association) [relations](#relation) to the query plan
 using the `join` method so that you can specify constraints upon them:
 
     lang:scala
@@ -1195,10 +1212,33 @@ using the `join` method so that you can specify constraints upon them:
     co.criteria.join(ci).add(ci.name LIKE "Lausanne").list
 
 [Automatic joins](#joins-auto) are used to update query plan properly. There is no limitation on
-the depth of association path used in a single query.
+quantity or depth of joined relations. However, some database vendors have limitations on maximum
+size of queries or maximum amount of relations participating in a single query.
 
 You can also use `limit` and `offset` methods to specify the maximum number of returned records and
-the amount of skipped records.
+the amount of skipped records. Since there may be more than one row for each [record](#record)
+object retrieved by criteria (see the [Associations Prefetching](#prefetch) for details),
+`LIMIT` and `OFFSET` clauses are rendered into a [predicate](#predicate) to ensure that you have
+the result you expect:
+
+    lang:scala
+    co.criteria.addOrder(co.name).limit(10).offset(5).toSql
+    // SELECT co.id AS p_1,
+    //        co.code AS p_2,
+    //        co.name AS p_3
+    // FROM
+    //   country AS co
+    // WHERE
+    //   (co.id IN (
+    //       SELECT __lo.id AS this_1
+    //       FROM
+    //         orm.country AS __lo
+    //       ORDER BY
+    //         co.name ASC
+    //       LIMIT 1 OFFSET 2
+    //   ))
+    // ORDER BY co.name ASC
+
 
 ### Prefetching Associations   {#prefetch}
 
@@ -1211,6 +1251,54 @@ every record in a possibly big result set, it would result in significant perfor
 
 With Criteria API you have an option to fetch as many associations as you want in a single query.
 This technique is refered to as *associations prefetching* or *lazy fetching*.
+
+To understand how associations prefetching works, let's take a look at the following domain model
+sample:
+
+    lang:scala
+    class Country extends Record[Country] {
+      val code = "code" VARCHAR(2) DEFAULT("'ch'")
+      val name = "name" TEXT
+      // inverse association:
+      def cities = inverse(City.country)
+    }
+
+    object Country extends Table[Country]
+
+    class City extends Record[City] {
+      val name = "name" TEXT
+      // straight association:
+      val country = "country_id" REFERENCES(Country) ON_DELETE CASCADE ON_UPDATE CASCADE
+    }
+
+    object City extends Table[City]
+
+You see two [relations](#relation), `Country` and `City`. Each city has one [associated](#association)
+`country`, and, conversely, each country has a list of corresponding `cities`.
+
+Now you wish to fetch all cities with their corresponding countries in a single query:
+
+    lang:scala
+    val cities = City.criteria.prefetch(City.country).list
+    cities.foreach(c => println(c.country()))   // no selects issued
+
+The example above shows the prefetching for straight associations. Same logic applies to reverse
+associations prefetching, for example, fetching all countries with their corresponding cities:
+
+    lang:scala
+    val countries = Country.criteria.prefetch(City.country).list
+    countries.foreach(c => println(c.cities()))   // no selects issued
+
+Okay. Now we totally hear you saying: "How is that really possible?" -- so let's explain a bit.
+Each `Criteria` object maintains it's own tree of associations, which is used to form the `FROM`
+clause of the query (using [automatic left-joins](#joins-auto)) and, eventually, to parse the
+result set. The data from result set is parsed into chunks and loaded into
+[transaction-scoped cache](#cache), which is subsequently used by associations and inverse
+associations to avoid unnecessary selects.
+
+There is no limitation on quantity or depth of prefetches. However, some database vendors
+have limitations on maximum size of queries or maximum amount of relations participating in a
+single query.
 
 ## Data manipulation   {#dml}
 
@@ -1272,8 +1360,8 @@ All data manipulation queries derive from the `DMLQuery` class. It defines a sin
 execution, `execute()`, which executes corresponding statement and returns the number of
 affected rows.
 
-Each execution of any data manipulation query evicts all records
-from [transaction-scoped cache](#cache).
+Also note that each execution of any data manipulation query evicts all records from
+[transaction-scoped cache](#cache).
 
 #### Insert-Select   {#insert-select}
 
@@ -1314,7 +1402,7 @@ Circumflex ORM does not support this feature yet.
 
 ## Advanced concepts   {#advanced}
 
-### Transaction Demarcation   {#demarcation}
+### Transactions & Demarcation Patterns  {#transaction}
 
 ### Transaction-Scoped Cache   {#cache}
 
