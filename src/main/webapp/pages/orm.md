@@ -452,7 +452,7 @@ There are several predefined validators available for your convenience:
     }
 
 A record is validated when either `validate` or `validate_!` is invoked.
-The first one returns `Option[Seq[ValidationError]]`:
+The first one returns `Option[ValidationErrors]`:
 
     lang:scala
     rec.validate match {
@@ -461,6 +461,9 @@ The first one returns `Option[Seq[ValidationError]]`:
     }
 
 The second one does not return anything, but throws `ValidationException` if validation fails.
+
+`ValidationErrors` is a convenient wrapper around `Seq[ValidationError]` which allows to
+look up different errors by `source` (or it's part).
 
 The `validate_!` method is also called when a record is being saved into database, read
 more in [Insert, Update & Delete](#iud) section.
@@ -479,8 +482,8 @@ Following members of `ValidationError` are involved in message resolution:
 The `toMsg` method resolves the message:
 
   * first, it tries to resolve a message with following key: `source + "." + errorKey`;
-  * if no such message exist in the `Messages` bundle, it tries to resolve a message with
-  the `errorKey` key;
+  * if no such message exist in the `Messages` bundle, it removes the part of the key until the
+  first dot (`.`) and then tries again;
   * if no message found, it simply returns `errorKey`;
   * finally, the `params` are interpolated into the resolved message.
 
