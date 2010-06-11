@@ -415,10 +415,10 @@ A record can be optionally validated before it is saved into database.
 
 The validation is performed using one or more *validators*, functions which take a `Record`
 and return `Option[ValidationError]`: `None` if validation succeeds or `Some[ValidationError]`
-otherwise. They are added to the `validation` object inside record class:
+otherwise. They are added to the `validation` object inside [relation](#relation):
 
     lang:scala
-    class Country extends Record[Country] {
+    object Country extends Table[Country] {
       validation.add(r => ...)
           .add(r => ...)
     }
@@ -428,9 +428,12 @@ There are several predefined validators available for your convenience:
     lang:scala
     class Country extends Record[Country] {
       val code = "code" VARCHAR(2) DEFAULT("'ch'")
-      validation.notNull(code)
-          .notEmpty(code)
-          .pattern(code, "(?i:[a-z]{2})")
+    }
+
+    object Country extends Table[Country] {
+      validation.notNull(_.code)
+          .notEmpty(_.code)
+          .pattern(_.code, "(?i:[a-z]{2})")
     }
 
 A record is validated when either `validate` or `validate_!` is invoked.
@@ -466,17 +469,6 @@ The `toMsg` method resolves the message:
   * if no message found, it simply returns `errorKey`;
   * finally, the `params` are interpolated into the resolved message.
 
-`ValidationException` also takes some effort to group validation errors by sources and error keys:
-
-    lang:scala
-    try {
-      rec.validate_!
-    } catch {
-      case ve: ValidationException =>
-        ve.byKey      // Map[String, Seq[ValidationError]]
-        ve.bySource   // Map[String, Seq[ValidationError]]
-    }
-
 Let's take a look at example. First, let's define a simple model with validation:
 
     lang:scala
@@ -488,55 +480,46 @@ Let's take a look at example. First, let's define a simple model with validation
         this.code := code
       }
       val code = "code" VARCHAR(2) DEFAULT("'ch'")
-      validation.notNull(code)
-          .notEmpty(code)
-          .pattern(code, "(?i:[a-z]{2})")
     }
 
-    object Country extends Table[Country]
+    object Country extends Table[Country] {
+      validation.notNull(_.code)
+          .notEmpty(_.code)
+          .pattern(_.code, "(?i:[a-z]{2})")
+    }
 
 Now let's provide some messages for validators:
 
     lang:no-highlight
     # Messages.properties
-    com.myapp.model.Country.code.null=Null value in country code is not allowed.
-    com.myapp.model.Country.code.empty=Empty value is country code is not allowed.
-    com.myapp.model.Country.code.pattern=The value {value} doesn't look like a valid country code.
+    Country.code.null=Null value in country code is not allowed.
+    Country.code.empty=Empty value is country code is not allowed.
+    Country.code.pattern=The value {value} doesn't look like a valid country code.
 
 Finally, let's play with them a bit:
 
     lang:scala
     val c = new Country
     c.validate
-    // Some(List(
-    //  ValidationError(
-    //    com.myapp.model.Country.code,
-    //    null,
-    //    Map(src -> com.myapp.model.Country.code))
-    // ))
+    // Some(com.myapp.model.Country.code.null)
     c.code := "11"
     c.validate
-    // Some(List(
-    //  ValidationError(
-    //    com.myapp.model.Country.code,
-    //    pattern,
-    //    Map(src -> com.myapp.model.Country.code, regex -> (?:[a-z]{2}), value -> 11))
-    // ))
+    // Some(com.myapp.model.Country.code.pattern)
     c.validate.get.apply(0).toMsg
     // "The value 11 doesn't look like a valid country code."
     c.code := "ch"
     c.validate
     // None
 
-It is also fairly easy to implement custom validators:
+It is also fairly easy to implement custom validators. Following example shows a validator
+for checking unique email addresses:
 
     lang:scala
-    class Person extends Record[Person] {
-      val age = "age" INTEGER
-      validation.add(r =>
-          if (age() < 21)
-            Some(ValidationError(age.uuid, "mature", "age" -> age()))
-          else None)
+    object Account extends Table[Account] {
+      validation.add(r => criteria
+          .add(r.email EQ r.email())
+          .unique
+          .map(a => new ValidationError(r.email.uuid, "unique")))
     }
 
 ### Exporting Database Schema   {#export-schema}
