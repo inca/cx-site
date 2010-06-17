@@ -27,6 +27,10 @@ class MainRouter extends RequestRouter
         Page.findByUriOrEmpty("/.md-cheatsheet").toHtml
       else rewrite("/.md-cheatsheet.html")
 
+  // None matched, let's try to guess a page
+  get("+/") = redirect(uri(1) + "/index.html")
+  get("+") = redirect(uri(1) + ".html")
+
 }
 
 object TOC {
