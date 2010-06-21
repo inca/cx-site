@@ -1201,30 +1201,10 @@ using the `join` method so that you can specify constraints upon them:
 quantity or depth of joined relations. However, some database vendors have limitations on maximum
 size of queries or maximum amount of relations participating in a single query.
 
-You can also use `limit` and `offset` methods to specify the maximum number of returned records and
-the amount of skipped records. Since there may be more than one row for each [record](#record)
-object retrieved by criteria (see the [Associations Prefetching](#prefetch) for details),
-`LIMIT` and `OFFSET` clauses are rendered into a [predicate](#predicate) to ensure that you have
-the result you expect:
-
-    lang:scala
-    co.criteria.addOrder(co.name).limit(10).offset(5).toSql
-    // SELECT co.id AS p_1,
-    //        co.code AS p_2,
-    //        co.name AS p_3
-    // FROM
-    //   country AS co
-    // WHERE
-    //   (co.id IN (
-    //       SELECT __lo.id AS this_1
-    //       FROM
-    //         orm.country AS __lo
-    //       ORDER BY
-    //         co.name ASC
-    //       LIMIT 1 OFFSET 2
-    //   ))
-    // ORDER BY co.name ASC
-
+One serious limitation of Criteria API is that it does not support `LIMIT` and `OFFSET` clauses
+due to the fact that [association prefetching](#prefetching) normally causes result set to yield
+more than one row per record. You can still use `LIMIT` and `OFFSET` with
+[SQL queries](#limit-offset);
 
 ### Prefetching Associations   {#prefetch}
 
