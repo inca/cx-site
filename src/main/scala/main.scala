@@ -1,15 +1,14 @@
 package ru.circumflex.site
 
 import ru.circumflex.core._
-import ru.circumflex.freemarker.FreemarkerHelper
+import ru.circumflex.freemarker.FTL._
 import ru.ciridiri.{Page, CiriDiri}
 import ru.circumflex.md.Markdown
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.lang.StringBuilder
 
-class MainRouter extends RequestRouter
-    with FreemarkerHelper {
+class MainRouter extends RequestRouter {
 
   'host := header.getOrElse("Host", "")
   'currentYear := new SimpleDateFormat("yyyy").format(new Date)
