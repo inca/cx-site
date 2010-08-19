@@ -95,7 +95,7 @@ Applications built with Circumflex ORM usually operate on following abstractions
   * [`Relation`](#relation) -- encapsulates database object (`Table` or `View`) for
   corresponding `Record` and adds methods for [querying](#sql), [manipulating](#dml)
   and [validating](#validation) it's data;
-  * `Field` -- corresponds to database column iside `Record`;
+  * `Field` -- corresponds to database column inside of `Record`;
   * [`Association`](#association) -- links one type of `Record` with another, this relationship
   is expressed by foreign keys in the database;
   * `Query` -- communicates with database either for [data retrieval](#sql) or
