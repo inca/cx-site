@@ -408,7 +408,7 @@ The other side of association can optionally define an *inverse association* usi
 
     lang:scala
     class Country extends Record[Country] {
-      val cities = inverse(City.country)
+      def cities = inverse(City.country)
     }
 
 Inverse associations are not represented by field in their relation, they are initialized by
