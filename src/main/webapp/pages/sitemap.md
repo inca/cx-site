@@ -3,4 +3,5 @@
 * [ORM](/orm.html)
 * [Markdown Live](/.mdwn)
 * [Maven Plugin](/plugin.html)
+* [Blog](http://blog.circumflex.ru)
 * [Team](/team.html)
