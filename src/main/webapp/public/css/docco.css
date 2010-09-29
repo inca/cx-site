@@ -36,12 +36,18 @@ table td {border: 0; outline: 0}
 .docs p, .docs li {line-height:24px}
 
 .docs pre {
-  margin: 16px -16px 16px -32px;
+  margin: 16px -16px;
   padding: 8px;
   background:#f7fff7;
   border: 1px solid #dedede;
-  border-width:1px 0 1px 0;
+  border-width:1px 0 1px 1px;
   overflow-x:auto;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  -webkit-border-top-left-radius: 8px;
+  -webkit-border-bottom-left-radius: 8px;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-bottomleft: 8px;
 }
 
 .docs code {background:#f7fff7}
