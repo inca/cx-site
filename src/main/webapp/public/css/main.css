@@ -34,10 +34,8 @@ a:hover {
   color:#000;
 }
 #header {
-  background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ccc));
-  box-shadow: 0 1px 1px #aaa;
-  -moz-box-shadow: 0 1px 1px #aaa;
-  -webkit-box-shadow: 0 1px 1px #aaa;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
+  border-bottom:1px solid #aaa;
   text-shadow:0 1px 1px #fff;
 }
 #header .wrap, #content {
@@ -54,30 +52,39 @@ a:hover {
 }
 #header .aside {
   float:right;
-  margin-top: -23px;
+  margin-top:-24px;
   font-variant:small-caps;
   font-size:24px;
+  color:#444;
 }
 #page {
+  box-shadow: 1px 1px 3px #777;
+  -moz-box-shadow: 1px 1px 3px #777;
   -webkit-box-shadow: 1px 1px 3px #777;
+  background: #fff;
+  background: -webkit-gradient(linear, 0% 0%, 2% 0%, from(#f7f7f7), to(#fff));
   padding:24px;
 }
-#page h1, #page h2, #page h3, #page p, #page ul, #page ol, #page dl {
-  margin:.75em 0;
+#page h1, #page h2, #page h3, #page p, #page ul, #page ol, #page dl, #page pre {
+  margin-bottom:.5em;
 }
 #page h1, h2, h3 {
   font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
-  font-weight:bold;
+  margin: .75em 0;
 }
 #page h1 {
   border-bottom: 1px solid #777;
 }
-#page h2 {
+#page h2, #page h3 {
   font-size:24px;
+  font-variant:small-caps;
+  border-bottom: 1px solid #eee;
 }
 #page h3 {
   font-size:18px;
-  font-variant:small-caps;
+}
+#page h1:first-child {
+  margin-top:-16px;
 }
 #footer {
   text-align:center;

@@ -258,20 +258,7 @@ support to grow strong. You can help make the Circumflex project better in follo
   * contact [The Circumflex Team](/team.html) personally;
   * just use Circumflex in your development and have fun :)
 
-You can also help Circumflex get popular by placing following link to sites you've built with Circumflex:
-
-<a href="http://circumflex.ru" title="I've been created with Circumflex!">
-  <img src="http://circumflex.ru/img/cx-thanks.png" alt="I've been created with Circumflex!"/>
-</a>
-
-Here's the markup:
-
-    lang:xml
-    <a href="http://circumflex.ru" title="I've been created with Circumflex!">
-      <img src="http://circumflex.ru/img/cx-thanks.png" alt="I've been created with Circumflex!"/>
-    </a>
-
-We are highly appreciating your help! 
+We highly appreciate your help! 
 
   [scala]: http://scala-lang.org
   [jdk]: http://java.sun.com/javase/downloads/index.jsp
