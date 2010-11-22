@@ -1,0 +1,149 @@
+/* Commons */
+
+body, form, h1, h2, h3, h4, h5, h6, dl, ol, ul {
+  margin:0;
+  padding:0;
+}
+fieldset, img {
+  border:0;
+}
+.clear{
+  clear:both;
+}
+.right-float{
+  float:right;
+  margin-left:2em;
+  margin-right:0;
+}
+.left-float{
+  float:left;
+  margin-right:2em;
+  margin-left:0;
+}
+
+/* Layout */
+
+body {
+  color:#333;
+  font: 16px/1.5 Palatino Linotype, Book Antiqua, Palatino, FreeSerif, serif;
+}
+a, a:visited, a:hover {
+  color:#333;
+}
+a:hover {
+  color:#000;
+}
+#header {
+  background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ccc));
+  box-shadow: 0 1px 1px #aaa;
+  -moz-box-shadow: 0 1px 1px #aaa;
+  -webkit-box-shadow: 0 1px 1px #aaa;
+  text-shadow:0 1px 1px #fff;
+}
+#header .wrap, #content {
+  width:900px;
+  margin:0 auto;
+}
+#header h1 {
+  font:64px/1.5 Scriptorama;
+  font-style:italic;
+  font-weight:normal;
+}
+#header a {
+  text-decoration:none;
+}
+#header .aside {
+  float:right;
+  margin-top: -23px;
+  font-variant:small-caps;
+  font-size:24px;
+}
+#page {
+  -webkit-box-shadow: 1px 1px 3px #777;
+  padding:24px;
+}
+#page h1, #page h2, #page h3, #page p, #page ul, #page ol, #page dl {
+  margin:.75em 0;
+}
+#page h1, h2, h3 {
+  font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
+  font-weight:bold;
+}
+#page h1 {
+  border-bottom: 1px solid #777;
+}
+#page h2 {
+  font-size:24px;
+}
+#page h3 {
+  font-size:18px;
+  font-variant:small-caps;
+}
+#footer {
+  text-align:center;
+  padding: 24px;
+}
+
+/* Code highlighting */
+
+pre, code {
+  font-family: monaco, lucida console, bitstream vera sans mono, monospace;
+  font-size: 14px;
+  color: #383;
+}
+pre code {
+  font-size: 12px;
+  display: block;
+  color: #333;
+}
+pre {
+  background: #f3f8f3;
+  border-top: 1px solid #e0e8e0;
+  border-bottom: 1px solid #e0e8e0;
+  margin: 0 -24px 16px;
+  padding: 8px 16px;
+  overflow-x:auto;
+}
+pre .comment, pre .javadoc {
+  color: #998;
+  font-style: italic
+}
+pre .javadoctag, pre .annotation, pre .pi {
+  color: #770;
+}
+pre .keyword, pre .class .keyword, pre .attribute {
+  color: #550;
+}
+pre .number, pre .hexcolor, pre .string, pre .attribute .value {
+  color: #2a2
+}
+pre .class .title, pre .tag {
+  color: #337;
+}
+
+/* Table of Contents */
+
+.toc {
+  position:fixed;
+  left:0;
+  top:0;
+  padding:8px 12px;
+  background:rgba(0,0,0,.7);
+  border-bottom-right-radius:8px;
+  -webkit-border-bottom-right-radius:8px;
+  -moz-border-radius-bottomright:8px;
+  border:2px solid #333;
+  border-width: 0 2px 2px 0;
+  overflow:hidden;
+}
+.toc, .toc a, .toc a:hover, .toc a:visited, .toc span, #toc-show, #toc-hide {
+  color:#fff;
+  font:13px/1.5 Lucida Grande, Lucida Sans Unicode, Arial, sans-serif;
+  font-variant:small-caps;
+  text-decoration:none;
+}
+#toc-show, #toc-hide {font-weight:bold}
+.toc a:hover {text-decoration:underline; color:#fff}
+.toc li > span, .toc li > span * {color:#aaa}
+.toc ul {list-style:none;margin:0 0 0 12px}
+.toc > ul {margin-left:0}
