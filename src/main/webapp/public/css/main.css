@@ -105,6 +105,7 @@ pre code {
 }
 pre {
   background: #f3f8f3;
+  background: -webkit-gradient(linear, 0% 0%, 2% 0%, from(#e5eee3), to(#f3f8f3));
   border-top: 1px solid #e0e8e0;
   border-bottom: 1px solid #e0e8e0;
   margin: 0 -24px 16px;

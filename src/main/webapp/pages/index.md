@@ -1,25 +1,18 @@
-Introducing Circumflex  {#intro}
-======================
-
-Circumflex is a set of software components for quick and robust application development
-using the [Scala][] programming language.
-
-Circumflex consists of several separate projects:
+Circumflex unites several self-contained projects for quick and robust appliaction
+development using [Scala][] programming language.
 
   * [Circumflex Web Framework](#web)
   * [Circumflex ORM](#orm)
-  * [Circumflex FreeMarker Views](#ftl)
+  * [Circumflex FreeMarker Helper](#ftl)
   * [Circumflex Markdown](#md)
   * [Circumflex Docco](#docco)
   * [Circumflex Maven Plugin](/plugin.html)
 
-## At a glance  {#glance}
+Each Circumflex project focuses on code quality, simplicity and consistency -- such
+forgotten merits in todays race for features and enterprise panacea-like solutions.
+We make every effort to keep Circumflex codebase concise, elegant and balanced.
 
-All Circumflex components share the same philosophy: the development process should be
-natural and intuitive. They rely on Scala's support for domain-specific languages that make
-development extremely efficient. And simple.
-
-### Web Framework  {#web}
+# Web Framework  {#web}
 
 [Circumflex Web Framework](/web.html) is a DSL for quick web application development.
 
@@ -41,33 +34,39 @@ Here's a simple web application:
       }
     }
 
-Of course, the capabilities of Web framework are not limited to responding to HTTP methods and
+Of course the capabilities of Web framework are not limited to responding to HTTP methods and
 matching URLs. Check out the [Circumflex Web Framework page](/web.html) for detailed overview.
 
-### ORM  {#orm}
+# Object-Relational Mapper {#orm}
 
-What can possibly be better than designing the domain model using the domain specific language
-that closely resembles the data definition language of SQL databases?
+What can possibly be better than designing domain model schema right inside your application
+using a DSL which closely resembles data definition language of SQL databases?
 
     lang:scala
-    class City extends Record[City] {
-      val name = "name" TEXT
-      val country = "country_id" REFERENCES(Country) ON_DELETE CASCADE ON_UPDATE CASCADE
-      override def toString = name.getOrElse("Unknown")
+    class Country extends Record[String, Country] {
+      val code = "code".VARCHAR(2).NOT_NULL.DEFAULT("'ch'")
+      val name = "name".TEXT.NOT_NULL
+
+      def cities = inverseMany(City.country)
+      def relation = Country
+      def PRIMARY_KEY = code
     }
 
-    object City extends Table[City]
+    object Country extends Country with Table[String, Country]
 
-    class Country extends Record[Country] {
-      val code = "code" VARCHAR(2) DEFAULT("'ch'")
-      val name = "name" TEXT
-      def cities = inverse(City.country)
-      override def toString = name.getOrElse("Unknown")
+    class City extends Record[Long, City] with SequenceGenerator[Long, City] {
+      val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+      val name = "name".TEXT
+      val country = "country_code".TEXT.NOT_NULL
+              .REFERENCES(Country)
+              .ON_DELETE(CASCADE)
+              .ON_UPDATE(CASCADE)
+
+      def relation = City
+      def PRIMARY_KEY = id
     }
 
-    object Country extends Table[Country] {
-      INDEX("country_code_idx", "LOWER(code)") USING "btree" UNIQUE
-    }
+    object City extends City with Table[Long, City]
 
 But still it is nothing comparing to object-oriented querying:
 
@@ -75,44 +74,45 @@ But still it is nothing comparing to object-oriented querying:
     // Prepare the relations that will participate in queries:
     val ci = City as "ci"
     val co = Country as "co"
-    // Select all russian cities, return Seq[City]:
-    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ru") ORDER_BY (ci.name ASC) list
+    // Select all cities of Switzerland, return Seq[City]:
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ch") ORDER_BY (ci.name ASC) list
     // Select countries with corresponding cities, return Seq[(Country, City)]:
-    SELECT (co.*, ci.*) FROM (co JOIN ci) list
+    SELECT (co.* -> ci.*) FROM (co JOIN ci) list
     // Select countries and count their cities, return Seq[(Country, Int)]:
-    SELECT (co.*, COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list
+    SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list
 
 Circumflex ORM also features lazy and eager fetching strategies for associations, complex queries,
 including subqueries of all kinds, data manipulation statements (`INSERT .. SELECT`, `UPDATE` and
-`DELETE`), set operations between queries (`UNION`, `INTERSECT`, `EXCEPT`),
-transaction-scoped caching, xml data import, schema generation with Maven plugin and arbitrary projections.
+`DELETE`), set operations between queries (`UNION`, `INTERSECT`, `EXCEPT`), transaction-scoped
+and application-scoped caching with [Terracotta Ehcache][ehcache], xml data import, schema generation
+with [Maven plugin](/plugin.html#schema) and other fun for data-centric applications.
 
 For more information, please check out the [Circumflex ORM page](/orm.html).
 
-### Markdown  {#md}
+# Markdown  {#md}
 
-The infamous text-to-html conversion tool for writers, [Markdown][], is now available for Scala users
-with some extensions and improved performance. The usage is pretty simple:
+The infamous text-to-html conversion tool for writers, [Markdown][], is now available for Scala
+users with some extensions and improved performance. The usage is pretty simple:
 
     lang:scala
     val html = Markdown(text)
 
 You are welcome to try it [online](/.mdwn)!
 
-### Freemarker  {#ftl}
+# Freemarker  {#ftl}
 
 Circumflex Freemarker module brings the power of the most advanced Java templating language,
 [Freemarker][] to Scala. Due to the fact that Freemarker templates can effectively render any
 possible content, the Freemarker is considered the main view technology for
 [Circumflex Web Framework](#web).
 
-### Docco  {#docco}
+# Docco  {#docco}
 
 Circumflex Docco is a port of [Docco Project](http://jashkenas.github.com/docco) for Scala.
 The ideas of documenting open-source Scala programs in Docco style are under evaluation for now,
 but you still might want to try it and let us know, what you think about it.
 
-## Why Circumflex? {#why}
+# Why Circumflex? {#why}
 
   * Circumflex components require minimum initial configuration, while still allowing
   developers to easily override defaults if necessary.
@@ -128,12 +128,12 @@ but you still might want to try it and let us know, what you think about it.
   The development process with Circumflex is intuitive and extremely productive. 
   * Circumflex is completely free, with a BSD-style [license](/license.html).
 
-## Quick start  {#start}
+# Quick start  {#start}
 
-### Use With Existing Projects  {#existing-projects}
+## Use With Existing Projects  {#existing-projects}
 
 If you already have a project and wish to use one of the Circumflex components, just
- add the corresponding dependency to your project's `pom.xml`:
+add the corresponding dependency to your project's `pom.xml`:
 
     lang:xml
     <properties>
@@ -175,7 +175,7 @@ If you already have a project and wish to use one of the Circumflex components, 
 Note that all Circumflex components should share the same version. Check out the
 [Central Maven Repository][m2-central] to determine the latest version of Circumflex.
 
-### Create New Project  {#new-projects}
+## Create New Project  {#new-projects}
 
 As soon as Circumflex is built, you are ready to create your first project. Change
 to the directory where you store your projects, and run:
@@ -214,7 +214,7 @@ The following lines indicate that your application is ready to serve requests:
 
 Now you may visit your application at <http://localhost:8180>.
 
-### Build From Sources  {#sources}
+## Build From Sources  {#sources}
 
 You can obtain the latest Circumflex sources at [GitHub][gh-cx]:
 
@@ -245,10 +245,10 @@ After the build has successfully finished, Circumflex with all its dependencies 
 be available in your local Maven 2 repository (it may take a while to download
 dependencies the first time).
 
-## Contribute  {#contribute}
+# Contribute  {#contribute}
 
-Circumflex is actively being developed. It is very young project, and it needs your help and
-support to grow strong. You can help make the Circumflex project better in following ways:
+Circumflex is being actively developed. Our young project needs your help and support
+to grow strong and mature. You can help the Circumflex project in following ways:
 
   * fork [Circumflex on GitHub][gh-cx] and take part in development;
   * report [issues][gh-issues];
@@ -273,3 +273,4 @@ We highly appreciate your help!
   [markdown]: http://daringfireball.net/projects/markdown/
   [freemarker]: http://freemarker.org
   [sinatra]: http://sinatrarb.com
+  [ehcache]: http://ehcache.org
