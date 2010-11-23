@@ -415,14 +415,19 @@ visit <a href="http://commons.apache.org/fileupload">Commons FileUpload Project 
       }
     } else Iterator.empty
 
-  }
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-12">
+        <td class="docs">
+          <h2>Include <span class="amp">&amp;</span> Forward</h2>
 
-  /*## Include &amp; Forward
-
-  The methods `forward` and `include` use request dispatcher mechanism provided by Servlet API
-  to forward the request processing to or to include partial result from different web application
-  object (such as servlet).
-  def forward(uri: String) = raw.getRequestDispatcher(uri).forward(raw, response.raw)
+<p>The methods <code>forward</code> and <code>include</code> use request dispatcher mechanism provided by Servlet API
+to forward the request processing to or to include partial result from different web application
+object (such as servlet).</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def forward(uri: String) = raw.getRequestDispatcher(uri).forward(raw, response.raw)
   def include(uri: String) = raw.getRequestDispatcher(uri).include(raw, response.raw)
 
   override def toString: String = method + &quot; &quot; + uri + &quot; &quot; + protocol

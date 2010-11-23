@@ -89,17 +89,22 @@ is available throughout your configuration via the <code>filterConfig</code> met
     cx(&quot;cx.filterConfig&quot;) = filterConfig
   }
 
-  def destroy = {}
+  def destroy = {}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2 id = "static">Serving static</h2>
 
-  /*## Serving static  {#static}
+<p>Static files are images, stylesheets, javascripts and all other application assets
+which do not require special processing and can be served to clients &ldquo;as is&rdquo;.</p>
 
-  Static files are images, stylesheets, javascripts and all other application assets
-  which do not require special processing and can be served to clients &quot;as is&quot;.
-
-  By default static files are served from `/public` location of your webapp root,
-  but you can specify different location by setting the `cx.public` configuration
-  parameter.
-  def serveStatic(req: HttpServletRequest,
+<p>By default static files are served from <code>/public</code> location of your webapp root,
+but you can specify different location by setting the <code>cx.public</code> configuration
+parameter.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def serveStatic(req: HttpServletRequest,
                   res: HttpServletResponse,
                   chain: FilterChain): Boolean = {
     if (req.getMethod.equalsIgnoreCase(&quot;get&quot;) || req.getMethod.equalsIgnoreCase(&quot;head&quot;)) {
@@ -119,7 +124,7 @@ is available throughout your configuration via the <code>filterConfig</code> met
   }</code></pre>
         </td>
       </tr>
-      <tr id="section-2">
+      <tr id="section-3">
         <td class="docs">
           <h2 id = "lifecycle">Main Lifecycle</h2>
 
@@ -176,7 +181,7 @@ the error is flushed to the client;</li>
   }</code></pre>
         </td>
       </tr>
-      <tr id="section-3">
+      <tr id="section-4">
         <td class="docs">
           <p>The <code>prepareContext</code> method populates current context with various useful
 shortcuts (from <code>web</code> package):</p>
@@ -208,7 +213,7 @@ to populate current context with global variables of your application.</p>
   }</code></pre>
         </td>
       </tr>
-      <tr id="section-4">
+      <tr id="section-5">
         <td class="docs">
           <h2>Callbacks</h2>
 

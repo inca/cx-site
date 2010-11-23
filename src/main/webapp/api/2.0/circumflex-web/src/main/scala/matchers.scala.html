@@ -60,14 +60,20 @@ match results on successfull match and are used in routes definition.</p>
 <p>Match results are subsequently used inside matched route's block.</p>
         </td>
         <td class="code">
-          <pre class="scala"><code>/*##! Match Results
+          <pre class="scala"><code></code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Match Results</h2>
 
-The results of matching contain information about successful match. The `name` reflects
-the name of the `Matcher` which yielded this match result, and the `params` contains
-strings captured by `Matcher`. The special name `splat` is assigned to parameters with
-unknown name (`+`, `*` or any group, if you use regular expressions).
-
-class MatchResult(val name: String,
+<p>The results of matching contain information about successful match. The <code>name</code> reflects
+the name of the <code>Matcher</code> which yielded this match result, and the <code>params</code> contains
+strings captured by <code>Matcher</code>. The special name <code>splat</code> is assigned to parameters with
+unknown name (<code>+</code>, <code>*</code> or any group, if you use regular expressions).</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class MatchResult(val name: String,
                   val params: (String, String)*) extends Map[String, String] {
   def +[B1 &gt;: String](kv: (String, B1)): Map[String, B1] = this
   def -(key: String): Map[String, String] = this
@@ -91,7 +97,7 @@ class MatchResult(val name: String,
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-2">
+      <tr id="section-3">
         <td class="docs">
           <p>Matchers can be composed together using the <code>&amp;</code> method. The <code>CompositeMatcher</code> will
 only yield match results if all it's matchers succeed.</p>
@@ -130,7 +136,7 @@ class CompositeMatcher extends Matcher {
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-3">
+      <tr id="section-4">
         <td class="docs">
           <h2>The <code>RegexMatcher</code></h2>
 
@@ -199,7 +205,7 @@ and have their index as well).</p>
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-4">
+      <tr id="section-5">
         <td class="docs">
           <p><code>HeaderMatcher</code> is used to match the requests by contents of their headers.</p>
         </td>
@@ -215,7 +221,7 @@ and have their index as well).</p>
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-5">
+      <tr id="section-6">
         <td class="docs">
           <p><code>HeaderMatcherHelper</code> provides DSL for matching requests by headers. See <code>matchers</code> object
 in package <code>ru.circumflex.web</code> for more information.</p>
