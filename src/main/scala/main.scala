@@ -16,7 +16,7 @@ class MainRouter extends RequestRouter {
 
   // API documentation
 
-  get("/api/?") = redirect("/api/" + cx("cx.version" + "/index.html"))
+  get("/api/?") = redirect("/api/" + cx("cx.version") +  "/index.html")
   get("/api/:version/?") = redirect("/api/" + param("version") + "/index.html")
   get("/api/:version/*.html") = {
     val version = param("version")
