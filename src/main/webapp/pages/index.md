@@ -10,7 +10,7 @@ development using [Scala][] programming language.
 
 Each Circumflex project focuses on code quality, simplicity and consistency -- such
 forgotten merits in todays race for features and enterprise panacea-like solutions.
-We make every effort to keep Circumflex codebase concise, elegant and balanced.
+We make every effort to keep [Circumflex codebase](/api) concise, elegant and balanced.
 
 # Web Framework  {#web}
 

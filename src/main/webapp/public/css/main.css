@@ -66,10 +66,11 @@ a:hover {
   text-decoration:none;
 }
 #header .aside {
+  display:block;
   float:right;
   font-variant:small-caps;
   font-size:24px;
-  list-style-type:24px;
+  line-height:24px;
   color:#444;
   margin-top:56px;
 }
