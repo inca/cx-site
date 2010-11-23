@@ -94,32 +94,32 @@ a:hover {
 #page h1, #page h2, #page h3, #page p, #page ul, #page ol, #page dl, #page pre {
   margin-bottom:.5em;
 }
-#page h1, h2, h3 {
+#content h1, h2, h3 {
   font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
   margin: .75em 0;
 }
-#page h1 {
+h1 {
   border-bottom: 1px solid #777;
 }
-#page h2, #page h3 {
+h2, h3 {
   font-size:24px;
   font-variant:small-caps;
   border-bottom: 1px solid #eee;
 }
-#page h3 {
+h3 {
   font-size:18px;
 }
-#page h1:first-child {
+h1:first-child {
   margin-top:-8px;
 }
-#page ul, #page ol {
+ul, ol {
   padding-left:32px;
 }
 #footer {
   text-align:center;
   padding: 24px;
 }
-#page ul > li > pre {
+ul > li > pre {
   margin-left: -57px;
 }
 
@@ -204,7 +204,8 @@ pre .class .title, pre .tag {
 #docco-index ul { list-style:none outside }
 #docco-back {
   position:absolute;
-  padding:8px 16px;
+  padding:24px;
+  border:0;
 }
 #docco-page .docs {
   max-width: 500px;
