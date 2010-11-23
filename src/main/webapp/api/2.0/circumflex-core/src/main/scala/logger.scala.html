@@ -1,0 +1,84 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;logger.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.core</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Logger</h1>
+
+<p>Internally Circumflex uses <a href="http://www.slf4j.org">slf4j</a> to log it's activities.</p>
+
+<p>The <code>Logger</code> class lets applications save some performance by introducing by-name logging.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Logger(val name: String) {
+  protected val log = org.slf4j.LoggerFactory.getLogger(name)
+  def info(msg: =&gt; Any): Unit = if (log.isInfoEnabled) log.info(msg.toString)
+  def warn(msg: =&gt; Any): Unit = if (log.isWarnEnabled) log.warn(msg.toString)
+  def warn(msg: =&gt; Any, e: Throwable): Unit = if (log.isWarnEnabled) log.warn(msg.toString, e)
+  def error(msg: =&gt; Any, e: Throwable): Unit = if (log.isErrorEnabled) log.error(msg.toString, e)
+  def error(msg: =&gt; Any): Unit = if (log.isErrorEnabled) log.error(msg.toString)
+  def debug(msg: =&gt; Any, e: Throwable): Unit = if (log.isDebugEnabled) log.debug(msg.toString, e)
+  def debug(msg: =&gt; Any): Unit = if (log.isDebugEnabled) log.debug(msg.toString)
+  def trace(msg: =&gt; Any, e: Throwable): Unit = if (log.isTraceEnabled) log.trace(msg.toString, e)
+  def trace(msg: =&gt; Any): Unit = if (log.isTraceEnabled) log.trace(msg.toString)
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

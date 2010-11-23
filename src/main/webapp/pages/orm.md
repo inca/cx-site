@@ -1366,23 +1366,6 @@ An optional `WHERE` clause specifies [predicate](#predicate) for searched update
 Many database vendors also allow `USING` clause in `UPDATE` and `DELETE` statements.
 Circumflex ORM does not support this feature yet.
 
-## Advanced concepts   {#advanced}
-
-### Transactions & Demarcation Patterns  {#transaction}
-
-### Transaction-Scoped Cache   {#cache}
-
-### Auxiliary Database Objects   {#aux}
-
-### Dialects   {#dialect}
-
-### Alias Resolution   {#alias}
-
-### Native Queries   {#native}
-
-### Configuration Parameters   {#cfg}
-
-
    [orm-wiki]:          http://en.wikipedia.org/wiki/Object-relational_mapping
                         "ORM definition on Wikipedia"
    [crud-wiki]:         http://en.wikipedia.org/wiki/Create,_read,_update_and_delete

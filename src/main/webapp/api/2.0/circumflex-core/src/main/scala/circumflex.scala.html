@@ -1,0 +1,193 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;circumflex.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.core
+
+import java.util.{Date, ResourceBundle, Locale}
+import java.text.SimpleDateFormat
+import collection.mutable.{HashMap, Map}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Configuration API</h1>
+
+<p>This singleton can be used to retrieve Circumflex configuration parameters
+throughout your application.</p>
+
+<p>Configuration parameters are read from <code>cx.properties</code> which should be available
+in classpath.</p>
+
+<p>You can also configure your application in runtime, just add your configuration
+parameters into <code>Circumflex</code> using methods of Scala's <code>Map</code> interface.
+Note, however, that <code>Circumflex</code> singleton is not thread-safe, so it is a best
+practice to only set configuration parameters inside some initialization block
+which will be executed only once by only one thread.</p>
+
+<p><a href="http://circumflex.ru/maven-plugin.html">Circumflex Maven Plugin</a>
+enables you to configure your application at build time using Maven properties
+(specified either in application's <code>pom.xml</code> or in <code>settings.xml</code>) and system
+properties (specified in command line). This is very robust production scenario,
+because it allows different configurations in different environments without
+manual filtering sources and resources.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>object Circumflex extends HashMap[String, Any] with UntypedContainer {
+
+  // The configuration object is initialized by reading `cx.properties`.
+  try {
+    val bundle = ResourceBundle.getBundle(
+      &quot;cx&quot;, Locale.getDefault, Thread.currentThread.getContextClassLoader)
+    val keys = bundle.getKeys
+    while (keys.hasMoreElements) {
+      val k = keys.nextElement
+      this(k) = bundle.getString(k)
+    }
+  } catch {
+    case _ =&gt; CX_LOG.error(&quot;Could not read configuration parameters from cx.properties.&quot;)
+  }
+
+  override def stringPrefix = &quot;cx&quot;
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p>Several helper methods allow you to obtain parameter precisely in the type you expect:</p>
+
+<ul>
+<li><code>getAs[T]</code> returns <code>Option[T]</code>;</li>
+<li><code>as[T]</code> returns <code>[T]</code>;</li>
+<li><code>getXXX</code> returns <code>XXX</code> trying to coerce the value to the <code>XXX</code> type.</li>
+</ul>
+
+<p>A <code>ClassCastException</code> is thrown if the configation contains the value
+with different type than you expect.</p>
+
+<p>Circumflex configuration (and every untyped container) also offers you a convenient
+way to configure different implementations of components and services, such as configuring
+dialects or connection providers for <a href="http://circumflex.ru/orm.html">Circumflex ORM</a>
+or request routers for <a href="http://circumflex.ru/web.html">Circumflex Web Framework</a>.
+We call this mechanism an <em>instantiation facility</em>.</p>
+
+<p>The logic is pretty simple. Let's say an application or library expects you
+to provide an implementation of some interface, for example, <code>MyService</code>, and
+has a default implementation, for example, <code>DefaultMyService</code>:</p>
+
+<pre class="scala"><code>cx.instantiate[MyService]("myApp.myService", DefaultMyService)</code></pre>
+
+<p>Then you can override this implementation by setting the configuration parameter
+(<code>myApp.myService</code> in our example) to one of the following values:</p>
+
+<ul>
+<li><p>the class of the desired object, if you run some initialization code:</p>
+
+<pre class="scala"><code>cx("myApp.myService") = classOf[MyServiceImpl]</code></pre></li>
+<li><p>class name of your implementation, if you use <code>cx.properties</code>:</p>
+
+<pre class="scala"><code>myApp.myService=com.myapp.MyServiceImpl</code></pre></li>
+</ul>
+
+<p>Scala singletons might also work pretty fine as service implementations,
+but you should remember to add a dollar sign (<code>$</code>) to the class name.</p>
+
+<p>For example, if you have following singleton:</p>
+
+<pre class="scala"><code>package com.myapp
+object MyServiceImpl extends MyService { ... }</code></pre>
+
+<p>then set your <code>myApp.myService</code> configuration parameter to <code>com.myapp.MyServiceImpl$</code>.
+Note that singletons cannot be instantiated more than once, so you'll get the same
+instance each time.</p>
+
+<p>Also note that the instantiation is done using default public class constructors, so
+make sure that the supplied class has one.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait UntypedContainer extends Map[String, Any] {
+
+  def as[C](key: String): C = apply(key).asInstanceOf[C]
+  def getAs[C](key: String): Option[C] = get(key).asInstanceOf[Option[C]]
+  def getString(key: String): String = getOrElse(key, &quot;&quot;).toString
+  def getBoolean(key: String): Boolean = getOrElse(key, &quot;false&quot;).toString.toBoolean
+  def getInt(key: String): Int = getOrElse(key, &quot;0&quot;).toString.toInt
+  def getLong(key: String): Long = getOrElse(key, &quot;0&quot;).toString.toLong
+  def getDouble(key: String): Double = getOrElse(key, &quot;0&quot;).toString.toDouble
+  def getDate(key: String, pattern: String): Date =
+    get(key).map(v =&gt; new SimpleDateFormat(pattern).parse(v.toString)).getOrElse(new Date)
+
+  def instantiate[C](name: String, default: =&gt;C): C = this.get(name) match {
+    case Some(c: Class[_]) =&gt; instantiateObject(name, c)
+    case Some(s: String) =&gt; instantiateObject(name, Class.forName(
+      s, true, Thread.currentThread.getContextClassLoader))
+    case v =&gt; default
+  }
+
+  def instantiate[C](name: String): C = instantiate[C](name, throw new CircumflexException(
+    &quot;Could not perform instantiation for parameter &quot; + name))
+
+  // Internally the instantiation is performed by the `instantiateObject` method.
+  protected def instantiateObject[C](name: String, c: Class[_]): C = try {
+    c.getField(&quot;MODULE$&quot;).get(null).asInstanceOf[C]
+  } catch {
+    case _ =&gt; c.newInstance.asInstanceOf[C]
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

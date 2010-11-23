@@ -35,7 +35,7 @@ All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
             <executions>
               <execution>
                 <id>configure</id>
-                <phase>compile</phase>
+                <phase>process-resources</phase>
                 <goals>
                   <goal>cfg</goal>
                 </goals>

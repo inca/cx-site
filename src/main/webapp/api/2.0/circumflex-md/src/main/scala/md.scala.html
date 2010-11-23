@@ -1,0 +1,622 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;md.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.md
+
+import ru.circumflex.core._
+import java.util.regex._
+import java.util.Random
+import java.lang.StringBuilder</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The Markdown Processor</h1>
+
+<p>This utility converts a plain text written in <a href="http://daringfireball.net/projects/markdown/syntax" title="Markdown Syntax">Markdown</a> into HTML fragment.
+The typical usage is:</p>
+
+<pre><code>val md = Markdown(myMarkdownText)</code></pre>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>object Markdown {
+
+  // SmartyPants chars
+
+  val leftQuote = Circumflex.get(&quot;md.leftQuote&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;ldquo;&quot;
+  }
+  val rightQuote = Circumflex.get(&quot;md.rightQuote&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;rdquo;&quot;
+  }
+  val dash = Circumflex.get(&quot;md.dash&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;mdash;&quot;
+  }
+  val copy = Circumflex.get(&quot;md.copy&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;copy;&quot;
+  }
+  val reg = Circumflex.get(&quot;md.reg&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;reg;&quot;
+  }
+  val trademark = Circumflex.get(&quot;md.trademark&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;trade;&quot;
+  }
+  val ellipsis = Circumflex.get(&quot;md.ellipsis&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;hellip;&quot;
+  }
+  val leftArrow = Circumflex.get(&quot;md.leftArrow&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;larr;&quot;
+  }
+  val rightArrow = Circumflex.get(&quot;md.rightArrow&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;&amp;rarr;&quot;
+  }
+
+  // Commons
+
+  val keySize = 20
+  val chars = &quot;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;
+  val rnd = new Random
+  val blockTags = &quot;p&quot; :: &quot;div&quot; :: &quot;h1&quot; :: &quot;h2&quot; :: &quot;h3&quot; :: &quot;h4&quot; :: &quot;h5&quot; :: &quot;h6&quot; ::
+      &quot;blockquote&quot; :: &quot;pre&quot; :: &quot;table&quot; :: &quot;dl&quot; :: &quot;ol&quot; :: &quot;ul&quot; :: &quot;script&quot; ::
+      &quot;noscript&quot; :: &quot;form&quot; :: &quot;fieldset&quot; :: &quot;iframe&quot; :: &quot;math&quot; :: &quot;ins&quot; :: &quot;del&quot; ::
+      &quot;article&quot; :: &quot;aside&quot; :: &quot;footer&quot; :: &quot;header&quot; :: &quot;hgroup&quot; :: &quot;nav&quot; :: &quot;section&quot; ::
+      &quot;figure&quot; :: &quot;video&quot; :: &quot;audio&quot; :: &quot;embed&quot; :: &quot;canvas&quot; :: &quot;address&quot; :: &quot;details&quot; ::
+      &quot;object&quot; ::  Nil
+  val htmlNameTokenExpr = &quot;[a-z_:][a-z0-9\\-_:.]*&quot;
+
+  // Regex patterns
+
+  // We use precompile several regular expressions that are used for typical
+  // transformations.
+
+  // Outdent
+  val rOutdent = Pattern.compile(&quot;^ {1,4}&quot;, Pattern.MULTILINE)
+  // Standardize line endings
+  val rLineEnds = Pattern.compile(&quot;\\r\\n|\\r&quot;)
+  // Strip out whitespaces in blank lines
+  val rBlankLines = Pattern.compile(&quot;^ +$&quot;, Pattern.MULTILINE)
+  // Tabs
+  val rTabs = Pattern.compile(&quot;\\t&quot;)
+  // Trailing whitespace
+  val rTrailingWS = Pattern.compile(&quot;\\s+$&quot;)
+  // Start of inline HTML block
+  val rInlineHtmlStart = Pattern.compile(&quot;^&lt;(&quot; + blockTags.mkString(&quot;|&quot;) + &quot;)\\b[^&gt;]*?&gt;&quot;,
+    Pattern.MULTILINE | Pattern.CASE_INSENSITIVE)
+  // HTML comments
+  val rHtmlComment = Pattern.compile(&quot;^ {0,3}(&lt;!--.*?--&gt;)\\s*?(?=\\n+|\\Z)&quot;,
+    Pattern.MULTILINE | Pattern.DOTALL)
+  // Link definitions
+  val rLinkDefinition = Pattern.compile(&quot;^ {0,3}\\[(.+)\\]:&quot; +
+      &quot; *\\n? *&lt;?(\\S+)&gt;? *\\n? *&quot; +
+      &quot;(?:[\&quot;('](.+?)[\&quot;)'])?&quot; +
+      &quot;(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+  // Character escaping
+  val rEscAmp = Pattern.compile(&quot;&amp;(?!#?[xX]?(?:[0-9a-fA-F]+|\\w+);)&quot;)
+  val rEscLt = Pattern.compile(&quot;&lt;(?![a-z/?\\$!])&quot;)
+  val rInsideTags = Pattern.compile(&quot;&lt;(/?&quot; + htmlNameTokenExpr + &quot;(?:\\s+(?:&quot; +
+      &quot;(?:&quot; + htmlNameTokenExpr + &quot;\\s*=\\s*\&quot;[^\&quot;]*\&quot;)|&quot; +
+      &quot;(?:&quot; + htmlNameTokenExpr + &quot;\\s*=\\s*'[^']*')|&quot; +
+      &quot;(?:&quot; + htmlNameTokenExpr + &quot;\\s*=\\s*[a-z0-9_:.\\-]+)&quot; +
+      &quot;)\\s*)*)&gt;&quot;, Pattern.DOTALL | Pattern.CASE_INSENSITIVE)
+  // Headers
+  val rH1 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.*?)\\})?\\n=+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+  val rH2 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.*?)\\})?\\n-+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+  val rHeaders = Pattern.compile(&quot;^(#{1,6}) *(\\S.*?)(?: *#*)?( *\\{#(.*?)\\})?$&quot;, Pattern.MULTILINE)
+  // Horizontal rulers
+  val rHr = Pattern.compile(&quot;^ {0,3}(?:&quot; +
+      &quot;(?:(?:\\* *){3,})|&quot; +
+      &quot;(?:(?:- *){3,})|&quot; +
+      &quot;(?:(?:_ *){3,})&quot; +
+      &quot;) *$&quot;, Pattern.MULTILINE)
+  val rHtmlHr = Pattern.compile(&quot;^ {0,3}(&lt;hr.*?&gt;)\\s*?$&quot;,
+    Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.MULTILINE)
+  // Lists
+  val listExpr = &quot;( {0,3}([-+*]|\\d+\\.) +(?s:.+?)&quot; +
+      &quot;(?:\\Z|\\n{2,}(?![-+*]|\\s|\\d+\\.)))&quot;
+  val rSubList = Pattern.compile(&quot;^&quot; + listExpr, Pattern.MULTILINE)
+  val rList = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n?)&quot; + listExpr, Pattern.MULTILINE)
+  val rListItem = Pattern.compile(&quot;(\\n)?^( *)(?:[-+*]|\\d+\\.) +&quot; +
+      &quot;((?s:.+?)\\n{1,2})(?=\\n*(?:\\Z|\\2(?:[-+*]|\\d+\\.) +))&quot;, Pattern.MULTILINE)
+  // Code blocks
+  val rCodeBlock = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n?)&quot; +
+      &quot;(^ {4}(?s:.+?))(?=\\Z|\\n+ {0,3}\\S)&quot;, Pattern.MULTILINE)
+  val rCodeLangId = Pattern.compile(&quot;^\\s*lang:(.+?)(?:\\n|\\Z)&quot;)
+  // Block quotes
+  val rBlockQuote = Pattern.compile(&quot;((?:^ *&gt;(?:.+(?:\\n|\\Z))+\\n*)+)&quot;,
+    Pattern.MULTILINE)
+  val rBlockQuoteTrims = Pattern.compile(&quot;(?:^ *&gt; ?)|(?:^ *$)|(?-m:\\n+$)&quot;,
+    Pattern.MULTILINE)
+  // Paragraphs splitter
+  val rParaSplit = Pattern.compile(&quot;\\n{2,}&quot;)
+  // Code spans
+  val rCodeSpan = Pattern.compile(&quot;(?&lt;!\\\\)(`+)(.+?)(?&lt;!`)\\1(?!`)&quot;)
+  val rCode = Pattern.compile(&quot;&lt;code( .*?)?&gt;(.*?)&lt;/code&gt;&quot;, Pattern.DOTALL)
+  // Images
+  val rImage = Pattern.compile(&quot;!\\[(.*?)\\]\\((.*?)( \&quot;(.*?)\&quot;)?\\)&quot;)
+  // Backslash escapes
+  val backslashEscapes = (&quot;\\\\\\\\&quot; -&gt; &quot;&amp;#92;&quot;) ::
+      (&quot;\\\\`&quot; -&gt;  &quot;&amp;#96;&quot;) ::
+      (&quot;\\\\_&quot; -&gt;  &quot;&amp;#95;&quot;) ::
+      (&quot;\\\\&gt;&quot; -&gt;  &quot;&amp;gt;&quot;) ::
+      (&quot;\\\\\\*&quot; -&gt;  &quot;&amp;#42;&quot;) ::
+      (&quot;\\\\\\{&quot; -&gt;  &quot;&amp;#123;&quot;) ::
+      (&quot;\\\\\\}&quot; -&gt;  &quot;&amp;#125;&quot;) ::
+      (&quot;\\\\\\[&quot; -&gt;  &quot;&amp;#91;&quot;) ::
+      (&quot;\\\\\\]&quot; -&gt;  &quot;&amp;#93;&quot;) ::
+      (&quot;\\\\\\(&quot; -&gt;  &quot;&amp;#40;&quot;) ::
+      (&quot;\\\\\\)&quot; -&gt;  &quot;&amp;#41;&quot;) ::
+      (&quot;\\\\#&quot; -&gt;  &quot;&amp;#35;&quot;) ::
+      (&quot;\\\\\\+&quot; -&gt;  &quot;&amp;#43;&quot;) ::
+      (&quot;\\\\-&quot; -&gt;  &quot;&amp;#45;&quot;) ::
+      (&quot;\\\\\\.&quot; -&gt;  &quot;&amp;#46;&quot;) ::
+      (&quot;\\\\!&quot; -&gt;  &quot;&amp;#33;&quot;) :: Nil
+  // Reference-style links
+  val rRefLinks = Pattern.compile(&quot;(\\[(.*?)\\] ?(?:\\n *)?\\[(.*?)\\])&quot;)
+  // Inline links
+  val rInlineLinks = Pattern.compile(&quot;\\[(.*?)\\]\\( *&lt;?(.*?)&gt;? *&quot; +
+      &quot;((['\&quot;])(.*?)\\4)?\\)&quot;, Pattern.DOTALL)
+  // Autolinks
+  val rAutoLinks = Pattern.compile(&quot;&lt;((https?|ftp):[^'\&quot;&gt;\\s]+)&gt;&quot;)
+  // Autoemails
+  val rAutoEmail = Pattern.compile(&quot;&lt;([-.\\w]+\\@[-a-z0-9]+(\\.[-a-z0-9]+)*\\.[a-z]+)&gt;&quot;)
+  // Ems and strongs
+  val rStrong = Pattern.compile(&quot;(\\*\\*|__)(?=\\S)(.+?[*_]*)(?&lt;=\\S)\\1&quot;)
+  val rEm = Pattern.compile(&quot;(\\*|_)(?=\\S)(.+?)(?&lt;=\\S)\\1&quot;)
+  // Manual linebreaks
+  val rBrs = Pattern.compile(&quot; {2,}\n&quot;)
+  // Ampersand wrapping
+  val rAmp = Pattern.compile(&quot;&amp;amp;(?!#?[xX]?(?:[0-9a-fA-F]+|\\w+);)&quot;)
+  // SmartyPants
+  val smartyPants = (Pattern.compile(&quot;(?&lt;=\\s|\\A)(?:\&quot;|&amp;quot;)(?=\\S)&quot;) -&gt; leftQuote) ::
+      (Pattern.compile(&quot;(?&lt;=[\\w)?!.])(?:\&quot;|&amp;quot;)(?=[.,;?!*)]|\\s|\\Z)&quot;) -&gt; rightQuote) ::
+      (Pattern.compile(&quot;--&quot;) -&gt; dash) ::
+      (Pattern.compile(&quot;\\(r\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; reg) ::
+      (Pattern.compile(&quot;\\(c\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; copy) ::
+      (Pattern.compile(&quot;\\(tm\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; trademark) ::
+      (Pattern.compile(&quot;\\.{3}&quot;) -&gt; ellipsis) :: 
+      (Pattern.compile(&quot;&amp;lt;-|&lt;-&quot;) -&gt; leftArrow) :: 
+      (Pattern.compile(&quot;-&amp;gt;|-&gt;&quot;) -&gt; rightArrow) :: Nil
+  // Markdown inside inline HTML
+  val rInlineMd = Pattern.compile(&quot;&lt;!--#md--&gt;(.*)&lt;!--~+--&gt;&quot;, Pattern.DOTALL)
+  // Macro definitions
+  val rMacroDefs = Pattern.compile(&quot;&lt;!--#md *\&quot;{3}(.*?)\&quot;{3}(\\?[idmsux]+)? +\&quot;{3}(.*?)\&quot;{3} *--&gt;&quot;)
+
+  def apply(source: String): String = new MarkdownText(source).toHtml
+}
+
+// Processing Stuff
+
+class MarkdownText(source: CharSequence) {
+  protected var listLevel = 0
+  protected var text = new StringEx(source)
+  import Markdown._
+
+  class LinkDefinition(val url: String, val title: String) {
+    override def toString = url + &quot; (&quot; + title + &quot;)&quot;
+  }
+
+  class MacroDefinition(val pattern: String, val flags: String, val replacement: String) {
+    val regex: Pattern = {
+      var f = 0;
+      if (flags != null) flags.toList.foreach {
+        case 'i' =&gt; f = f | Pattern.CASE_INSENSITIVE
+        case 'd' =&gt; f = f | Pattern.UNIX_LINES
+        case 'm' =&gt; f = f | Pattern.MULTILINE
+        case 's' =&gt; f = f | Pattern.DOTALL
+        case 'u' =&gt; f = f | Pattern.UNICODE_CASE
+        case 'x' =&gt; f = f | Pattern.COMMENTS
+        case _ =&gt;
+      }
+      Pattern.compile(pattern, f)
+    }
+    override def toString = regex.toString
+  }
+
+  protected var links: Map[String, LinkDefinition] = Map()
+  protected var macros: Seq[MacroDefinition] = Nil
+
+  // Protector for HTML blocks
+  val htmlProtector = new Protector
+
+  //  Encoding methods
+
+  // All unsafe chars are encoded to SGML entities.
+  protected def encodeUnsafeChars(code: StringEx): StringEx = code
+      .replaceAll(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)
+      .replaceAll(&quot;&gt;&quot;, &quot;&amp;gt;&quot;)
+      .replaceAll(&quot;*&quot;, &quot;&amp;#42;&quot;)
+      .replaceAll(&quot;`&quot;, &quot;&amp;#96;&quot;)
+      .replaceAll(&quot;_&quot;, &quot;&amp;#95;&quot;)
+      .replaceAll(&quot;\\&quot;, &quot;&amp;#92;&quot;)
+
+  // All characters escaped with backslash are encoded to corresponding
+  // SGML entities.
+  protected def encodeBackslashEscapes(text: StringEx): StringEx =
+    backslashEscapes.foldLeft(text)((tx, p) =&gt;
+      tx.replaceAll(Pattern.compile(p._1), p._2))
+
+  // All unsafe chars are encoded to SGML entities inside code blocks.
+  protected def encodeCode(code: StringEx): StringEx = code
+      .replaceAll(rEscAmp, &quot;&amp;amp;&quot;)
+      .replaceAll(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)
+      .replaceAll(&quot;&gt;&quot;, &quot;&amp;gt;&quot;)
+
+  // Ampersands and less-than signes are encoded to `&amp;amp;` and `&amp;lt;` respectively.
+  protected def encodeAmpsAndLts(text: StringEx) = text
+      .replaceAll(rEscAmp, &quot;&amp;amp;&quot;)
+      .replaceAll(rEscLt, &quot;&amp;lt;&quot;)
+
+  // Encodes specially-treated characters inside the HTML tags.
+  protected def encodeCharsInsideTags(text: StringEx) =
+    text.replaceAll(rInsideTags, m =&gt;
+      &quot;&lt;&quot; + encodeUnsafeChars(new StringEx(m.group(1)))
+          .replaceAll(rEscAmp, &quot;&amp;amp;&quot;)
+          .toString + &quot;&gt;&quot;)
+
+  // Normalize line endings and whitespace
+  protected def normalize(text: StringEx) = text
+      .replaceAll(rLineEnds, &quot;\n&quot;)
+      .replaceAll(rTabs, &quot;    &quot;)
+      .replaceAll(rBlankLines, &quot;&quot;)
+
+  // All inline HTML blocks are hashified, so that no harm is done to their internals.
+  protected def hashHtmlBlocks(text: StringEx): StringEx = {
+    text.replaceAll(rHtmlHr, m =&gt; htmlProtector.addToken(m.group(1)) + &quot;\n&quot;)
+    val m = text.matcher(rInlineHtmlStart)
+    if (m.find) {
+      val tagName = m.group(1)
+      // This regex will match either opening or closing tag;
+      // opening tags will be captured by $1 leaving $2 empty,
+      // while closing tags will be captured by $2 leaving $1 empty
+      val mTags = text.matcher(Pattern.compile(
+        &quot;(&lt;&quot; + tagName + &quot;\\b[^/&gt;]*?&gt;)|(&lt;/&quot; + tagName + &quot;\\s*&gt;)&quot;,
+        Pattern.CASE_INSENSITIVE))
+      // Find end index of matching closing tag
+      var depth = 1
+      var idx = m.end
+      while (depth &gt; 0 &amp;&amp; idx &lt; text.length &amp;&amp; mTags.find(idx)) {
+        if (mTags.group(2) == null) depth += 1
+        else depth -= 1
+        idx = mTags.end
+      }
+      // Having inline HTML subsequence
+      val endIdx = idx
+      val startIdx = m.start
+      val inlineHtml = new StringEx(text.subSequence(startIdx, endIdx))
+      // Process markdown inside
+      inlineHtml.replaceAll(rInlineMd, m =&gt; new MarkdownText(m.group(1)).toHtml)
+      // Hashify block
+      val key = htmlProtector.addToken(inlineHtml.toString)
+      val sb = new StringBuilder(text.subSequence(0, startIdx))
+          .append(&quot;\n&quot;)
+          .append(key)
+          .append(&quot;\n&quot;)
+          .append(text.subSequence(endIdx, text.length))
+      // Continue recursively until all blocks are processes
+      hashHtmlBlocks(new StringEx(sb))
+    } else text
+  }
+
+  // All HTML comments are hashified too.
+  protected def hashHtmlComments(text: StringEx): StringEx = text.replaceAll(rHtmlComment, m =&gt; {
+    val comment = m.group(1)
+    val hash = htmlProtector.addToken(comment)
+    &quot;\n&quot; + hash + &quot;\n&quot;
+  })
+
+  // Standalone link definitions are added to the dictionary and then
+  // stripped from the document.
+  protected def stripLinkDefinitions(text: StringEx) =
+    text.replaceAll(rLinkDefinition, m =&gt; {
+      val id = m.group(1).toLowerCase
+      val url = m.group(2)
+      val title = if (m.group(3) == null) &quot;&quot; else m.group(3)
+      links += id -&gt; new LinkDefinition(url, title.replaceAll(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;))
+      &quot;&quot;
+    })
+
+  // Macro definitions are stripped from the document.
+  protected def stripMacroDefinitions(text: StringEx) =
+    text.replaceAll(rMacroDefs, m =&gt; {
+      macros ++= List(new MacroDefinition(m.group(1), m.group(2), m.group(3)))
+      &quot;&quot;
+    })
+
+  // Block elements are processed within specified `text`.
+  protected def runBlockGamut(text: StringEx): StringEx = {
+    var result = text
+    result = doMacros(result)
+    result = doHeaders(result)
+    result = doHorizontalRulers(result)
+    result = doLists(result)
+    result = doCodeBlocks(result)
+    result = doBlockQuotes(result)
+    result = hashHtmlBlocks(result)    // Again, now hashing our generated markup
+    result = formParagraphs(result)
+    return result
+  }
+
+  // Process both types of headers.
+  protected def doHeaders(text: StringEx): StringEx = text
+      .replaceAll(rH1, m =&gt; {
+    val id = m.group(3)
+    val idAttr = if (id == null) &quot;&quot; else &quot; id = \&quot;&quot; + id + &quot;\&quot;&quot;
+    &quot;&lt;h1&quot; + idAttr + &quot;&gt;&quot; + runSpanGamut(new StringEx(m.group(1))) + &quot;&lt;/h1&gt;&quot;
+  }).replaceAll(rH2, m =&gt; {
+    val id = m.group(3)
+    val idAttr = if (id == null) &quot;&quot; else &quot; id = \&quot;&quot; + id + &quot;\&quot;&quot;
+    &quot;&lt;h2&quot; + idAttr + &quot;&gt;&quot; + runSpanGamut(new StringEx(m.group(1))) + &quot;&lt;/h2&gt;&quot;
+  }).replaceAll(rHeaders, m =&gt; {
+    val marker = m.group(1)
+    val body = runSpanGamut(new StringEx(m.group(2)))
+    val id = m.group(4)
+    val idAttr = if (id == null) &quot;&quot; else &quot; id = \&quot;&quot; + id + &quot;\&quot;&quot;
+    &quot;&lt;h&quot; + marker.length + idAttr + &quot;&gt;&quot; + body + &quot;&lt;/h&quot; + marker.length + &quot;&gt;&quot;
+  })
+
+  // Process horizontal rulers.
+  protected def doHorizontalRulers(text: StringEx): StringEx =
+    text.replaceAll(rHr, &quot;\n&lt;hr/&gt;\n&quot;)
+
+  // Process ordered and unordered lists and list items.
+  protected def doLists(text: StringEx): StringEx = {
+    val pattern = if (listLevel == 0) rList else rSubList
+    text.replaceAll(pattern, m =&gt; {
+      val list = new StringEx(m.group(1))
+          .append(&quot;\n&quot;)
+          .replaceAll(rParaSplit, &quot;\n\n\n&quot;)
+          .replaceAll(rTrailingWS, &quot;\n&quot;)
+      val listType = m.group(2) match {
+        case s if s.matches(&quot;[*+-]&quot;) =&gt; &quot;ul&quot;
+        case _ =&gt; &quot;ol&quot;
+      }
+      val result = processListItems(list).replaceAll(rTrailingWS, &quot;&quot;)
+      &quot;&lt;&quot; + listType + &quot;&gt;\n&quot; + result + &quot;\n&lt;/&quot; + listType + &quot;&gt;\n\n&quot;
+    })
+  }
+
+  protected def processListItems(text: StringEx): StringEx = {
+    listLevel += 1
+    val sx = text.replaceAll(rListItem, m =&gt; {
+      val content = m.group(3)
+      val leadingLine = m.group(1)
+      var item = new StringEx(content).outdent()
+      if (leadingLine != null || content.indexOf(&quot;\n\n&quot;) != -1)
+        item = runBlockGamut(item)
+      else item = runSpanGamut(doLists(item))
+      &quot;&lt;li&gt;&quot; + item.toString.trim + &quot;&lt;/li&gt;\n&quot;;
+    })
+    listLevel -= 1
+    return sx
+  }
+
+  // Process code blocks.
+  protected def doCodeBlocks(text: StringEx): StringEx =
+    text.replaceAll(rCodeBlock, m =&gt; {
+      var langExpr = &quot;&quot;
+      val code = encodeCode(new StringEx(m.group(1)))
+          .outdent
+          .replaceAll(rTrailingWS, &quot;&quot;)
+          .replaceAll(rCodeLangId, m =&gt; {
+        langExpr = &quot; class=\&quot;&quot; + m.group(1) + &quot;\&quot;&quot;
+        &quot;&quot;})
+      &quot;&lt;pre&quot; + langExpr + &quot;&gt;&lt;code&gt;&quot; + code + &quot;&lt;/code&gt;&lt;/pre&gt;\n\n&quot;
+    })
+
+   // Process blockquotes.
+  protected def doBlockQuotes(text: StringEx): StringEx =
+    text.replaceAll(rBlockQuote, m =&gt; {
+      val content = new StringEx(m.group(1))
+          .replaceAll(rBlockQuoteTrims, &quot;&quot;)
+      &quot;&lt;blockquote&gt;\n&quot; + runBlockGamut(content) + &quot;\n&lt;/blockquote&gt;\n\n&quot;
+    })
+
+   // At this point all HTML blocks should be hashified, so we treat all lines
+   // separated by more than 2 linebreaks as paragraphs.
+  protected def formParagraphs(text: StringEx): StringEx = new StringEx(
+    rParaSplit.split(text.toString.trim)
+        .map(para =&gt; htmlProtector.decode(para) match {
+      case Some(d) =&gt; d
+      case _ =&gt; &quot;&lt;p&gt;&quot; + runSpanGamut(new StringEx(para)).toString + &quot;&lt;/p&gt;&quot;
+    }).mkString(&quot;\n\n&quot;))
+
+  // Span elements are processed within specified `text`.
+  protected def runSpanGamut(text: StringEx): StringEx = {
+    val protector = new Protector
+    var result = protectCodeSpans(protector, text)
+    result = doCodeSpans(protector, text)
+    result = encodeBackslashEscapes(text)
+    result = doImages(text)
+    result = doRefLinks(text)
+    result = doInlineLinks(text)
+    result = doAutoLinks(text)
+    result = doLineBreaks(text)
+    result = protectHtmlTags(protector, text)
+    result = doSmartyPants(text)
+    result = doAmpSpans(text)
+    result = doEmphasis(text)
+    result = unprotect(protector, text)
+    return result
+  }
+
+  protected def protectHtmlTags(protector: Protector, text: StringEx): StringEx =
+    text.replaceAll(rInsideTags, m =&gt; protector.addToken(m.group(0)))
+
+  protected def protectCodeSpans(protector: Protector, text: StringEx): StringEx =
+    text.replaceAll(rCode, m =&gt; protector.addToken(m.group(0)))
+
+  protected def unprotect(protector: Protector, text: StringEx): StringEx =
+    protector.keys.foldLeft(text)((t, k) =&gt; t.replaceAll(k, protector.decode(k).getOrElse(&quot;&quot;)))
+
+  // Process code spans.
+  protected def doCodeSpans(protector: Protector, text: StringEx): StringEx = text.replaceAll(rCodeSpan, m =&gt;
+    protector.addToken(&quot;&lt;code&gt;&quot; + encodeCode(new StringEx(m.group(2).trim)) + &quot;&lt;/code&gt;&quot;))
+
+  // Process images.
+  protected def doImages(text: StringEx): StringEx = text.replaceAll(rImage, m =&gt; {
+    val alt = m.group(1)
+    val src = m.group(2)
+    val title = m.group(4)
+    var result = &quot;&lt;img src=\&quot;&quot; + src + &quot;\&quot; alt=\&quot;&quot; + alt + &quot;\&quot;&quot;
+    if (title != null &amp;&amp; title != &quot;&quot;)
+      result += &quot; title=\&quot;&quot; + title + &quot;\&quot;&quot;
+    result + &quot;/&gt;&quot;
+  })
+
+  // Process reference-style links.
+  protected def doRefLinks(text: StringEx): StringEx = text.replaceAll(rRefLinks, m =&gt; {
+    val wholeMatch = m.group(1)
+    val linkText = m.group(2)
+    var id = m.group(3).trim.toLowerCase
+    if (id == null || id == &quot;&quot;) id = linkText.trim.toLowerCase
+    links.get(id) match {
+      case Some(ld) =&gt;
+        val title = ld.title
+            .replaceAll(&quot;\\*&quot;, &quot;&amp;#42;&quot;)
+            .replaceAll(&quot;_&quot;, &quot;&amp;#95;&quot;)
+            .trim
+        val url = ld.url
+            .replaceAll(&quot;\\*&quot;, &quot;&amp;#42;&quot;)
+            .replaceAll(&quot;_&quot;, &quot;&amp;#95;&quot;)
+        val titleAttr = if (title != &quot;&quot;) &quot; title=\&quot;&quot; + title + &quot;\&quot;&quot; else &quot;&quot;
+        &quot;&lt;a href=\&quot;&quot; + url + &quot;\&quot;&quot; + titleAttr + &quot;&gt;&quot; + linkText + &quot;&lt;/a&gt;&quot;
+      case _ =&gt; wholeMatch
+    }
+  })
+
+  // Process inline links.
+  protected def doInlineLinks(text: StringEx): StringEx =
+    text.replaceAll(rInlineLinks, m =&gt; {
+      val linkText = m.group(1)
+      val url = m.group(2)
+          .replaceAll(&quot;\\*&quot;, &quot;&amp;#42;&quot;)
+          .replaceAll(&quot;_&quot;, &quot;&amp;#95;&quot;)
+      var titleAttr = &quot;&quot;
+      var title = m.group(5)
+      if (title != null) titleAttr = &quot; title=\&quot;&quot; + title
+          .replaceAll(&quot;\\*&quot;, &quot;&amp;#42;&quot;)
+          .replaceAll(&quot;_&quot;, &quot;&amp;#95;&quot;)
+          .replaceAll(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;)
+          .trim + &quot;\&quot;&quot;
+      &quot;&lt;a href=\&quot;&quot; + url + &quot;\&quot;&quot; + titleAttr + &quot;&gt;&quot; + linkText + &quot;&lt;/a&gt;&quot;
+    })
+
+  // Process autolinks.
+  protected def doAutoLinks(text: StringEx): StringEx = text
+      .replaceAll(rAutoLinks, m =&gt; &quot;&lt;a href=\&quot;&quot; + m.group(1) + &quot;\&quot;&gt;&quot; + m.group(1) + &quot;&lt;/a&gt;&quot;)
+      .replaceAll(rAutoEmail, m =&gt; {
+    val address = m.group(1)
+    val url = &quot;mailto:&quot; + address
+    &quot;&lt;a href=\&quot;&quot; + encodeEmail(url) + &quot;\&quot;&gt;&quot; + encodeEmail(address) + &quot;&lt;/a&gt;&quot;
+  })
+
+  // Process autoemails in anti-bot manner.
+  protected def encodeEmail(s: String) = s.toList.map(c =&gt; {
+    val r = rnd.nextDouble
+    if (r &lt; 0.45) &quot;&amp;#&quot; + c.toInt + &quot;;&quot;
+    else if (r &lt; 0.9) &quot;&amp;#x&quot; + Integer.toHexString(c.toInt) + &quot;;&quot;
+    else c
+  }).mkString
+
+  // Process EMs and STRONGs.
+  protected def doEmphasis(text: StringEx): StringEx = text
+      .replaceAll(rStrong, m =&gt; &quot;&lt;strong&gt;&quot; + m.group(2) + &quot;&lt;/strong&gt;&quot;)
+      .replaceAll(rEm, m =&gt; &quot;&lt;em&gt;&quot; + m.group(2) + &quot;&lt;/em&gt;&quot;)
+
+  // Process manual linebreaks.
+  protected def doLineBreaks(text: StringEx): StringEx = text
+      .replaceAll(rBrs, &quot; &lt;br/&gt;\n&quot;)
+
+  // Process SmartyPants stuff.
+  protected def doSmartyPants(text: StringEx): StringEx =
+    smartyPants.foldLeft(text)((t,p) =&gt; t.replaceAll(p._1, p._2))
+
+  // Wrap ampersands with `&lt;span class=&quot;amp&quot;&gt;`.
+  protected def doAmpSpans(text: StringEx): StringEx =
+    text.replaceAll(rAmp, &quot;&lt;span class=\&quot;amp\&quot;&gt;&amp;amp;&lt;/span&gt;&quot;)
+
+  // Process user-defined macros.
+  protected def doMacros(text: StringEx): StringEx =
+    macros.foldLeft(text)((t, m) =&gt; t.replaceAll(m.regex, m.replacement, false))
+
+  // Transform the Markdown source into HTML.
+  def toHtml(): String = {
+    var result = text
+    result = normalize(result)
+    result = encodeCharsInsideTags(result)
+    result = hashHtmlBlocks(result)
+    result = stripMacroDefinitions(result)
+    result = hashHtmlComments(result)
+    result = encodeAmpsAndLts(result)
+    result = stripLinkDefinitions(result)
+    result = runBlockGamut(result)
+    return result.toString
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

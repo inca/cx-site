@@ -1,0 +1,169 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;field.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._
+import java.util.Date
+import xml._
+import java.sql.ResultSet</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Field</h1>
+
+<p>The <code>Field</code> class holds atomic values of records. It wraps actual value
+and provides methods for constructing column definitions for enclosing
+tables. It also contains the <code>REFERENCES</code> method which is used to create
+associations.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Field[T, R &lt;: Record[_, R]](name: String, record: R , sqlType: String)
+    extends ValueHolder[T, R](name, record, sqlType) with SQLable {
+
+  def uuid = record.getClass.getName + &quot;.&quot; + name
+
+  def read(rs: ResultSet, alias: String): Option[T] =
+    typeConverter.read(rs, alias).asInstanceOf[Option[T]]
+
+  def REFERENCES[P &lt;: Record[T, P]](relation: Relation[T, P]): Association[T, R, P] =
+    new Association(this, relation)
+
+  def toSql: String = dialect.columnDefinition(this)
+}
+
+trait AutoIncrementable[T, R &lt;: Record[_, R]] extends Field[T, R] {
+  protected var _autoIncrement: Boolean = false
+  def autoIncrement_?(): Boolean = _autoIncrement
+  def AUTO_INCREMENT(): this.type = {
+    _autoIncrement = true
+    return this
+  }
+}
+
+class IntField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Int, R](name, record, dialect.integerType)
+        with AutoIncrementable[Int, R] {
+  def from(str: String): Option[Int] =
+    try Some(str.toInt) catch { case _ =&gt; None }
+}
+
+class LongField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Long, R](name, record, dialect.longType)
+        with AutoIncrementable[Long, R]{
+  def from(str: String): Option[Long] =
+    try Some(str.toLong) catch { case _ =&gt; None }
+}
+
+class NumericField[R &lt;: Record[_, R]](
+    name: String, record: R, val precision: Int = -1, val scale: Int = 0)
+    extends XmlSerializable[Double, R](
+      name,
+      record,
+      dialect.numericType + (if (precision == -1) &quot;&quot; else &quot;(&quot; + precision + &quot;,&quot; + scale + &quot;)&quot;)) {
+  def from(str: String): Option[Double] =
+    try Some(str.toDouble) catch { case _ =&gt; None }
+}
+
+class TextField[R &lt;: Record[_, R]](name: String, record: R, sqlType: String)
+    extends XmlSerializable[String, R](name, record, sqlType) {
+  def this(name: String, record: R, length: Int = -1) =
+    this(name, record, dialect.varcharType + (if (length == -1) &quot;&quot; else &quot;(&quot; + length + &quot;)&quot;))
+  def from(str: String): Option[String] =
+    if (str == &quot;&quot;) None else Some(str)
+}
+
+class BooleanField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Boolean, R](name, record, dialect.booleanType) {
+  def from(str: String): Option[Boolean] =
+    try Some(str.toBoolean) catch { case _ =&gt; None }
+}
+
+class TimestampField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Date, R](name, record, dialect.timestampType) {
+  def from(str: String): Option[Date] =
+    try Some(new Date(java.sql.Timestamp.valueOf(str).getTime)) catch { case _ =&gt; None }
+  override def to(value: Option[Date]): String =
+    value.map(v =&gt; new java.sql.Timestamp(v.getTime).toString).getOrElse(&quot;&quot;)
+}
+
+class DateField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Date, R](name, record, dialect.dateType) {
+  def from(str: String): Option[Date] =
+    try Some(new Date(java.sql.Date.valueOf(str).getTime)) catch { case _ =&gt; None }
+  override def to(value: Option[Date]): String =
+    value.map(v =&gt; new java.sql.Date(v.getTime).toString).getOrElse(&quot;&quot;)
+}
+
+class TimeField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Date, R](name, record, dialect.timeType) {
+  def from(str: String): Option[Date] =
+    try Some(new Date(java.sql.Time.valueOf(str).getTime)) catch { case _ =&gt; None }
+  override def to(value: Option[Date]): String =
+    value.map(v =&gt; new java.sql.Time(v.getTime).toString).getOrElse(&quot;&quot;)
+}
+
+class XmlField[R &lt;: Record[_, R]](name: String, record: R)
+    extends XmlSerializable[Elem, R](name, record, dialect.xmlType) {
+  def from(str: String): Option[Elem] = Some(XML.loadString(str))
+  override def read(rs: ResultSet, alias: String) =
+    any2option(rs.getString(alias)).flatMap(x =&gt; from(x))
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

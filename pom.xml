@@ -15,6 +15,13 @@
     <cx.version>2.0</cx.version>
     <ciridiri.version>1.5</ciridiri.version>
     <cx.router>ru.circumflex.site.MainRouter</cx.router>
+    <cx.sourceRoot>/opt/inca/circumflex</cx.sourceRoot>
+    <ftl.configuration>ru.circumflex.site.FreeMarkerConf</ftl.configuration>
+    <docco.basePath>${cx.sourceRoot}</docco.basePath>
+    <docco.outputPath>src/main/webapp/api/${cx.version}</docco.outputPath>
+    <docco.pageTemplate>/docco-page.ftl</docco.pageTemplate>
+    <docco.indexTemplate>/docco-index.ftl</docco.indexTemplate>
+    <docco.title>Circumflex ${cx.version} API Documentation</docco.title>
   </properties>
 
   <dependencies>

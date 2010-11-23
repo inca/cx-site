@@ -1,0 +1,154 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;statistics.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.util.concurrent.atomic._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>ORM Statistics</h1>
+
+<p>The <code>Statistics</code> singleton is used to gather the statistical information from
+various code points inside Circumflex ORM. Most methods rely on non-blocking
+counters from <code>java.util.concurrent.atomic</code> package.</p>
+
+<p>Following statistical data is available:</p>
+
+<ul>
+<li><code>connectionsOpened</code> &mdash; the amount of physical JDBC connections opened by
+<code>Transaction</code> objects;</li>
+<li><code>connectionsClosed</code> &mdash; the amount of physical JDBC connections closed by
+<code>Transaction</code> objects;</li>
+<li><code>executions</code> &mdash; the total amount of invokations of the <code>execute</code> method of
+<code>Transaction</code> objects</li>
+<li><code>executionsSucceeded</code> &mdash; the amount of successful invokations of the
+<code>execute</code> method of <code>Transaction</code> objects;</li>
+<li><code>executionsFailed</code> &mdash; the amount of failed invokations of the <code>execute</code>
+method of <code>Transaction</code> objects;</li>
+<li><code>recordCacheHits</code> &mdash; the amount of records successfully retrieved from cache;</li>
+<li><code>recordCacheMisses</code> &mdash; the amount of records retrieved from database and stored
+in cache;</li>
+<li><code>inverseCacheHits</code> &mdash; the amount of inverse associations retrieved from cache;</li>
+<li><code>inverseCacheMisses</code> &mdash; the amount of inverse associations retrieved from database
+and stored in cache;</li>
+<li><code>heaviestSqlTime</code> &mdash; the time (in milliseconds) of the heaviest SQL query execution;</li>
+<li><code>heaviestSql</code> &mdash; the SQL statement of the heaviest data-retrieval query.</li>
+</ul>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>object Statistics {
+
+  val connectionsOpened = new AtomicInteger(0)
+  val connectionsClosed = new AtomicInteger(0)
+  val executions = new AtomicInteger(0)
+  val executionsSucceeded = new AtomicInteger(0)
+  val executionsFailed = new AtomicInteger(0)
+  val recordCacheHits = new AtomicInteger(0)
+  val recordCacheMisses = new AtomicInteger(0)
+  val inverseCacheHits = new AtomicInteger(0)
+  val inverseCacheMisses = new AtomicInteger(0)
+
+  protected var _heaviestSqlTime = 0l
+  def heaviestSqlTime = _heaviestSqlTime
+
+  protected var _heaviestSql = &quot;&quot;
+  def heaviestSql = _heaviestSql
+
+  def executeSql(q: SQLQuery[_]): Unit = synchronized {
+    val t = q.executionTime
+    if (t &gt; _heaviestSqlTime) {
+      _heaviestSqlTime = t
+      _heaviestSql = q.toInlineSql
+    }
+  }
+
+  protected var _heaviestDmlTime = 0l
+  def heaviestDmlTime = _heaviestDmlTime
+
+  protected var _heaviestDml = &quot;&quot;
+  def heaviestDml = _heaviestDml
+
+  def executeDml(q: DMLQuery): Unit = synchronized {
+    val t = q.executionTime
+    if (t &gt; _heaviestDmlTime) {
+      _heaviestDmlTime = t
+      _heaviestDml = q.toInlineSql
+    }
+  }
+
+  def clear(): Unit = synchronized {
+    connectionsOpened.set(0)
+    connectionsClosed.set(0)
+    executions.set(0)
+    executionsSucceeded.set(0)
+    executionsFailed.set(0)
+    recordCacheHits.set(0)
+    recordCacheMisses.set(0)
+    inverseCacheHits.set(0)
+    inverseCacheMisses.set(0)
+    _heaviestSql = &quot;&quot;
+    _heaviestSqlTime = 0l
+    _heaviestDml = &quot;&quot;
+    _heaviestDmlTime = 0l
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

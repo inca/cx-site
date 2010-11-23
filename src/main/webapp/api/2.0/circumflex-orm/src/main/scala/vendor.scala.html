@@ -1,0 +1,98 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;vendor.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Vendor-specific SQL dialects</h1>
+
+<p>Following vendors are currently supported by Circumflex ORM:</p>
+
+<ul>
+<li>PostgreSQL;</li>
+<li>MySQL;</li>
+<li>H2 database;</li>
+<li>Oracle.</li>
+</ul>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class PostgreSQLDialect extends Dialect {
+  override def timestampType = &quot;TIMESTAMPTZ&quot;
+}
+
+class MySQLDialect extends Dialect
+
+class OracleDialect extends Dialect
+
+class H2Dialect extends Dialect {
+  override def textType = &quot;VARCHAR&quot;
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + quoteIdentifer(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
+        &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      result += &quot; WHERE &quot; + idx.where.toInlineSql
+    return result
+  }
+  override def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + schema.name
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

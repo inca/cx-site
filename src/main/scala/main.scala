@@ -1,16 +1,33 @@
 package ru.circumflex.site
 
+import _root_.freemarker.cache._
+import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
 import ru.circumflex._, core._, web._, freemarker._, md._
 import ru.ciridiri.{Page, CiriDiri}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.lang.StringBuilder
+import java.io.File
+import org.apache.commons.io.FileUtils._
 
 class MainRouter extends RequestRouter {
 
-  'host := headers.getOrElse("Host", "")
-  'currentYear := new SimpleDateFormat("yyyy").format(new Date)
   'sitemap := Page.findByUri("/sitemap")    // read sitemap
+
+  // API documentation
+
+  get("/api/?") = redirect("/api/" + cx("cx.version" + "/index.html"))
+  get("/api/:version/?") = redirect("/api/" + param("version") + "/index.html")
+  get("/api/:version/*.html") = {
+    val version = param("version")
+    val file = new File("src/main/webapp/api/" + version + "/" + uri(2) + ".html")
+    if (file.isFile) {
+      readFileToString(file, "UTF-8")
+    } else sendError(404)
+  }
+  get("/api/:version/:project/:file.scala") = redirect(
+    "/api/" + param("version") + "/" + param("project") + "/src/main/scala/" +
+        param("file") + ".scala.html")
 
   new CiriDiri {    // let ciridiri handle the rest
     override def onFound(page: Page) = 'toc := new TOC(page.toHtml)
@@ -70,4 +87,12 @@ class TOC(val html: String) {
     formList(1, 0)
     "<ul>\n" + sb.toString + "</ul>"
   }
+}
+
+class FreeMarkerConf extends Configuration {
+  setObjectWrapper(new ScalaObjectWrapper())
+  setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER)
+  setDefaultEncoding("utf-8")
+  setTemplateLoader(new FileTemplateLoader(new File("src/main/resources"), false))
+  setSharedVariable("currentYear", new SimpleDateFormat("yyyy").format(new Date))
 }

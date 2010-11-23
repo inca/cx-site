@@ -1,0 +1,217 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;projection.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.sql.ResultSet</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Projections</h1>
+
+<p>In relational algebra a <em>projection</em> is a function which describes a subset of
+columns returned from an SQL query. In Circumflex ORM instances of the <code>Projection</code>
+trait are used to process <code>ResultSet</code> and determine the result type of SQL queries.</p>
+
+<p>We distinguish between <em>atomic</em> and <em>composite</em> projections: the former ones
+span across only one column of <code>ResultSet</code>, the latter ones contain a list of internal
+projections and therefore span across multiple columns.</p>
+
+<p>Like with relation nodes, special alias <code>this</code> is expanded into query-unique alias
+to prevent collisions when aliases are not assigned explicitly.</p>
+
+<p>Circumflex ORM supports querying arbitrary expressions which your database understands,
+you only need to explicitly specify an expected type.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Projection[T] extends SQLable {
+
+  def read(rs: ResultSet): Option[T]
+
+  def sqlAliases: Seq[String]
+
+  protected[orm] var alias: String = &quot;this&quot;
+
+  def AS(alias: String): this.type = {
+    this.alias = alias
+    return this
+  }
+
+  override def toString = toSql
+
+}
+
+trait AtomicProjection[T] extends Projection[T] {
+
+  def sqlAliases = List(alias)
+
+}
+
+trait CompositeProjection[T] extends Projection[T] {
+
+  def subProjections: Seq[Projection[_]]
+
+  def sqlAliases = subProjections.flatMap(_.sqlAliases)
+
+  override def equals(obj: Any) = obj match {
+    case p: CompositeProjection[_] =&gt;
+      this.subProjections.toList == p.subProjections.toList
+    case _ =&gt; false
+  }
+
+  private var _hash = 0;
+  override def hashCode: Int = {
+    if (_hash == 0)
+      for (p &lt;- subProjections)
+        _hash = 31 * _hash + p.hashCode
+    return _hash
+  }
+
+  def toSql = subProjections.map(_.toSql).mkString(&quot;, &quot;)
+
+}
+
+class ExpressionProjection[T](val expression: String)
+    extends AtomicProjection[T] {
+
+  def toSql = dialect.alias(expression, alias)
+
+  def read(rs: ResultSet) = typeConverter.read(rs, alias).asInstanceOf[Option[T]]
+
+  override def equals(obj: Any) = obj match {
+    case p: ExpressionProjection[_] =&gt;
+      p.expression == this.expression
+    case _ =&gt; false
+  }
+
+  override def hashCode = expression.hashCode
+}
+
+class FieldProjection[T, R &lt;: Record[_, R]](val node: RelationNode[_, R],
+                                            val field: Field[T, R])
+    extends AtomicProjection[T] {
+
+  def expr = dialect.qualifyColumn(field, node.alias)
+
+  def toSql = dialect.alias(expr, alias)
+
+  def read(rs: ResultSet) = field.read(rs, alias)
+
+  override def equals(obj: Any) = obj match {
+    case p: FieldProjection[_, _] =&gt;
+      p.node == this.node &amp;&amp; p.field.name == this.field.name
+    case _ =&gt; false
+  }
+
+  override def hashCode = node.hashCode * 31 + field.name.hashCode
+}
+
+class RecordProjection[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
+    extends CompositeProjection[R] {
+
+  protected val _fieldProjections: Seq[FieldProjection[_, R]] = node
+      .relation.fields.map(f =&gt; new FieldProjection(node, f))
+
+  def subProjections = _fieldProjections
+
+  def read(rs: ResultSet): Option[R] = _fieldProjections
+      .find(_.field == node.relation.PRIMARY_KEY)
+      .flatMap(_.read(rs))
+      .flatMap(id =&gt; contextCache.cacheRecord(id.asInstanceOf[PK], node.relation, Some(readRecord(rs))))
+
+  protected def readRecord(rs: ResultSet): R = {
+    val record: R = node.relation.recordClass.newInstance
+    _fieldProjections.foreach { p =&gt;
+      node.relation.getField(record, p.field.asInstanceOf[Field[Any, R]]).set(p.read(rs))
+    }
+    return record
+  }
+
+  override def equals(obj: Any) = obj match {
+    case p: RecordProjection[_, _] =&gt; this.node == p.node
+    case _ =&gt; false
+  }
+
+  override def hashCode = node.hashCode
+
+}
+
+class UntypedTupleProjection(val subProjections: Projection[_]*)
+    extends CompositeProjection[Array[Option[Any]]] {
+  def read(rs: ResultSet): Option[Array[Option[Any]]] = Some(subProjections.map(_.read(rs)).toArray)
+}
+
+class PairProjection[T1, T2] (_1: Projection[T1], _2: Projection[T2])
+    extends CompositeProjection[(Option[T1], Option[T2])] {
+  def subProjections = List[Projection[_]](_1, _2)
+  def read(rs: ResultSet): Option[(Option[T1], Option[T2])] =
+    Some((_1.read(rs), _2.read(rs)))
+}
+
+class AliasMapProjection(val subProjections: Seq[Projection[_]])
+    extends CompositeProjection[Map[String, Any]] {
+  def read(rs: ResultSet): Option[Map[String, Any]] = {
+    val pairs = subProjections.flatMap { p =&gt;
+      p.read(rs).map(v =&gt; p.alias -&gt; v).asInstanceOf[Option[(String, Any)]]
+    }
+    Some(Map[String, Any](pairs: _*))
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

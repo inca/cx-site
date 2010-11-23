@@ -43,7 +43,7 @@ You may specify configuration parameters in two different ways.
                 <executions>
                   <execution>
                     <id>configure</id>
-                    <phase>compile</phase>
+                    <phase>process-resources</phase>
                     <goals>
                       <goal>cfg</goal>
                     </goals>
