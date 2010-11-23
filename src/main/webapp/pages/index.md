@@ -266,7 +266,7 @@ to grow strong and mature. You can help the Circumflex project in following ways
   * contact [The Circumflex Team](/team.html) personally;
   * just use Circumflex in your development and have fun :)
 
-We highly appreciate your help! 
+We highly appreciate your help!
 
   [scala]: http://scala-lang.org
   [jdk]: http://java.sun.com/javase/downloads/index.jsp

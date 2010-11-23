@@ -1,68 +1,31 @@
-The Circumflex Team
-===================
+# The Circumflex Team
 
 Circumflex is in active development stage. For now, it is primarily maintained
-by [whiteants developers team (Russia)][whiteants].
+by [whiteants.net (Russia)][whiteants].
 
 If you wish to join the team, please contact one of the team members below.
 
   [whiteants]: http://whiteants.net
 
-Team Members
-------------
+  * [Boris Okunskiy](http://github.com/inca)
+  * [Stanislav Lakhtin](http://github.com/StanislavLakhtin)
+  * [Valery Aligorsky](http://github.com/StanislavLakhtin)
+  * [Vasily Polovnyov](http://github.com/vast)
 
-<ul class="team">
-  <li>
-    <a href="http://github.com/inca">
-      <img src="http://www.gravatar.com/avatar/9646564df6dbd498185ee71f24e6a33a.png"
-           class="avatar"
-           alt="Boris S. Okunskiy"/>
-    </a>
-    <h3><a href="http://github.com/inca">Boris S. Okunskiy</a></h3>
-    <ul class="roles">
-      <li>founder,</li>
-      <li>committer</li>
-    </ul>
-  </li>
-  <li>
-    <a href="http://github.com/StanislavLakhtin">
-      <img src="http://www.gravatar.com/avatar/e4e146ba3bd7808e9774899f6c708879"
-           class="avatar"
-           alt="Stanislav E. Lakhtin"/>
-    </a>
-    <h3><a href="http://github.com/StanislavLakhtin">Stanislav E. Lakhtin</a></h3>
-    <ul class="roles">
-      <li>project director,</li>
-      <li>ideologist</li>
-    </ul>
-  </li>
-  <li>
-    <a href="http://github.com/vast">
-      <img src="http://www.gravatar.com/avatar/277212d5ad624fb5b0c6d23ca3841b06"
-           class="avatar"
-           alt="Vasily S. Polovnyov"/>
-    </a>
-    <h3><a href="http://github.com/vast">Vasily S. Polovnyov</a></h3>
-    <ul class="roles">
-      <li>steering committee,</li>
-      <li>ideologist</li>
-    </ul>
-  </li>
-  <li>
-    <a href="http://github.com/rationalem">
-      <img src="http://www.gravatar.com/avatar/278d1a8a007b0bc2dec940bd07567ecf.png"
-           class="avatar"
-           alt="Mauro Rocchi"/>
-    </a>
-    <h3><a href="http://github.com/rationalem">Mauro Rocchi</a></h3>
-    <ul class="roles">
-      <li>committer</li>
-    </ul>
-  </li>
-</ul>
+## Credits
 
-Special Thanks
---------------
+The Circumflex team thanks all people interested in our projects. We hope you'll
+have a lot of fun developing with Circumflex!
 
-* [crank](http://github.com/crank)
-* [chocolateboy](http://github.com/chocolateboy)
+We also owe special thanks to some people for their contribution to the development
+of Circumflex:
+
+  * [Mauro Rocchi](http://github.com/rationalem)
+  * [Alexander Zolotko](http://github.com/crank)
+  * [Andrey Shikov](http://github.com/andreyshikov)
+  * [chocolateboy](http://github.com/chocolateboy)
+  * [Hiram Chirino](http://github.com/chirino)
+  * [Alexander Temerev](http://github.com/atemerev)
+  * [Charles F. Munat](http://github.com/chasm)
+
+We highly appreciate your help, guys!
