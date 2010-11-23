@@ -9,8 +9,8 @@ If you wish to join the team, please contact one of the team members below.
 
   * [Boris Okunskiy](http://github.com/inca)
   * [Stanislav Lakhtin](http://github.com/StanislavLakhtin)
-  * [Valery Aligorsky](http://github.com/StanislavLakhtin)
   * [Vasily Polovnyov](http://github.com/vast)
+  * [Valery Aligorsky](http://github.com/RyuuGan)
 
 ## Credits
 
