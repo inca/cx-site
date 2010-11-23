@@ -19,9 +19,9 @@ function ctrlEnterSubmit(e, form) {
 // syntax highlighting
 hljs.initHighlightingOnLoad();
 // other stuff
-$(document).ready(function(){
+$(function() {
   // smooth scrolling
-  $('a[href*=#]').click(function() {
+  $('a[href^=#]').click(function() {
     var $target = $(this.hash);
     $target = $target.length && $target || $('[name=' + this.hash.slice(1) +']');
     if ($target.length) {

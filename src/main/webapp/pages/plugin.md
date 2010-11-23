@@ -1,22 +1,21 @@
-Circumflex Maven Plugin
-=======================
+# Circumflex Maven Plugin
 
-Circumflex comes shipped with handy Maven plugin that can help you with following tasks:
+Circumflex comes shipped with handy Maven plugin which can help you with following tasks:
 
   * [configuring Circumflex application](#cfg) using `pom.xml` instead of `cx.properties`;
   * [exporting database schema](#schema) of [Circumflex ORM](/orm.html) project on build;
   * generating source code documentation with [Docco](/index.html#docco).
 
-## Configuring Circumflex Application    {#cfg}
+# Configuring Circumflex Application    {#cfg}
 
 The `cfg` goal is used to create `cx.properties` file filled with properties defined in
-the `properties` section of your `pom.xml`. It is a very convenient way to configure Circumflex:
+the `properties` section of your `pom.xml`. It is a very convenient way to configure
+various aspects of your Circumflex application. This approach gives you following
+advantages:
 
-  * you can setup different environments using Maven profiles;
-  * you can reuse properties with the `${prop}` notation inside your `pom.xml`;
-  * you gain the advantages of property inheritance;
-  * you can override properties with your `settings.xml` file to create custom environment
-  on specific machine.
+  * different environments using Maven profiles and `settings.xml`;
+  * property inheritance;
+  * possibility to reuse properties with the `${prop}` notation inside your `pom.xml`;
 
 All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
 
@@ -48,7 +47,8 @@ All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
     </project>
 
 After that you may specify configuration properties right in the `properties` section of
-your `pom.xml`:
+your `pom.xml` (note that `cx.properties` from your `src/main/resourses`
+**will not be used anymore**):
 
     lang:xml
     <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -61,13 +61,7 @@ your `pom.xml`:
       </properties>
     </project>
 
-Of course, nothing stops you from using Circumflex to deal with your own configuration:
+# Exporting Database Schema   {#schema}
 
-    lang:scala
-    Circumflex("myCfgParam") match {
-      case s: String => ...
-      case _ => ...
-    }
-
-## Exporting Database Schema   {#schema}
+# Generating Source Documentation   {#docco}
 

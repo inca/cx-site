@@ -30,7 +30,6 @@ function updatePreview(cont) {
 function scheduleUpdate() {
   if(needs_update == $("#md-source").val())
     return;
-
   needs_update = $("#md-source").val();
   clearTimeout(timeout);
   timeout = setTimeout(function () {

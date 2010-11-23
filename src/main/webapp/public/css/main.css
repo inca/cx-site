@@ -23,6 +23,12 @@ fieldset, img {
 
 /* Layout */
 
+.amp {
+  font-family:Baskerville, "Goudy Old Style", "Palatino", "Book Antiqua", serif !important;
+  font-style:italic !important;
+  font-weight:normal !important;
+  line-height:inherit !important;
+}
 body {
   color:#333;
   font: 16px/1.5 Palatino Linotype, Book Antiqua, Palatino, FreeSerif, serif;
@@ -42,10 +48,33 @@ a:hover {
   width:900px;
   margin:0 auto;
 }
+#header .wrap {
+  background: url(/img/scala-line-54.png) repeat-y;
+  padding: 16px 0 0 54px;
+}
 #header h1 {
-  font:64px/1.5 Scriptorama;
+  font:64px/1.1 Scriptorama;
   font-style:italic;
   font-weight:normal;
+}
+#header .topnav {
+  float:right;
+  list-style: none outside;
+  overflow: hidden;
+  margin-top:-72px;
+}
+#header .topnav li {
+  float:left;
+  margin:0 8px;
+}
+#header .topnav li a {
+  display:block;
+  font-size:32px;
+  font-variant:small-caps;
+  color:#555;
+}
+#header .topnav li a:hover {
+  color:#333;
 }
 #header a {
   text-decoration:none;
@@ -84,7 +113,10 @@ a:hover {
   font-size:18px;
 }
 #page h1:first-child {
-  margin-top:-16px;
+  margin-top:-8px;
+}
+#page ul, #page ol {
+  padding-left:32px;
 }
 #footer {
   text-align:center;
@@ -96,12 +128,14 @@ a:hover {
 pre, code {
   font-family: monaco, lucida console, bitstream vera sans mono, monospace;
   font-size: 14px;
-  color: #383;
+  background: #f3f8f3;
+  border: 1px solid #e3e8e3;
 }
 pre code {
   font-size: 12px;
   display: block;
-  color: #333;
+  border:0;
+  background:transparent;
 }
 pre {
   background: #f3f8f3;
@@ -151,7 +185,22 @@ pre .class .title, pre .tag {
   text-decoration:none;
 }
 #toc-show, #toc-hide {font-weight:bold}
+#toc-hide { margin-right:4px;}
+#toc-hide span { position:absolute;}
 .toc a:hover {text-decoration:underline; color:#fff}
 .toc li > span, .toc li > span * {color:#aaa}
 .toc ul {list-style:none;margin:0 0 0 12px}
 .toc > ul {margin-left:0}
+
+/* Markdown Live */
+
+#md-markup-help-contents {
+  background:#fff;
+  padding:8px;
+}
+#md-markup-help-contents h1, #md-markup-help-contents h2, #md-markup-help-contents h3,
+#md-markup-help-contents h4, #md-markup-help-contents h5, #md-markup-help-contents h6,
+#md-preview h1, #md-preview h2, #md-preview h3,
+#md-preview h4, #md-preview h5, #md-preview h6 {
+  visibility:visible;
+}

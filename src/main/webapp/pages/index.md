@@ -1,4 +1,4 @@
-Circumflex unites several self-contained projects for quick and robust appliaction
+Circumflex unites several self-contained projects for quick and robust application
 development using [Scala][] programming language.
 
   * [Circumflex Web Framework](#web)
@@ -85,7 +85,7 @@ Circumflex ORM also features lazy and eager fetching strategies for associations
 including subqueries of all kinds, data manipulation statements (`INSERT .. SELECT`, `UPDATE` and
 `DELETE`), set operations between queries (`UNION`, `INTERSECT`, `EXCEPT`), transaction-scoped
 and application-scoped caching with [Terracotta Ehcache][ehcache], xml data import, schema generation
-with [Maven plugin](/plugin.html#schema) and other fun for data-centric applications.
+with [Maven plugin](/plugin.html#schema) and other cute stuff for data-centric applications.
 
 For more information, please check out the [Circumflex ORM page](/orm.html).
 
@@ -114,13 +114,13 @@ but you still might want to try it and let us know, what you think about it.
 
 # Why Circumflex? {#why}
 
-  * Circumflex components require minimum initial configuration, while still allowing
+  * Circumflex projects require minimum initial configuration, while still allowing
   developers to easily override defaults if necessary.
-  * Circumflex is based on Scala. It has all the benefits of Scala.
-  It runs on the JVM. It is fast. It is concise.
+  * Circumflex projects are written in Scala. They have all the benefits of Scala.
+  They run on the JVM. They are fast. They are concise.
   * Circumflex does not try to solve all the problems a developer might ever face.
   It maintains a minimal features set, allowing developers to choose the tools and libraries
-  that best suit their particular needs.
+  which best suit their particular needs.
   * Circumflex is designed to use the powers of the Apache Maven 2 software management
   platform. Adding Circumflex components to your project is a matter of few more lines
   in your `pom.xml`.
@@ -143,7 +143,7 @@ add the corresponding dependency to your project's `pom.xml`:
       <!-- Circumflex Web Framework -->
       <dependency>
         <groupId>ru.circumflex</groupId>
-        <artifactId>circumflex-core</artifactId>
+        <artifactId>circumflex-web</artifactId>
         <version>{cx.version}</version>
       </dependency>
       <!-- Circumflex ORM -->
@@ -244,6 +244,14 @@ Once you are ready to build, execute the following in the Circumflex root direct
 After the build has successfully finished, Circumflex with all its dependencies will
 be available in your local Maven 2 repository (it may take a while to download
 dependencies the first time).
+
+## Build With SBT
+
+An application skeleton for SBT has been kindly provided by
+[andreyshikov](http://github.com/andreyshikov), it shows how to configure simple Circumflex
+application to build with SBT.
+
+You can clone it from <http://github.com/andreyshikov/circumflex-sbt-quickstart>.
 
 # Contribute  {#contribute}
 
