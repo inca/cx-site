@@ -245,7 +245,7 @@ After the build has successfully finished, Circumflex with all its dependencies 
 be available in your local Maven 2 repository (it may take a while to download
 dependencies the first time).
 
-## Build With SBT
+## Build With SBT {#sbt}
 
 An application skeleton for SBT has been kindly provided by
 [andreyshikov](http://github.com/andreyshikov), it shows how to configure simple Circumflex

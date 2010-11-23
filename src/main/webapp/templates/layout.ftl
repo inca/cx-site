@@ -19,8 +19,6 @@
   <script src="/js/highlight.pack.js"></script>
   <script src="/js/jquery-1.4.2.min.js"></script>
   <script src="/js/jquery.colorbox-min.js"></script>
-  <script src="/js/typeface.js"></script>
-  <script src="/js/scriptorama.typeface.js"></script>
   <script src="/js/application.js"></script>
   [#if ciripage?? && .template_name?ends_with('/page.ftl')]
     <link rel="alternate"
@@ -40,7 +38,9 @@
 <body>
 <div id="header">
   <div class="wrap">
-    <h1><a href="/" title="Home">C&icirc;rcumflex</a></h1>
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
     [#--<ul class="topnav">--]
       [#--<li><a href="http://blog.circumflex.ru">Blog</a></li>--]
       [#--<li><a href="http://docs.circumflex.ru">Docs</a></li>--]

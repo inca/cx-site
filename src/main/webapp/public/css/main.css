@@ -34,10 +34,10 @@ body {
   font: 16px/1.5 Palatino Linotype, Book Antiqua, Palatino, FreeSerif, serif;
 }
 a, a:visited, a:hover {
-  color:#333;
+  color:#516f5d;
 }
 a:hover {
-  color:#000;
+  color:#304035;
 }
 #header {
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
@@ -50,41 +50,36 @@ a:hover {
 }
 #header .wrap {
   background: url(/img/scala-line-54.png) repeat-y;
-  padding: 16px 0 0 54px;
+  padding-left:64px;
+  height: 88px;
 }
 #header h1 {
-  font:64px/1.1 Scriptorama;
-  font-style:italic;
-  font-weight:normal;
-}
-#header .topnav {
-  float:right;
-  list-style: none outside;
-  overflow: hidden;
-  margin-top:-72px;
-}
-#header .topnav li {
+  padding-top:4px;
   float:left;
-  margin:0 8px;
 }
-#header .topnav li a {
-  display:block;
-  font-size:32px;
-  font-variant:small-caps;
-  color:#555;
-}
-#header .topnav li a:hover {
-  color:#333;
+#header h1 a {
+  text-indent:-9999px;
+  width:288px;
+  height:117px;
+  position:absolute;
+  background:transparent url(/img/logo.png) no-repeat;
 }
 #header a {
   text-decoration:none;
 }
 #header .aside {
   float:right;
-  margin-top:-24px;
   font-variant:small-caps;
   font-size:24px;
+  list-style-type:24px;
   color:#444;
+  margin-top:64px;
+}
+#header .aside a {
+  color:#990000;
+}
+#header .aside a:hover {
+  color:#770000;
 }
 #page {
   box-shadow: 1px 1px 3px #777;
@@ -197,10 +192,4 @@ pre .class .title, pre .tag {
 #md-markup-help-contents {
   background:#fff;
   padding:8px;
-}
-#md-markup-help-contents h1, #md-markup-help-contents h2, #md-markup-help-contents h3,
-#md-markup-help-contents h4, #md-markup-help-contents h5, #md-markup-help-contents h6,
-#md-preview h1, #md-preview h2, #md-preview h3,
-#md-preview h4, #md-preview h5, #md-preview h6 {
-  visibility:visible;
 }
