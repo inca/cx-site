@@ -127,6 +127,20 @@ a:hover {
   -moz-border-radius-bottomright:8px;
 }
 
+#content table {
+  border-collapse:collapse;
+}
+#content table th {
+  font: 18px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
+  background:#fafafa;
+}
+#content table tr {
+  border-bottom:1px solid #eee;
+}
+#content table code {
+  border:0;
+}
+
 /* Code highlighting */
 
 pre, code {

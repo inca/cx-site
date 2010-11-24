@@ -1,17 +1,17 @@
 Circumflex ORM   {#orm}
 ==============
 
-Circumflex ORM is an [Object/Relational Mapping (ORM)][orm-wiki] framework for creating fast,
+Circumflex ORM is an [Object-Relational Mapping (ORM)][orm-wiki] framework for creating fast,
 concise and efficient data-centric applications with elegant DSL.
 
-The term [Object/Relational Mapping][orm-wiki] refers to the technique of mapping
+The term &laquo;Object-Relational Mapping&raquo; refers to the technique of mapping
 a data representation from an object model to a relational data model. ORM tools may
 significantly speed up development by eliminating boilerplates for common
 [CRUD][crud-wiki] operations, making applications more portable by
 incapsulating vendor-specific SQL dialects, providing object-oriented API for querying,
 allowing transparent navigation between object associations and much more.
 
-## Installation & Configuration   {#install}
+# Installation & Configuration   {#install}
 
 There's a couple of things you need to do in order to get started with Circumflex ORM.
 
@@ -31,7 +31,7 @@ to do so is to add corresponding `dependency` to your `pom.xml`:
       </dependency>
     </dependencies>
 
-Second, configure database access by specifying following [configuration parameters](#cfg):
+Second, configure database access by specifying following configuration parameters:
 
   * `orm.connection.driver` -- fully-qualified class name of JDBC Driver of your database vendor;
   * `orm.connection.url` -- URL for database communication (read the documentation of
@@ -39,100 +39,86 @@ Second, configure database access by specifying following [configuration paramet
   * `orm.connection.username` and `orm.connection.password` -- database account data which will
   be used to obtain JDBC connections.
 
-There are a couple of ways you can provide configuration parameters:
+Here's the example `cx.properties` file:
 
-  * You can specify them in `cx.properties`:
+    lang:no-highlight
+    orm.connection.driver=org.postgresql.Driver
+    orm.connection.url=jdbc:postgresql://localhost:5432/mydb
+    orm.connection.username=myuser
+    orm.connection.password=mypassword
 
-        lang:no-highlight
-        orm.connection.driver=org.postgresql.Driver
-        orm.connection.url=jdbc:postgresql://localhost:5432/mydb
-        orm.connection.username=myuser
-        orm.connection.password=mypassword
+Please refer to [Circumflex Configuration API](/core.html#cfg) for more information on how
+to configure your application.
 
-    This file should be in the classpath, (typically in `/WEB-INF/classes` of your web application);
-    if you use Maven, just place it into `src/main/resources` directory.
-
-  * You can also specify them in your `pom.xml` and configure `maven-cx-plugin`:
-
-        lang:xml
-        <project xmlns="http://maven.apache.org/POM/4.0.0">
-          <properties>
-            <orm.connection.driver>org.postgresql.Driver</orm.connection.driver>
-            <orm.connection.url>jdbc:postgresql://localhost:5432/mydb</orm.connection.url>
-            <orm.connection.username>myuser</orm.connection.username>
-            <orm.connection.password>mypassword</orm.connection.password>
-          </properties>
-        </project>
-
-    Note that you should also add an execution for `cfg` goal of `maven-cx-plugin` to your
-    `pom.xml`, see the [Circumflex Maven Plugin documentation](/plugin.html#cfg) for more details.
-
-If you are writing a web application, configure `TransactionManagementListener` in your `web.xml`:
-
-    lang:xml
-    <web-app version="2.5">
-      <listener>
-        <listener-class>ru.circumflex.orm.TransactionManagementListener</listener-class>
-      </listener>
-    </web-app>
-
-Note that there are different approaches to transaction demarcation in web applications, read more
-in the [transaction demarcation](#transaction) section.
-
-### Imports   {#import}
+## Imports   {#import}
 
 All code examples assume that you have following `import` statement in code where necessary:
 
     lang:scala
     import ru.circumflex.orm._
 
-## Central abstractions   {#abstractions}
+# Central abstractions   {#abstractions}
 
 Applications built with Circumflex ORM usually operate on following abstractions:
 
-  * [`Record`](#record) -- wraps a row in a database `Table` or `View`, encapsulates the database
+  * `Record` -- wraps a row in a database `Table` or `View`, encapsulates the database
   access and adds domain logic on that data;
-  * [`Relation`](#relation) -- encapsulates database object (`Table` or `View`) for
+  * `Relation` -- encapsulates database object (`Table` or `View`) for
   corresponding `Record` and adds methods for [querying](#sql), [manipulating](#dml)
-  and [validating](#validation) it's data;
-  * `Field` -- corresponds to database column inside of `Record`;
-  * [`Association`](#association) -- links one type of `Record` with another, this relationship
-  is expressed by foreign keys in the database;
+  and [validating](#validation) its data;
+  * `Field` -- corresponds to atomic data unit inside `Record` or database column in `Table`;
+  * [`Association`](#association) -- incapsulates `Field` which links one type of `Record`
+  with another, this relationship is expressed by foreign keys in the database;
   * `Query` -- communicates with database either for [data retrieval](#sql) or
   [data manipulation](#dml);
-  * `SchemaObject` -- represents an abstract [database object](#aux) (such as trigger or
-  stored procedure).
+  * `SchemaObject` -- represents an abstract [database object](#aux) (such as trigger, index,
+  constraint or stored procedure); tables and views are database objects, too.
 
-## Data definition   {#ddl}
+# Data Definition   {#ddl}
 
 The process of creating the domain model of application is refered to as *data definition*.
 It usually involves following steps:
 
-  * defining a [record](#record), a subclass of `Record`;
-  * defining *fields* and [associations](#association) of the record;
-  * defining relation, a companion object for the record subclassed from `Relation` (typically,
-  more specific `Table` and `View` classes are subclassed);
-  * adding constraints, indexes and other [auxiliary database objects](#aux);
-  * adding methods for [querying](#sql) and [manipulating](#dml) records;
+  * defining a *record*, a subclass of `Record`;
+  * defining *fields* and *associations* of the record;
+  * defining the *primary key* of the record;
+  * defining the *relation*, a companion object subclassed from corresponding record and mixed
+  with one of the `Relation` traits (`Table` or `View`);
+  * adding *constraints*, *indexes* and other *auxiliary database objects* to relation;
+  * adding methods for [querying](#sql) and [manipulating](#dml) records to relation;
   * specifying, how the record should be [validated](#validation).
 
-### Records   {#record}
-
-A record is definied by subclassing `Record` and supplying self-type as it's type parameter:
+Here's a simple example of fictional domain model:
 
     lang:scala
-    class Account extends Record[Account]
+    class Country extends Record[String, Country] {
+      val code = "code".VARCHAR(2).NOT_NULL
+      val name = "name".TEXT.NOT_NULL
 
-The body of record class should contain definitions of it's *fields*. A field should be an
-immutable (`val`) member of record class, each field will correspond to a column in database table:
-
-    lang:scala
-    class Country extends Record[Country] {
-      val code = "code" VARCHAR(2) DEFAULT("'ch'") NOT_NULL
-      val name = "name" TEXT
+      def PRIMARY_KEY = code
+      def relation = Country
     }
 
-As the example shows, the syntax of field definition closely resembles classic DDL for generating
+    object Country extends Country with Table[String, Country]
+
+## Record {#record}
+
+In this example the `Country` table will have two fields, `code` and `name`.
+The first type parameter, `String`, designates the type of primary key (we refer to this type as `PK`).
+The second type parameter points to class itself to ensure type safety. The `Record` class has
+two abstract methods which should be implemented: `PRIMARY_KEY` and `relation`.
+
+The `PRIMARY_KEY` method points to `Field` which type matches `PK` (`String` in our example).
+Primary key uniquely identifies a record in database table. Unfortunately, Circumflex ORM does not
+support composite primary keys yet.
+
+The `relation` points to companion object which corresponds to record. It must have the same name
+as record class and should extend a record itself to inherit all its fields.
+
+The body of record class contains field definitions. A field should be a public immutable (`val`) member
+of record class. Each field corresponds to a column in database table.
+
+As the example above shows, the syntax of field definition closely resembles classic DDL for generating
 database schema for tables: you specify the column name with `String`, then you call one of the
 methods to create a field of certain type, then you optionally call one of methods that change the
 definition of target column.
@@ -149,7 +135,7 @@ Following methods are used to create field definitions:
   <thead>
   <tr>
     <th>Method</th>
-    <th>Default SQL type</th>
+    <th>SQL type</th>
     <th>Scala type</th>
     <th>Implementing class</th>
   </tr>
@@ -171,19 +157,19 @@ Following methods are used to create field definitions:
     <td><code>NUMERIC(precision: Int, scale: Int)</code></td>
     <td><code>NUMERIC(p, s)</code></td>
     <td><code>Double</code></td>
-    <td><code>DoubleField</code></td>
+    <td><code>NumericField</code></td>
   </tr>
   <tr>
     <td><code>TEXT</code></td>
     <td><code>TEXT</code></td>
     <td><code>String</code></td>
-    <td><code>StringField</code></td>
+    <td><code>TextField</code></td>
   </tr>
   <tr>
     <td><code>VARCHAR(length: Int)</code></td>
     <td><code>VARCHAR(l)</code></td>
     <td><code>String</code></td>
-    <td><code>StringField</code></td>
+    <td><code>TextField</code></td>
   </tr>
   <tr>
     <td><code>BOOLEAN</code></td>
@@ -194,109 +180,78 @@ Following methods are used to create field definitions:
   <tr>
     <td><code>DATE</code></td>
     <td><code>DATE</code></td>
-    <td><code>java.lang.Date</code></td>
+    <td><code>java.util.Date</code></td>
     <td><code>DateField</code></td>
   </tr>
   <tr>
     <td><code>TIME</code></td>
     <td><code>TIME</code></td>
-    <td><code>java.lang.Date</code></td>
-    <td><code>DateField</code></td>
+    <td><code>java.util.Date</code></td>
+    <td><code>TimeField</code></td>
   </tr>
   <tr>
     <td><code>TIMESTAMP</code></td>
     <td><code>TIMESTAMP</code></td>
-    <td><code>java.lang.Date</code></td>
-    <td><code>DateField</code></td>
+    <td><code>java.util.Date</code></td>
+    <td><code>TimestampField</code></td>
   </tr>
   </tbody>
 </table>
 
 In the table above the default SQL types show the types defined in default [dialect](#dialect),
-which can be overriden in vendor-specific dialect. Besides it is possible to define a field with
-custom SQL type using the `field(name: String, sqlType: String)` method:
+which can be overriden in vendor-specific dialects. Besides it is possible to define a field with
+custom SQL type by subclassing the `Field` class.
+Refer to [Circumflex ORM API documentation](/api/2.0/circumflex-orm/field.scala) for details. 
+
+Since version 2.0 genearated columns **will not have** `NOT NULL` constraints by default (this
+behavior is consistent with SQL specifications). You should call `NOT_NULL` method to express
+`NOT NULL` constraint in column definition:
 
     lang:scala
-    val myCustomField = field("custom", "NVARCHAR(32)").NOT_NULL
+    val mandatory = "mandatory".TEXT.NOT_NULL
+    val optional = "optional".TEXT
 
-The columns are generated with `NOT NULL` constraint by default, so `NOT_NULL` call can be omitted:
-
-    lang:scala
-    // following definitions are equivalent:
-    val name = "name".TEXT.NOT_NULL
-    val name = "name".TEXT
-
-If you need a column without `NOT NULL` constraint, you should express this using `NULLABLE` method:
+You can optionally initialize a field with value with `NOT_NULL`:
 
     lang:scala
-    val optionalField = "optional".TEXT.NULLABLE
+    val createdAt = "created_at".TIMESTAMP.NOT_NULL(new Date)
 
-Each record also has an implicit auto-incremented primary key field -- `id`. It is used to look up
-records in [transaction-scoped cache](#cache), for various [data manipulation queries](#dml)
-and other things. A record is refered to *transient* if it's `id` value is empty, otherwise it is
-considered *persistent*.
+You can also specify the default expression for the field, it will be rendered in database
+column definition:
 
-Fields operate with values. You may set the value of a field:
-
-    lang:scala
-    val age = "age" INTEGER
-    // following statements are equivalent:
-    age := 25
-    age.setValue(25)
-    age() = 25
-
-You may also retrieve the value of a field:
-
-    lang:scala
-    // following statements are equivalent:
-    age()           // 25
-    age.apply       // 25
-    age.getValue    // 25
-
-You may also use the `get` method for pattern matching:
-
-    lang:scala
-    age.get match {
-      case Some(a) => ...
-      case None => ...
-    }
-
-Or use the `getOrElse` method, which returns specified `default` instead of `null`:
-
-    lang:scala
-    age.getOrElse(18)
-
-There are also shortcut methods for setting or checking the `null` value:
-
-    lang:scala
-    // set null:
-    age.NULL_!
-    age.setNull
-    // check, if value is null:
-    if (age.NULL_?) ...
-    if (age.empty_?) ...
-
-You may specify the default expression for a field:
-
-    lang:scala
-    class Circle extends Record[Circle] {
-      val radius = "radius".NUMERIC
-      val square = "square".NUMERIC.DEFAULT("PI() * (radius ^ 2)")
-    }
-
-If a record is inserted and the field with default expression is empty, then it's value will be
-generated by the database.
+    lang: scala
+    val radius = "radius".NUMERIC.NOT_NULL
+    val square = "square".NUMERIC.NOT_NULL.DEFAULT("PI() * (radius ^ 2)")
 
 You can also create a single-column unique constraint using the `UNIQUE` method:
 
     lang:scala
     val login = "login".VARCHAR(64).NOT_NULL.UNIQUE
 
-You should place domain-specific logic inside record classes. The following example shows the most
-trivial case: overriding `toString` and providing alternative constructor:
+Fields operate with values. The syntax for accessing and setting values is self-descriptive:
 
     lang:scala
-    class Country extends Record[Country] {
+    val age = "age".INTEGER  // Field[Int, R]
+    // accessing
+    age.value                     // Option[Int]
+    age.get                       // Option[Int]
+    age()                         // Int
+    age.getOrElse(default: Int)   // Int
+    age.null_?                    // Boolean
+    // setting
+    age := 25
+    age.set(25)
+    age.set(Some(25))
+    age.set(None)
+    age.setNull
+
+It is a good practice to place domain-specific logic inside record classes. The following example
+shows the most trivial case: overriding `toString` and providing alternative constructor:
+
+    lang:scala
+    class Country extends Record[String, Country] {
+      def PRIMARY_KEY = code
+      def relation = Country
       // Constructor shortcuts
       def this(code: String, name: String) = {
         this()
@@ -310,55 +265,83 @@ trivial case: overriding `toString` and providing alternative constructor:
       override def toString = name.getOrElse("Unknown")
     }
 
-### Relations   {#relation}
+## Relation   {#relation}
 
-The relation is defined as a companion object of corresponding [record](#record) subclassed from
-either `Table` or `View`:
-
-    lang:scala
-    object Country extends Table[Country]
-
-You can place the definitions of constraints and indexes inside the body of relation:
+Relation is defined as a companion object for corresponding [record](#record). As mentioned before,
+the relation object should have the same name as its corresponding record class, should extend
+that record class and should mix in one of the `Relation` traits (`Table` or `View`):
 
     lang:scala
-    object Country extends Table[Country] {
-      // create a named UNIQUE constraint:
-      CONSTRAINT "code_uniq" UNIQUE(this.code)   // relations are converted to records implicitly
-      // create a UNIQUE constraint with default name:
-      UNIQUE(this.code)
-      // create a named CHECK constraint:
-      CONSTRAINT "code_chk" CHECK("code IN ('ch', 'us', 'uk', 'fr', 'es', 'it', 'pt')")
-      // create a named FOREIGN KEY constraint:
-      CONSTRAINT "eurozone_code_fkey" FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
-      // create a FOREIGN KEY constraint with default name:
-      FOREIGN_KEY(EuroZone, this.code -> EuroZone.code).ON_DELETE(CASCADE)
-      // create an index:
-      INDEX("country_code_idx", "LOWER(code)") USING "btree" UNIQUE
+    class Country extends Record[String, Country] {
+      def relation = Country
+      // ...
     }
+    object Country extends Country with Table[String, Country]
+
+You can place the definitions of constraints and indexes inside the body of relation, they should
+be public immutable (`val`) members of relation:
+
+    lang:scala
+    object Country extends Country with Table[String, Country] {
+      // a named UNIQUE constraint
+      val codeKey = CONSTRAINT("code_uniq").UNIQUE(this.code)
+      // a UNIQUE constraint with default name
+      val codeKey = UNIQUE(this.code)
+      // a named CHECK constraint:
+      val codeChk = CONSTRAINT("code_chk").CHECK("code IN ('ch', 'us', 'uk', 'fr', 'es', 'it', 'pt')")
+      // a named FOREIGN KEY constraint:
+      val fkey = CONSTRAINT("eurozone_code_fkey").FOREIGN_KEY(EuroZone, this.code -> EuroZone.code)
+      // an index:
+      val idx = "country_code_idx".INDEX("LOWER(code)").USING("btree").UNIQUE
+    }
+
+Consult [Circumflex ORM API Documentation](/api/2.0/circumflex-orm/sql.scala) for other
+definition options.
 
 The relation object is also the right place for various querying methods:
 
     lang:scala
     object User extends Table[User] {
-      def byLogin(l: String): Option[User] = criteria.add(this.login LIKE l).unique
+      def findByLogin(l: String): Option[User] = (this AS "u").map(u =>
+          SELECT(u.*).FROM(u).WHERE(u.login LIKE l).unique)
     }
 
 See [querying](#sql), [data manipulation](#dml) and [Criteria API](#criteria) sections for
 more information.
 
-### Associations   {#association}
+## Generating Identifiers {#idgen}
 
-An *association* provides a way to link one [relation](#relation) with another.
+Circumflex ORM allows you to use database-generated identifiers as primary keys.
+Let's take a look at following data definition snippet:
 
-    lang:scala
-    class City extends Record[City] {
-      val country = "country_id" REFERENCES(Country) ON_DELETE CASCADE ON_UPDATE NO_ACTION
+    class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+      val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+      val name = "name".TEXT.NOT_NULL
+      def PRIMARY_KEY = id
+      def relation = City
     }
 
-As the example above shows, the syntax for association definition is similar to fields definition,
-except that the `REFERENCES(relation: Relation[R])` method is used. Associations also implicitly
-add foreign key constraint to table's definition, so the cascading actions can be specified by
-invoking `ON_DELETE` and `ON_UPDATE` with one of the following arguments:
+    object City extends City with Table[Long, City]
+
+This snippet shows a surrogate primary key example. The value of `id` is generated when a
+record is inserted. Then additional SQL select is issued to read this generated value.
+
+For more information refer to [Circumflex ORM API Documentation](/api/2.0/circumflex-orm/record.scala).
+
+## Associations   {#association}
+
+An *association* provides a way to link one relation with another.
+
+    lang:scala
+    class City extends Record[Long, City] {
+      val country = "country_code".TEXT.REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(NO_ACTION)
+    }
+
+As the example above shows, associations are created from fields using the `REFERENCES` method.
+The type of the field must match the type of primary key of referenced relation.
+
+Associations also implicitly add foreign key constraint to table's definition. The cascading
+actions can be specified by invoking `ON_DELETE` and `ON_UPDATE` with one of the following arguments:
 
   * `NO_ACTION` (default),
   * `CASCADE`,
@@ -373,29 +356,30 @@ as a *parent relation*.
 Like with regular field, you can set an retrieve the association's value:
 
     lang:scala
-    // set the value
-    country := russia
-    country() = russia
-    country.setValue(russia)
-    // retrieve the value
-    country()
-    country.apply
-    country.getValue
-    // pattern match the value
-    country.get match {
-      case Some(c: Country) =>
-      case None =>
-    }
-    // get or default
-    country.getOrElse(new Country)
-    // set null
-    country.NULL_!
-    // check for null
-    country.NULL_?
+    // accessing
+    country.value                       // Option[Country]
+    country.get                         // Option[Country]
+    country()                           // Country
+    country.getOrElse(default: Country) // Country
+    country.null_?                      // Boolean
+    // setting
+    country := switzerland
+    country.set(switzerland)
+    country.set(Some(switzerland))
+    country.set(None)
+    country.setNull
 
-An association's value is initilialized the first time you access it inside a persistent
-[record](#record). This technique is usually refered to as *lazy initialization* or
-*lazy fetching*:
+Associations do not store objects themselves. Instead they store the primary key of an object
+in their internal field. You can access and set this value directly using the `field` method:
+
+    lang:scala
+    country.field   // Field[String, R]
+    country.field := "ch"
+
+When you access association using its `get`, `apply`, `value` or `getOrElse` methods, the
+actual record is returned from cache of current transaction. However, if record does not
+exist in cache yet, a transparent SQL select will be issued to fetch this record. This technique
+is usually refered to as *lazy initialization* or *lazy fetching*:
 
     lang:scala
     val c = new City
@@ -407,8 +391,8 @@ An association's value is initilialized the first time you access it inside a pe
 The other side of association can optionally define an *inverse association* using following syntax:
 
     lang:scala
-    class Country extends Record[Country] {
-      def cities = inverse(City.country)
+    class Country extends Record[String, Country] {
+      def cities = inverseMany(City.country)
     }
 
 Inverse associations are not represented by field in their relation, they are initialized by
@@ -416,24 +400,29 @@ issuing the `SELECT` statement against child relation:
 
     lang:scala
     val c = new Country
-    c.id := 5
+    c.code := 'ch'
     c.cities()   // a SELECT query is executed to retrieve a set of City objects
-                 // which have country_id = 5
+                 // which have country_code = 'ch'
     c.cities()   // further selects are not issued
 
-You can also perform [association prefetching](#prefetch) for both straight and inverse
-associations, using the [Criteria API](#criteria).
+Here we have the so-called &laquo;one-to-many&raquo; relationship. The &laquo;one-to-one&raquo;
+relationship is simulated by placing a unique constraint on association (in child table) and
+using `inverseOne` in parent table.
 
-Note that associations hold their state in [transaction-scoped cache](#cache), it is invalidated
-by any [data manipulation](#dml) statement or [transaction control](#transaction) command.
+You can also perform *association prefetching* for both straight and inverse associations using
+the [Criteria API](#criteria).
 
-### Validation   {#validation}
+## Validation   {#validation}
 
 A record can be optionally validated before it is saved into database.
 
 The validation is performed using one or more *validators*, functions which take a `Record`
-and return `Option[ValidationError]`: `None` if validation succeeds or `Some[ValidationError]`
-otherwise. They are added to the `validation` object inside [relation](#relation):
+and return `Option[Msg]`: `None` if validation succeeds or `Some[Msg]` otherwise. In case of
+failed validation the `Msg` object is used to describe the exact problem.
+Refer to [Circumflex Messages API Documentation](/api/2.0/circumflex-core/messages.scala) to
+find out how to work with messages.
+
+Validators are added to the `validation` object inside [relation](#relation):
 
     lang:scala
     object Country extends Table[Country] {
@@ -443,19 +432,14 @@ otherwise. They are added to the `validation` object inside [relation](#relation
 
 There are several predefined validators available for your convenience:
 
-    lang:scala
-    class Country extends Record[Country] {
-      val code = "code" VARCHAR(2) DEFAULT("'ch'")
-    }
-
-    object Country extends Table[Country] {
+    object Country extends Table[String, Country] {
       validation.notNull(_.code)
           .notEmpty(_.code)
           .pattern(_.code, "(?i:[a-z]{2})")
     }
 
 A record is validated when either `validate` or `validate_!` is invoked.
-The first one returns `Option[ValidationErrors]`:
+The first one returns `Option[MsgGroup]`:
 
     lang:scala
     rec.validate match {
@@ -465,72 +449,8 @@ The first one returns `Option[ValidationErrors]`:
 
 The second one does not return anything, but throws `ValidationException` if validation fails.
 
-`ValidationErrors` is a convenient wrapper around `Seq[ValidationError]` which allows to
-look up different errors by `source` (or it's part).
-
 The `validate_!` method is also called when a record is being saved into database, read
 more in [Insert, Update & Delete](#iud) section.
-
-Each `ValidationError` could be resolved into a message from
-[Circumflex `Messages` helper](/web.html#msg).
-Following members of `ValidationError` are involved in message resolution:
-
-  * `source` describes a place where error occured, most obvious field-based validators return
-  `ValidationError` instances with field's `uuid` as their source;
-  * `errorKey` describes the nature of the error, for example, `"null"` for `notNull` validator,
-  or `"empty"` for `notEmpty` validator;
-  * `params` provide additional information about validation, these params are
-  [interpolated](/web.html#msg) inside resolved message.
-
-The `toMsg` method resolves the message:
-
-  * first, it tries to resolve a message with following key: `source + "." + errorKey`;
-  * if no such message exist in the `Messages` bundle, it removes the part of the key until the
-  first dot (`.`) and then tries again;
-  * if no message found, it simply returns `errorKey`;
-  * finally, the `params` are interpolated into the resolved message.
-
-Let's take a look at example. First, let's define a simple model with validation:
-
-    lang:scala
-    package com.myapp.model
-
-    class Country extends Record[Country] {
-      def this(code: String) = {
-        this()
-        this.code := code
-      }
-      val code = "code" VARCHAR(2) DEFAULT("'ch'")
-    }
-
-    object Country extends Table[Country] {
-      validation.notNull(_.code)
-          .notEmpty(_.code)
-          .pattern(_.code, "(?i:[a-z]{2})")
-    }
-
-Now let's provide some messages for validators:
-
-    lang:no-highlight
-    # Messages.properties
-    Country.code.null=Null value in country code is not allowed.
-    Country.code.empty=Empty value is country code is not allowed.
-    Country.code.pattern=The value {value} doesn't look like a valid country code.
-
-Finally, let's play with them a bit:
-
-    lang:scala
-    val c = new Country
-    c.validate
-    // Some(com.myapp.model.Country.code.null)
-    c.code := "11"
-    c.validate
-    // Some(com.myapp.model.Country.code.pattern)
-    c.validate.get.apply(0).toMsg
-    // "The value 11 doesn't look like a valid country code."
-    c.code := "ch"
-    c.validate
-    // None
 
 It is also fairly easy to implement custom validators. Following example shows a validator
 for checking unique email addresses:
@@ -540,49 +460,39 @@ for checking unique email addresses:
       validation.add(r => criteria
           .add(r.email EQ r.email())
           .unique
-          .map(a => new ValidationError(r.email.uuid, "unique")))
+          .map(a => new Msg(r.email.uuid + ".unique")))
     }
 
-### Exporting Database Schema   {#export-schema}
+# Exporting Database Schema   {#export-schema}
 
-You can use `DDLUnit` to create or drop database objects programmaticaly:
+Database schema scripts are generated with `DDLUnit`. You can use this class to create and drop
+database objects programmatically:
 
     lang:scala
     val ddl = new DDLUnit(Country, City)
     // drop objects
-    ddl.drop
+    ddl.DROP
     // create objects
-    ddl.create
+    ddl.CREATE
     // drop and then create objects
-    ddl.dropCreate
+    ddl.DROP_CREATE
 
 `DDLUnit` creates objects in the following order:
 
-  * preliminary [auxiliary objects](#aux);
+  * preliminary auxiliary objects;
   * tables;
   * constraints;
   * views;
-  * posterior [auxiliary objects](#aux).
+  * posterior auxiliary objects.
 
 Respectively, drop script works with objects in a reverse order.
 
-After the execution, `DDLUnit` produces `messages`: `InfoMsg` for succeeded statements,
-`ErrorMsg` for failed ones. Here's the example:
-
-    lang:scala
-    ddl.messages(0).sql
-    // CREATE TABLE public.country (
-    //   id BIGINT NOT NULL DEFAULT NEXTVAL('public.country_id_seq'),
-    //   code VARCHAR(2) NOT NULL DEFAULT 'ch',
-    //   name TEXT NOT NULL,
-    //   PRIMARY KEY (id))
-    ddl.messages(0).body
-    // CREATE TABLE public.country: OK
+After the execution, `DDLUnit` produces `messages`.
 
 You can also setup `maven-cx-plugin` to export the schema for your Maven project within a
 build profile. Read more on [Circumflex Maven Plugin page](/plugin.html#schema).
 
-## Querying   {#sql}
+# Querying   {#sql}
 
 A precise request for information retrieval from database is often refered to as *query*.
 There are various ways you can query your data with Circumflex ORM:

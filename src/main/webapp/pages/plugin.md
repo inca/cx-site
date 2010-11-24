@@ -63,5 +63,88 @@ your `pom.xml` (note that `cx.properties` from your `src/main/resourses`
 
 # Exporting Database Schema   {#schema}
 
+You can configure your application to execute schema export scripts on build.
+Just add a configuration for `maven-cx-plugin` to your `pom.xml`:
+
+    lang:xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                                 http://maven.apache.org/maven-v4_0_0.xsd">
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>ru.circumflex</groupId>
+            <artifactId>maven-cx-plugin</artifactId>
+            <version>${cx.version}</version>
+            <configuration>
+              <packages>
+                <package>com.myapp.model</package>
+              </packages>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>your-jdbc-driver-vendor</groupId>
+                <artifactId>your-jdbc-driver-artifact</artifactId>
+                <version>your-jdbc-driver-version</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </project>
+
+Then simply execute following string in your project root:
+
+    lang:no-highlight
+    $ mvn clean compile cx:schema
+
+The database objects from specified `package` (`com.myapp.model` in our example) will be
+created. To drop objects first, add `-Ddrop` to execution line. Note that plugin
+searches for schema objects in compiled classes inside project's `outputDirectory`.
+Make sure you `clean compile` your project before running `cx:schema` to avoid ambiguous
+situations.
+
+Also note that specifying the `dependency` to JDBC driver inside `maven-cx-plugin`
+configuration is **mandatory** even if you already have one in your project. This is caused
+by classloading limitations of [c3p0](http://www.mchange.com/projects/c3p0/index.html).
+
 # Generating Source Documentation   {#docco}
 
+You can use Docco to build your source documentation (just like we did to document
+[our codebase](/api).
+
+Circumflex Docco recognizes documentation in following format:
+
+    /*! Your documentation in Markdown
+    ...
+    ...
+    */
+    your_source_code
+
+The API generation is simple: you add a configuration for `maven-cx-plugin` to your `pom.xml`:
+
+    lang:xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                                 http://maven.apache.org/maven-v4_0_0.xsd">
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>ru.circumflex</groupId>
+            <artifactId>maven-cx-plugin</artifactId>
+            <version>${cx.version}</version>
+          </plugin>
+        </plugins>
+      </build>
+    </project>
+
+Then you execute following in your project root:
+
+    lang:no-highlight
+    $ mvn cx:docco
+
+The documentation will be created in `target/docco`.
