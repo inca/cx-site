@@ -21,6 +21,13 @@ fieldset, img {
   margin-left:0;
 }
 
+h1, h2, h3, p, ul, ol, dl, pre {
+  margin-bottom:.5em;
+}
+h1, h2, h3 {
+  font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
+  margin: .75em 0;
+}
 h1 {
   border-bottom: 1px solid #777;
 }
@@ -118,19 +125,13 @@ a:hover {
   -webkit-border-bottom-right-radius:8px;
   -moz-border-radius-bottomright:8px;
 }
-#page h1, #page h2, #page h3, #page p, #page ul, #page ol, #page dl, #page pre {
-  margin-bottom:.5em;
-}
-#content h1, h2, h3 {
-  font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
-  margin: .75em 0;
-}
 
 /* Code highlighting */
 
 pre, code {
   font-family: monaco, lucida console, bitstream vera sans mono, monospace;
-  font-size: 14px;
+  font-size:.85em;
+  font-variant:normal;
   background: #f3f8f3;
   border: 1px solid #e3e8e3;
 }
