@@ -74,7 +74,7 @@ response body to <code>UTF-8</code>. Feel free to change it if your application 
     throw new ResponseSentException
   }
 
-  def flush(): Unit = {
+  def flush(): Unit = if (!raw.isCommitted) {
     if (statusCode != -1)
       raw.setStatus(statusCode)
     if (contentLength != -1)
