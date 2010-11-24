@@ -190,8 +190,14 @@ pre .class .title, pre .tag {
 #toc-hide span { position:absolute;}
 .toc a:hover {text-decoration:underline; color:#fff}
 .toc li > span, .toc li > span * {color:#aaa}
-.toc ul {list-style:none;margin:0 0 0 12px}
-.toc > ul {margin-left:0}
+.toc ul {
+  list-style:none;
+  padding-left:24px;
+}
+.toc > ul {
+  margin:0;
+  padding:0;
+}
 
 /* Markdown Live */
 
