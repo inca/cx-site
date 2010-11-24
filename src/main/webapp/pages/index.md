@@ -76,10 +76,10 @@ But still it is nothing comparing to object-oriented querying:
     val co = Country as "co"
     // Select all cities of Switzerland, return Seq[City]:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ch") ORDER_BY (ci.name ASC) list
-    // Select countries with corresponding cities, return Seq[(Country, City)]:
-    SELECT (co.* -> ci.*) FROM (co JOIN ci) list
-    // Select countries and count their cities, return Seq[(Country, Int)]:
+    // Select countries and count their cities, return Seq[(Option[Country], Option[Long])]:
     SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list
+    // Select countries with corresponding cities, return a sequence of alias maps:
+    SELECT (co.* AS "country", ci.* AS "city") FROM (co JOIN ci) list
 
 Circumflex ORM also features lazy and eager fetching strategies for associations, complex queries,
 including subqueries of all kinds, data manipulation statements (`INSERT .. SELECT`, `UPDATE` and
