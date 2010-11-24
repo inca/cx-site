@@ -21,6 +21,31 @@ fieldset, img {
   margin-left:0;
 }
 
+h1 {
+  border-bottom: 1px solid #777;
+}
+h2, h3 {
+  font-size:24px;
+  font-variant:small-caps;
+  border-bottom: 1px solid #eee;
+}
+h3 {
+  font-size:18px;
+}
+h1:first-child {
+  margin-top:-8px;
+}
+ul, ol {
+  padding-left:32px;
+}
+#footer {
+  text-align:center;
+  padding: 24px;
+}
+ul > li > pre {
+  margin-left: -57px;
+}
+
 /* Layout */
 
 .amp {
@@ -97,30 +122,6 @@ a:hover {
 #content h1, h2, h3 {
   font: 32px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
   margin: .75em 0;
-}
-h1 {
-  border-bottom: 1px solid #777;
-}
-h2, h3 {
-  font-size:24px;
-  font-variant:small-caps;
-  border-bottom: 1px solid #eee;
-}
-h3 {
-  font-size:18px;
-}
-h1:first-child {
-  margin-top:-8px;
-}
-ul, ol {
-  padding-left:32px;
-}
-#footer {
-  text-align:center;
-  padding: 24px;
-}
-ul > li > pre {
-  margin-left: -57px;
 }
 
 /* Code highlighting */
