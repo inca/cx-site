@@ -1,0 +1,411 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;config.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._
+import javax.sql.DataSource
+import javax.naming.InitialContext
+import java.util.Date
+import java.sql.{Timestamp, Connection, PreparedStatement, ResultSet}
+import com.mchange.v2.c3p0.{DataSources, ComboPooledDataSource}
+import collection.mutable.HashMap
+import xml._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>ORM Configuration Objects</h1>
+
+<p>Circumflex ORM needs to know a little about your environment to operate.
+Following objects configure different aspects of Circumflex ORM:</p>
+
+<ul>
+<li><em>connection provider</em> is used to acquire JDBC connections, can be
+overriden using the <code>orm.connectionProvider</code> configuration parameter;</li>
+<li><em>type converter</em> handles convertions between JDBC and Scala data types,
+can be overriden using the <code>orm.typeConverter</code> configuration parameter;</li>
+<li><em>dialect</em> handles all SQL rendering throughout the framework,
+can be overriden using the <code>orm.dialect</code> configuration parameter;</li>
+<li><em>transaction manager</em> is responsible for allocating current transactions
+for execution contexts.</li>
+</ul>
+        </td>
+        <td class="code">
+          <pre class="scala"><code></code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Connection Provider</h2>
+
+<p>The <code>ConnectionProvider</code> is a simple trait responsible for acquiring JDBC
+connections throughout the application.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait ConnectionProvider {
+  def openConnection(): Connection
+
+  def close(): Unit
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p>Circumflex ORM provides default <code>ConnectionProvider</code> implementation.
+It behaves as follows:</p>
+
+<ul>
+<li><p>if <code>orm.connection.datasource</code> is set, use it to acquire data source
+from JNDI;</p>
+
+<ul>
+<li>if <code>orm.connection.datasource</code> is missing, construct a connection
+pool using <a href="http://www.mchange.com/projects/c3p0">c3p0</a> and following configuration parameters:
+<ul>
+<li><code>orm.connection.driver</code></li>
+<li><code>orm.connection.url</code></li>
+<li><code>orm.connection.username</code></li>
+<li><code>orm.connection.password</code></li>
+</ul></li>
+<li>set <em>auto-commit</em> for each connection to <code>false</code></li>
+<li>set the transaction isolation level to the value <code>orm.connection.isolation</code>
+(or use <code>READ COMMITTED</code> by default)</li>
+</ul>
+
+<p>If c3p0 data source is used you can fine tune it's configuration with <code>c3p0.properties</code>
+file (see <a href="http://www.mchange.com/projects/c3p0/index.html#configuration&#95;properties">c3p0 documentation</a> for more details).</p>
+
+<p>Though <code>DefaultConnectionProvider</code> is an optimal choice for most applications, you
+can create your own connection provider by implementing the <code>ConnectionProvider</code> trait
+and setting the <code>orm.connectionProvider</code> configuration parameter.</p></li>
+</ul>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class DefaultConnectionProvider extends ConnectionProvider {
+
+  protected val autocommit: Boolean = cx.get(&quot;orm.connection.autocommit&quot;) match {
+    case Some(&quot;true&quot;) =&gt; true
+    case _ =&gt; false
+  }
+
+  protected val isolation: Int = cx.get(&quot;orm.connection.isolation&quot;) match {
+    case Some(&quot;none&quot;) =&gt; Connection.TRANSACTION_NONE
+    case Some(&quot;read_uncommitted&quot;) =&gt; Connection.TRANSACTION_READ_UNCOMMITTED
+    case Some(&quot;read_committed&quot;) =&gt; Connection.TRANSACTION_READ_COMMITTED
+    case Some(&quot;repeatable_read&quot;) =&gt; Connection.TRANSACTION_REPEATABLE_READ
+    case Some(&quot;serializable&quot;) =&gt; Connection.TRANSACTION_SERIALIZABLE
+    case _ =&gt; {
+      ORM_LOG.info(&quot;Using READ COMMITTED isolation, override 'orm.connection.isolation' if necesssary.&quot;)
+      Connection.TRANSACTION_READ_COMMITTED
+    }
+  }
+
+  protected def createDataSource: DataSource = cx.get(&quot;orm.connection.datasource&quot;) match {
+    case Some(jndiName: String) =&gt; {
+      val ctx = new InitialContext
+      val ds = ctx.lookup(jndiName).asInstanceOf[DataSource]
+      ORM_LOG.info(&quot;Using JNDI datasource ({}).&quot;, jndiName)
+      ds
+    }
+    case _ =&gt; {
+      ORM_LOG.info(&quot;Using c3p0 connection pool.&quot;)
+      val driver = cx.get(&quot;orm.connection.driver&quot;) match {
+        case Some(s: String) =&gt; s
+        case _ =&gt;
+          throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.driver'.&quot;)
+      }
+      val url = cx.get(&quot;orm.connection.url&quot;) match {
+        case Some(s: String) =&gt; s
+        case _ =&gt;
+          throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.url'.&quot;)
+      }
+      val username = cx.get(&quot;orm.connection.username&quot;) match {
+        case Some(s: String) =&gt; s
+        case _ =&gt;
+          throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.username'.&quot;)
+      }
+      val password = cx.get(&quot;orm.connection.password&quot;) match {
+        case Some(s: String) =&gt; s
+        case _ =&gt;
+          throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.password'.&quot;)
+      }
+      val ds = new ComboPooledDataSource()
+      ds.setDriverClass(driver)
+      ds.setJdbcUrl(url)
+      ds.setUser(username)
+      ds.setPassword(password)
+      ds
+    }
+  }
+
+  protected var _ds: DataSource = null
+  def dataSource: DataSource = {
+    if (_ds == null)
+      _ds = createDataSource
+    return _ds
+  }
+
+  def openConnection(): Connection = {
+    val conn = dataSource.getConnection
+    conn.setAutoCommit(autocommit)
+    conn.setTransactionIsolation(isolation)
+    return conn
+  }
+
+  def close(): Unit = {
+    DataSources.destroy(_ds)
+    _ds = null
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <h2>Type converter</h2>
+
+<p>The <code>TypeConverter</code> trait is used to read atomic values from JDBC result sets and to set
+JDBC prepared statement values for execution. If you intend to use custom types,
+provide your own implementation.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait TypeConverter {
+
+  def read(rs: ResultSet, alias: String): Option[Any] = {
+    val result = rs.getObject(alias)
+    if (rs.wasNull) return None
+    else return fromJDBC(result)
+  }
+
+  def write(st: PreparedStatement, parameter: Any, paramIndex: Int): Unit =
+    parameter match {
+      case None | null =&gt; st.setObject(paramIndex, null)
+      case Some(v) =&gt; write(st, toJDBC(v), paramIndex)
+      case v =&gt; st.setObject(paramIndex, toJDBC(v))
+    }
+
+  def toJDBC(value: Any): Any
+
+  def fromJDBC(value: Any): Option[Any]
+
+  def escape(value: Any): String
+}
+
+class DefaultTypeConverter extends TypeConverter {
+
+  def toJDBC(value: Any): Any = value match {
+    case Some(v) =&gt; toJDBC(v)
+    case p: Date =&gt; new Timestamp(p.getTime)
+    case x: Elem =&gt; x.toString
+    case value =&gt; value
+  }
+
+  def fromJDBC(value: Any): Option[Any] = value match {
+    case null =&gt; None
+    case None =&gt; None
+    case Some(value) =&gt; fromJDBC(value)
+    case value =&gt; Some(value)
+  }
+
+  def escape(value: Any): String = fromJDBC(value) match {
+    case Some(s: String) =&gt; dialect.quoteLiteral(s)
+    case Some(d: Timestamp) =&gt; dialect.quoteLiteral(d.toString)
+    case Some(other) =&gt; other.toString
+    case _ =&gt; &quot;NULL&quot;
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <h1>Transaction manager</h1>
+
+<p>No communication with the database can occur outside of a database transaction.</p>
+
+<p>The <code>Transaction</code> class wraps JDBC <code>Connection</code> and provides simple methods
+for committing or rolling back underlying transaction as well as for executing
+various typical JDBC statements.</p>
+
+<p>The <code>TransactionManager</code> trait is responsible for allocation current transaction
+for application's execution context. The default implementation uses <code>Context</code>,
+however, your application may require different approaches to transaction
+demarcation &mdash; in this case you may provide your own implementation.</p>
+
+<p>JDBC <code>PreparedStatement</code> objects are also cached within <code>Transaction</code> for
+performance considerations.</p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Transaction {
+
+  // Connections are opened lazily
+  protected var _connection: Connection = null
+
+  // Statements are cached by actual SQL
+  protected val _statementsCache = new HashMap[String, PreparedStatement]()
+
+  def live_?(): Boolean =
+    _connection != null &amp;&amp; !_connection.isClosed
+
+  def commit(): Unit =
+    if (live_? &amp;&amp; !_connection.getAutoCommit) _connection.commit
+
+  def rollback(): Unit = {
+    if (live_? &amp;&amp; !_connection.getAutoCommit) _connection.rollback
+    contextCache.invalidate
+  }
+
+  def close(): Unit = if (live_?) try {
+    // close all cached statements
+    _statementsCache.values.foreach(_.close)
+  } finally {
+    // clear statements cache
+    _statementsCache.clear
+    // close connection
+    _connection.close
+    Statistics.connectionsClosed.incrementAndGet
+    ORM_LOG.trace(&quot;Closed a JDBC connection.&quot;)
+  }
+
+  protected def getConnection: Connection = {
+    if (_connection == null || _connection.isClosed) {
+      _connection = connectionProvider.openConnection
+      Statistics.connectionsOpened.incrementAndGet
+      ORM_LOG.trace(&quot;Opened a JDBC connection.&quot;)
+    }
+    return _connection
+  }
+
+  def execute[A](connActions: Connection =&gt; A)
+                (errActions: Throwable =&gt; A): A =
+    try {
+      Statistics.executions.incrementAndGet
+      val result = connActions(getConnection)
+      Statistics.executionsSucceeded.incrementAndGet
+      result
+    } catch {
+      case e =&gt;
+        Statistics.executionsFailed.incrementAndGet
+        errActions(e)
+    }
+
+  def execute[A](sql: String)
+                (stActions: PreparedStatement =&gt; A)
+                (errActions: Throwable =&gt; A): A = execute { conn =&gt;
+    ORM_LOG.debug(sql)
+    val st =_statementsCache.get(sql).getOrElse {
+      val statement = conn.prepareStatement(sql)
+      _statementsCache.update(sql, statement)
+      statement
+    }
+    stActions(st)
+  } (errActions)
+
+  def apply[A](block: =&gt; A): A = {
+    val sp = getConnection.setSavepoint
+    try {
+      block
+    } catch {
+      case e =&gt;
+        getConnection.rollback(sp)
+        throw e
+    } finally {
+      getConnection.releaseSavepoint(sp)
+    }
+  }
+
+}
+
+trait TransactionManager {
+
+  def hasLive_?(): Boolean
+
+  def get: Transaction
+}
+
+class DefaultTransactionManager extends TransactionManager {
+
+  Context.addDestroyListener(c =&gt; try {
+    get.commit
+    ORM_LOG.trace(&quot;Committed current transaction.&quot;)
+  } catch {
+    case e =&gt;
+      ORM_LOG.error(&quot;Could not commit current transaction&quot;, e)
+      try {
+        get.rollback
+        ORM_LOG.trace(&quot;Rolled back current transaction.&quot;)
+      } catch {
+        case e =&gt;
+          ORM_LOG.error(&quot;Could not roll back current transaction&quot;, e)
+      }
+  } finally {
+    get.close
+  })
+
+  def hasLive_?(): Boolean = ctx.contains(&quot;orm.transaction&quot;)
+
+  def get: Transaction = ctx.get(&quot;orm.transaction&quot;) match {
+    case Some(t: Transaction) =&gt; t
+    case _ =&gt;
+      val t = cx.instantiate[Transaction](&quot;orm.transaction&quot;, new Transaction)
+      ctx.update(&quot;orm.transaction&quot;, t)
+      return t
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

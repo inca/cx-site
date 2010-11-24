@@ -1,0 +1,252 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          <p></p>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import ru.circumflex.core._
+import orm._
+import java.util.regex.Pattern
+import net.sf.ehcache.CacheManager</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>orm</code> Package</h1>
+
+<p>Package <code>orm</code> contains different shortcuts, utilities, helpers and implicits &mdash;
+the basis of DSL of Circumflex ORM.</p>
+
+<p>You should import this package to use Circumflex ORM in your application:</p>
+
+<pre><code>import ru.circumflex.orm._</code></pre>
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object orm {
+
+  val ORM_LOG = new Logger(&quot;ru.circumflex.orm&quot;)
+
+  // Configuration
+
+  val connectionProvider: ConnectionProvider = cx.instantiate[ConnectionProvider](
+    &quot;orm.connectionProvider&quot;, new DefaultConnectionProvider)
+
+  val typeConverter: TypeConverter = cx.instantiate[TypeConverter](
+    &quot;orm.typeConverter&quot;, new DefaultTypeConverter)
+
+  val dialect: Dialect = cx.instantiate[Dialect](&quot;orm.dialect&quot;, cx.get(&quot;orm.connection.url&quot;) match {
+    case Some(url: String) =&gt;
+      if (url.startsWith(&quot;jdbc:postgresql:&quot;)) new PostgreSQLDialect
+      else if (url.startsWith(&quot;jdbc:mysql:&quot;)) new MySQLDialect
+      else if (url.startsWith(&quot;jdbc:oracle:&quot;)) new OracleDialect
+      else if (url.startsWith(&quot;jdbc:h2:&quot;)) new H2Dialect
+      else new Dialect
+    case _ =&gt; new Dialect
+  })
+
+  val transactionManager: TransactionManager = cx.instantiate[TransactionManager](
+    &quot;orm.transactionManager&quot;, new DefaultTransactionManager)
+
+  val defaultSchema: Schema = new Schema(
+    cx.get(&quot;orm.defaultSchema&quot;).map(_.toString).getOrElse(&quot;public&quot;))
+
+  val ehcacheManager: CacheManager = cx.get(&quot;orm.ehcache.config&quot;) match {
+    case Some(f: String) =&gt; new CacheManager(f)
+    case _ =&gt; new CacheManager()
+  }
+
+  def contextCache = CacheService.get
+
+  def tx: Transaction = transactionManager.get
+  def COMMIT() = tx.commit()
+  def ROLLBACK() = tx.rollback()
+
+  // Implicits
+
+  // for nodes, fields and records
+
+  implicit def association2field[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      association: Association[K, C, P]): Field[K, C] = association.field
+  implicit def relation2node[PK, R &lt;: Record[PK, R]](relation: Relation[PK, R]): RelationNode[PK, R] =
+    new RelationNode[PK, R](relation)
+  implicit def node2relation[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): R = {
+    ctx(&quot;orm.lastAlias&quot;) = node.alias
+    node.relation.asInstanceOf[R]
+  }
+  implicit def field2str(field: Field[_, _]): String = ctx.get(&quot;orm.lastAlias&quot;) match {
+    case Some(alias: String) =&gt;
+      ctx.remove(&quot;orm.lastAlias&quot;)
+      alias + &quot;.&quot; + field.name
+    case _ =&gt; field.name
+  }
+
+  // for predicates
+
+  implicit def string2helper(expression: String): SimpleExpressionHelper =
+    new SimpleExpressionHelper(expression)
+  implicit def field2helper(field: Field[_, _]): SimpleExpressionHelper =
+    new SimpleExpressionHelper(field2str(field))
+  implicit def string2predicate(expression: String): Predicate =
+    new SimpleExpression(expression, Nil)
+  implicit def paramExpr2predicate(expression: ParameterizedExpression): Predicate =
+    new SimpleExpression(expression.toSql, expression.parameters)
+  implicit def predicate2aggregateHelper(predicate: Predicate) =
+    new AggregatePredicateHelper(predicate)
+  implicit def predicate2string(predicate: Predicate): String = predicate.toInlineSql
+
+  // for orders
+
+  implicit def string2order(expression: String): Order =
+    new Order(expression, Nil)
+  implicit def field2order(field: Field[_, _]): Order =
+    new Order(field2str(field), Nil)
+
+  // for projections
+
+  implicit def string2projection(expression: String): Projection[Any] =
+    new ExpressionProjection[Any](expression)
+  implicit def field2projection[T](field: Field[T, _]): Projection[T] =
+    new ExpressionProjection[T](field2str(field))
+
+  implicit def pair2proj[T1, T2](
+      t: (Projection[T1], Projection[T2])) = new PairProjection(t._1, t._2)
+
+  // Constants
+
+  val NO_ACTION = ForeignKeyAction(dialect.fkNoAction)
+  val CASCADE = ForeignKeyAction(dialect.fkCascade)
+  val RESTRICT = ForeignKeyAction(dialect.fkRestrict)
+  val SET_NULL = ForeignKeyAction(dialect.fkSetNull)
+  val SET_DEFAULT = ForeignKeyAction(dialect.fkSetDefault)
+
+  val INNER = JoinType(dialect.innerJoin)
+  val LEFT = JoinType(dialect.leftJoin)
+  val RIGHT = JoinType(dialect.rightJoin)
+  val FULL = JoinType(dialect.fullJoin)
+
+  val OP_UNION = SetOperation(dialect.union)
+  val OP_UNION_ALL = SetOperation(dialect.unionAll)
+  val OP_EXCEPT = SetOperation(dialect.except)
+  val OP_EXCEPT_ALL = SetOperation(dialect.exceptAll)
+  val OP_INTERSECT = SetOperation(dialect.intersect)
+  val OP_INTERSECT_ALL = SetOperation(dialect.intersectAll)
+
+  // Predicates DSL
+
+  def AND(predicates: Predicate*) =
+    new AggregatePredicateHelper(predicates.head).AND(predicates.tail: _*)
+  def OR(predicates: Predicate*) =
+    new AggregatePredicateHelper(predicates.head).OR(predicates.tail: _*)
+  def NOT(predicate: Predicate) =
+    new SimpleExpression(dialect.not(predicate.toSql), predicate.parameters)
+  def expr[T](expression: String): ExpressionProjection[T] =
+    new ExpressionProjection[T](expression)
+  def prepareExpr(expression: String, params: Pair[String, Any]*): SimpleExpression = {
+    var sqlText = expression
+    var parameters: Seq[Any] = Nil
+    val paramsMap = Map[String, Any](params: _*)
+    val pattern = Pattern.compile(&quot;:(\\w+)\\b&quot;)
+    val matcher = pattern.matcher(expression)
+    while(matcher.find) paramsMap.get(matcher.group(1)) match {
+      case Some(param) =&gt; parameters ++= List(param)
+      case _ =&gt; parameters ++= List(null)
+    }
+    sqlText = matcher.replaceAll(&quot;?&quot;)
+    return new SimpleExpression(sqlText, parameters)
+  }
+
+  // Simple subqueries DSL
+
+  def EXISTS(subquery: SQLQuery[_]) =
+    new SubqueryExpression(dialect.exists, subquery)
+
+  def NOT_EXISTS(subquery: SQLQuery[_]) =
+    new SubqueryExpression(dialect.notExists, subquery)
+
+  // Simple projections
+
+  def COUNT(expr: String) =
+    new ExpressionProjection[Long](dialect.count + &quot;(&quot; + expr + &quot;)&quot;)
+  def COUNT_DISTINCT(expr: String) =
+    new ExpressionProjection[Long](
+      dialect.count + &quot;(&quot; + dialect.distinct + &quot; &quot; + expr + &quot;)&quot;)
+  def MAX(expr: String) =
+    new ExpressionProjection[Any](dialect.max + &quot;(&quot; + expr + &quot;)&quot;)
+  def MIN(expr: String) =
+    new ExpressionProjection[Any](dialect.min + &quot;(&quot; + expr + &quot;)&quot;)
+  def SUM(expr: String) =
+    new ExpressionProjection[Any](dialect.sum + &quot;(&quot; + expr + &quot;)&quot;)
+  def AVG(expr: String) =
+    new ExpressionProjection[Any](dialect.avg + &quot;(&quot; + expr + &quot;)&quot;)
+
+  // Queries DSL
+
+  def SELECT[T](p1: Projection[T], p2: Projection[_], pn: Projection[_]*) = {
+    val projections = List(p1, p2) ++ pn
+    new Select(new AliasMapProjection(projections))
+  }
+  def SELECT[T](projection: Projection[T]): Select[T] = new Select(projection)
+  def INSERT_INTO[PK, R &lt;: Record[PK, R]](relation: Relation[PK, R]) =
+    new InsertSelectHelper(relation)
+  def UPDATE[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]) =
+    new Update(node)
+  def DELETE[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]) =
+    new Delete(node)
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+
