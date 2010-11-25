@@ -41,7 +41,9 @@
           <p></p>
         </td>
         <td class="code">
-          <pre class="scala"><code>package ru.circumflex.orm</code></pre>
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.util.Date</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -68,9 +70,11 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
         <td class="code">
           <pre class="scala"><code>  def longType = &quot;BIGINT&quot;
   def integerType = &quot;INTEGER&quot;
-  def numericType = &quot;NUMERIC&quot;
+  def numericType(precision: Int, scale: Int): String =
+    &quot;NUMERIC&quot; + (if (precision == -1) &quot;&quot; else &quot;(&quot; + precision + &quot;,&quot; + scale + &quot;)&quot;)
   def textType = &quot;TEXT&quot;
-  def varcharType = &quot;VARCHAR&quot;
+  def varcharType(length: Int): String =
+    &quot;VARCHAR&quot; + (if (length == -1) &quot;&quot; else &quot;(&quot; + length + &quot;)&quot;)
   def booleanType = &quot;BOOLEAN&quot;
   def dateType = &quot;DATE&quot;
   def timeType = &quot;TIME&quot;
@@ -188,6 +192,12 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
           <pre class="scala"><code>  def quoteLiteral(expr: String) = &quot;'&quot; + expr.replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;
 
   def quoteIdentifer(identifier: String) = identifier
+
+  def escapeParameter(value: Any): String = value match {
+    case Some(v) =&gt; escapeParameter(v)
+    case None | null =&gt; &quot;NULL&quot;
+    case v =&gt; quoteLiteral(v.toString)
+  }
 
   def relationQualifiedName(relation: Relation[_, _]) =
     quoteIdentifer(relation.schema.name) + &quot;.&quot; + quoteIdentifer(relation.relationName)

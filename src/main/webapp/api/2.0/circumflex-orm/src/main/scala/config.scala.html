@@ -204,55 +204,21 @@ and setting the <code>orm.connectionProvider</code> configuration parameter.</p>
         <td class="docs">
           <h2>Type converter</h2>
 
-<p>The <code>TypeConverter</code> trait is used to read atomic values from JDBC result sets and to set
-JDBC prepared statement values for execution. If you intend to use custom types,
-provide your own implementation.</p>
+<p>The <code>TypeConverter</code> trait is used to set JDBC prepared statement values for execution.
+If you intend to use custom types, provide your own implementation.</p>
         </td>
         <td class="code">
-          <pre class="scala"><code>trait TypeConverter {
-
-  def read(rs: ResultSet, alias: String): Option[Any] = {
-    val result = rs.getObject(alias)
-    if (rs.wasNull) return None
-    else return fromJDBC(result)
-  }
+          <pre class="scala"><code>class TypeConverter {
 
   def write(st: PreparedStatement, parameter: Any, paramIndex: Int): Unit =
     parameter match {
       case None | null =&gt; st.setObject(paramIndex, null)
-      case Some(v) =&gt; write(st, toJDBC(v), paramIndex)
-      case v =&gt; st.setObject(paramIndex, toJDBC(v))
+      case Some(v) =&gt; write(st, v, paramIndex)
+      case p: Date =&gt; st.setObject(paramIndex, new Timestamp(p.getTime))
+      case x: Elem =&gt; st.setString(paramIndex, x.toString)
+      case bd: BigDecimal =&gt; st.setBigDecimal(paramIndex, bd.bigDecimal)
+      case v =&gt; st.setObject(paramIndex, v)
     }
-
-  def toJDBC(value: Any): Any
-
-  def fromJDBC(value: Any): Option[Any]
-
-  def escape(value: Any): String
-}
-
-class DefaultTypeConverter extends TypeConverter {
-
-  def toJDBC(value: Any): Any = value match {
-    case Some(v) =&gt; toJDBC(v)
-    case p: Date =&gt; new Timestamp(p.getTime)
-    case x: Elem =&gt; x.toString
-    case value =&gt; value
-  }
-
-  def fromJDBC(value: Any): Option[Any] = value match {
-    case null =&gt; None
-    case None =&gt; None
-    case Some(value) =&gt; fromJDBC(value)
-    case value =&gt; Some(value)
-  }
-
-  def escape(value: Any): String = fromJDBC(value) match {
-    case Some(s: String) =&gt; dialect.quoteLiteral(s)
-    case Some(d: Timestamp) =&gt; dialect.quoteLiteral(d.toString)
-    case Some(other) =&gt; other.toString
-    case _ =&gt; &quot;NULL&quot;
-  }
 }</code></pre>
         </td>
       </tr>

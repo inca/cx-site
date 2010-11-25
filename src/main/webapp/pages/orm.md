@@ -154,9 +154,16 @@ Following methods are used to create field definitions:
     <td><code>LongField</code></td>
   </tr>
   <tr>
-    <td><code>NUMERIC(precision: Int, scale: Int)</code></td>
+    <td><code>DOUBLE(precision: Int, scale: Int)</code></td>
     <td><code>NUMERIC(p, s)</code></td>
     <td><code>Double</code></td>
+    <td><code>DoubleField</code></td>
+  </tr>
+  <tr>
+    <td><code>NUMERIC(precision: Int, scale: Int
+        roundingMode: BigDecimal.RoundingMode.RoundingMode)</code></td>
+    <td><code>NUMERIC(p, s)</code></td>
+    <td><code>scala.math.BigDecimal</code></td>
     <td><code>NumericField</code></td>
   </tr>
   <tr>

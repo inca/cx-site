@@ -46,7 +46,8 @@
 import ru.circumflex.core._
 import java.util.Date
 import xml._
-import java.sql.ResultSet</code></pre>
+import java.sql.ResultSet
+import scala.math.BigDecimal._</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -64,8 +65,11 @@ associations.</p>
 
   def uuid = record.getClass.getName + &quot;.&quot; + name
 
-  def read(rs: ResultSet, alias: String): Option[T] =
-    typeConverter.read(rs, alias).asInstanceOf[Option[T]]
+  def read(rs: ResultSet, alias: String): Option[T] = {
+    val o = rs.getObject(alias)
+    if (rs.wasNull) None
+    else Some(o.asInstanceOf[T])
+  }
 
   def REFERENCES[P &lt;: Record[T, P]](relation: Relation[T, P]): Association[T, R, P] =
     new Association(this, relation)
@@ -96,20 +100,32 @@ class LongField[R &lt;: Record[_, R]](name: String, record: R)
     try Some(str.toLong) catch { case _ =&gt; None }
 }
 
-class NumericField[R &lt;: Record[_, R]](
-    name: String, record: R, val precision: Int = -1, val scale: Int = 0)
-    extends XmlSerializable[Double, R](
-      name,
-      record,
-      dialect.numericType + (if (precision == -1) &quot;&quot; else &quot;(&quot; + precision + &quot;,&quot; + scale + &quot;)&quot;)) {
+class DoubleField[R &lt;: Record[_, R]](name: String,
+                                     record: R,
+                                     val precision: Int = -1,
+                                     val scale: Int = 0)
+    extends XmlSerializable[Double, R](name, record, dialect.numericType(precision, scale)) {
   def from(str: String): Option[Double] =
     try Some(str.toDouble) catch { case _ =&gt; None }
+}
+
+class NumericField[R &lt;: Record[_, R]](name: String,
+                                      record: R,
+                                      val precision: Int = -1,
+                                      val scale: Int = 0,
+                                      val roundingMode: RoundingMode.RoundingMode = RoundingMode.HALF_EVEN)
+    extends XmlSerializable[BigDecimal, R](name, record, dialect.numericType(precision, scale)) {
+  def from(str: String): Option[BigDecimal] =
+    try Some(BigDecimal(str)) catch { case _ =&gt; None }
+  override def read(rs: ResultSet, alias: String): Option[BigDecimal] =
+    any2option(rs.getString(alias)).flatMap(x =&gt; from(x))
+  addSetter(v =&gt; v.setScale(scale, roundingMode))
 }
 
 class TextField[R &lt;: Record[_, R]](name: String, record: R, sqlType: String)
     extends XmlSerializable[String, R](name, record, sqlType) {
   def this(name: String, record: R, length: Int = -1) =
-    this(name, record, dialect.varcharType + (if (length == -1) &quot;&quot; else &quot;(&quot; + length + &quot;)&quot;))
+    this(name, record, dialect.varcharType(length))
   def from(str: String): Option[String] =
     if (str == &quot;&quot;) None else Some(str)
 }

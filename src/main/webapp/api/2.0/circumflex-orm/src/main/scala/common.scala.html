@@ -72,7 +72,7 @@ with SQL expressions with JDBC-style parameters.</p>
   def parameters: Seq[Any]
 
   def toInlineSql: String = parameters.foldLeft(toSql)((sql, p) =&gt;
-    sql.replaceFirst(&quot;\\?&quot;, typeConverter.escape(p)))
+    sql.replaceFirst(&quot;\\?&quot;, dialect.escapeParameter(p)))
 
   override def equals(that: Any) = that match {
     case e: ParameterizedExpression =&gt;

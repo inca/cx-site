@@ -46,7 +46,8 @@
 import ru.circumflex.core._
 import orm._
 import java.util.regex.Pattern
-import net.sf.ehcache.CacheManager</code></pre>
+import net.sf.ehcache.CacheManager
+import java.sql.ResultSet</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -65,13 +66,13 @@ the basis of DSL of Circumflex ORM.</p>
 
   val ORM_LOG = new Logger(&quot;ru.circumflex.orm&quot;)
 
-  // Configuration
+  // Commons
 
   val connectionProvider: ConnectionProvider = cx.instantiate[ConnectionProvider](
     &quot;orm.connectionProvider&quot;, new DefaultConnectionProvider)
 
   val typeConverter: TypeConverter = cx.instantiate[TypeConverter](
-    &quot;orm.typeConverter&quot;, new DefaultTypeConverter)
+    &quot;orm.typeConverter&quot;, new TypeConverter)
 
   val dialect: Dialect = cx.instantiate[Dialect](&quot;orm.dialect&quot;, cx.get(&quot;orm.connection.url&quot;) match {
     case Some(url: String) =&gt;
