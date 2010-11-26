@@ -177,7 +177,7 @@ The typical usage is:</p>
     Pattern.MULTILINE)
   // Tables
   val rTable = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n*) {0,3}(?:\\| *)?--[-| ]*( *\\{#(.+?)\\})?\\n&quot; +
-      &quot;(.*\\|.*)\\n {0,3}(?:\\| *)?--[-| ]*\\n((?:.*\\|.*\\n)*) {0,3}(?:\\| *)?--[-| ]*\\n(?=\\n+|\\Z)&quot;)
+      &quot;(.*\\|.*)\\n {0,3}(?:\\| *)?([-:]{2}[-| :]*)\\n((?:.*\\|.*\\n)*) {0,3}(?:\\| *)?--[-| ]*\\n(?=\\n+|\\Z)&quot;)
   // Paragraphs splitter
   val rParaSplit = Pattern.compile(&quot;\\n{2,}&quot;)
   // Code spans
@@ -430,12 +430,20 @@ class MarkdownText(source: CharSequence) {
         }
         result += &quot;    &lt;/tr&gt;\n  &lt;/thead&gt;\n&quot;
       }
-      val data = m.group(4)
+      val align = m.group(4).split(&quot;\\|&quot;).map { a =&gt;
+        val v = a.trim
+        if (v.startsWith(&quot;:&quot;) &amp;&amp; v.endsWith(&quot;:&quot;)) &quot; align=\&quot;center\&quot;&quot;
+        else if (v.startsWith(&quot;:&quot;)) &quot; align=\&quot;left\&quot;&quot;
+        else if (v.endsWith(&quot;:&quot;)) &quot; align=\&quot;right\&quot;&quot;
+        else &quot;&quot;
+      }.take(cols).padTo(cols, &quot;&quot;)
+      val data = m.group(5)
       if (data != null) {
         result += &quot;  &lt;tbody&gt;\n&quot;
         data.split(&quot;\\n&quot;)
             .foreach { tr =&gt;
           result += &quot;    &lt;tr&gt;\n&quot;
+          var i = 0
           tr.replaceAll(&quot;^ *\\|* *&quot;, &quot;&quot;)
               .replaceAll(&quot; *\\|* *$&quot;, &quot;&quot;)
               .split(&quot;\\|&quot;)
@@ -443,7 +451,8 @@ class MarkdownText(source: CharSequence) {
               .take(cols)
               .padTo(cols, &quot;&quot;)
               .foreach { td =&gt;
-            result += &quot;      &lt;td&gt;&quot; + runSpanGamut(new StringEx(td)).toString.trim + &quot;&lt;/td&gt;\n&quot;
+            result += &quot;      &lt;td&quot; + align(i) + &quot;&gt;&quot; + runSpanGamut(new StringEx(td)).toString.trim + &quot;&lt;/td&gt;\n&quot;
+            i += 1
           }
           result += &quot;    &lt;/tr&gt;\n&quot;
         }
