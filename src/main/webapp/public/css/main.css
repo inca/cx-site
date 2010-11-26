@@ -223,6 +223,9 @@ pre .class .title, pre .tag {
   background:#fff;
   padding:8px;
 }
+#md-source {
+  font-family: Monaco, monospace;
+}
 
 /* Docco */
 
