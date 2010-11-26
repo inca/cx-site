@@ -148,9 +148,9 @@ The typical usage is:</p>
       &quot;(?:&quot; + htmlNameTokenExpr + &quot;\\s*=\\s*[a-z0-9_:.\\-]+)&quot; +
       &quot;)\\s*)*)&gt;&quot;, Pattern.DOTALL | Pattern.CASE_INSENSITIVE)
   // Headers
-  val rH1 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.*?)\\})?\\n=+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
-  val rH2 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.*?)\\})?\\n-+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
-  val rHeaders = Pattern.compile(&quot;^(#{1,6}) *(\\S.*?)(?: *#*)?( *\\{#(.*?)\\})?$&quot;, Pattern.MULTILINE)
+  val rH1 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.+?)\\})?\\n=+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+  val rH2 = Pattern.compile(&quot;^ {0,3}(\\S.*?)( *\\{#(.+?)\\})?\\n-+(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+  val rHeaders = Pattern.compile(&quot;^(#{1,6}) *(\\S.*?)(?: *#*)?( *\\{#(.+?)\\})?$&quot;, Pattern.MULTILINE)
   // Horizontal rulers
   val rHr = Pattern.compile(&quot;^ {0,3}(?:&quot; +
       &quot;(?:(?:\\* *){3,})|&quot; +
@@ -163,11 +163,11 @@ The typical usage is:</p>
   val listExpr = &quot;( {0,3}([-+*]|\\d+\\.) +(?s:.+?)&quot; +
       &quot;(?:\\Z|\\n{2,}(?![-+*]|\\s|\\d+\\.)))&quot;
   val rSubList = Pattern.compile(&quot;^&quot; + listExpr, Pattern.MULTILINE)
-  val rList = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n?)&quot; + listExpr, Pattern.MULTILINE)
+  val rList = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n*)&quot; + listExpr, Pattern.MULTILINE)
   val rListItem = Pattern.compile(&quot;(\\n)?^( *)(?:[-+*]|\\d+\\.) +&quot; +
       &quot;((?s:.+?)\\n{1,2})(?=\\n*(?:\\Z|\\2(?:[-+*]|\\d+\\.) +))&quot;, Pattern.MULTILINE)
   // Code blocks
-  val rCodeBlock = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n?)&quot; +
+  val rCodeBlock = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n*)&quot; +
       &quot;(^ {4}(?s:.+?))(?=\\Z|\\n+ {0,3}\\S)&quot;, Pattern.MULTILINE)
   val rCodeLangId = Pattern.compile(&quot;^\\s*lang:(.+?)(?:\\n|\\Z)&quot;)
   // Block quotes
@@ -175,6 +175,9 @@ The typical usage is:</p>
     Pattern.MULTILINE)
   val rBlockQuoteTrims = Pattern.compile(&quot;(?:^ *&gt; ?)|(?:^ *$)|(?-m:\\n+$)&quot;,
     Pattern.MULTILINE)
+  // Tables
+  val rTable = Pattern.compile(&quot;(?&lt;=\\n\\n|\\A\\n*) {0,3}(?:\\| *)?--[-| ]*( *\\{#(.+?)\\})?\\n&quot; +
+      &quot;(.*\\|.*)\\n {0,3}(?:\\| *)?--[-| ]*\\n((?:.*\\|.*\\n)*) {0,3}(?:\\| *)?--[-| ]*\\n(?=\\n+|\\Z)&quot;)
   // Paragraphs splitter
   val rParaSplit = Pattern.compile(&quot;\\n{2,}&quot;)
   // Code spans
@@ -217,13 +220,13 @@ The typical usage is:</p>
   val rAmp = Pattern.compile(&quot;&amp;amp;(?!#?[xX]?(?:[0-9a-fA-F]+|\\w+);)&quot;)
   // SmartyPants
   val smartyPants = (Pattern.compile(&quot;(?&lt;=\\s|\\A)(?:\&quot;|&amp;quot;)(?=\\S)&quot;) -&gt; leftQuote) ::
-      (Pattern.compile(&quot;(?&lt;=[\\w)?!.])(?:\&quot;|&amp;quot;)(?=[.,;?!*)]|\\s|\\Z)&quot;) -&gt; rightQuote) ::
+      (Pattern.compile(&quot;(?&lt;=[\\p{L})?!.])(?:\&quot;|&amp;quot;)(?=[.,;?!*)]|\\s|\\Z)&quot;) -&gt; rightQuote) ::
       (Pattern.compile(&quot;--&quot;) -&gt; dash) ::
       (Pattern.compile(&quot;\\(r\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; reg) ::
       (Pattern.compile(&quot;\\(c\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; copy) ::
       (Pattern.compile(&quot;\\(tm\\)&quot;, Pattern.CASE_INSENSITIVE) -&gt; trademark) ::
-      (Pattern.compile(&quot;\\.{3}&quot;) -&gt; ellipsis) :: 
-      (Pattern.compile(&quot;&amp;lt;-|&lt;-&quot;) -&gt; leftArrow) :: 
+      (Pattern.compile(&quot;\\.{3}&quot;) -&gt; ellipsis) ::
+      (Pattern.compile(&quot;&amp;lt;-|&lt;-&quot;) -&gt; leftArrow) ::
       (Pattern.compile(&quot;-&amp;gt;|-&gt;&quot;) -&gt; rightArrow) :: Nil
   // Markdown inside inline HTML
   val rInlineMd = Pattern.compile(&quot;&lt;!--#md--&gt;(.*)&lt;!--~+--&gt;&quot;, Pattern.DOTALL)
@@ -375,6 +378,7 @@ class MarkdownText(source: CharSequence) {
   protected def runBlockGamut(text: StringEx): StringEx = {
     var result = text
     result = doMacros(result)
+    result = doTables(result)
     result = doHeaders(result)
     result = doHorizontalRulers(result)
     result = doLists(result)
@@ -406,6 +410,49 @@ class MarkdownText(source: CharSequence) {
   // Process horizontal rulers.
   protected def doHorizontalRulers(text: StringEx): StringEx =
     text.replaceAll(rHr, &quot;\n&lt;hr/&gt;\n&quot;)
+
+  // Process simple tables
+  protected def doTables(text: StringEx): StringEx =
+    text.replaceAll(rTable, m =&gt; {
+      val id = m.group(2)
+      val idAttr = if (id == null) &quot;&quot; else &quot; id = \&quot;&quot; + id + &quot;\&quot;&quot;
+      var result = &quot;&lt;table&quot; + idAttr + &quot;&gt;\n&quot;
+      var cols = 0
+      val heading = m.group(3)
+      if (heading != null) {
+        result += &quot;  &lt;thead&gt;\n    &lt;tr&gt;\n&quot;
+        heading.replaceAll(&quot;^ *\\|* *&quot;, &quot;&quot;)
+            .replaceAll(&quot; *\\|* *$&quot;, &quot;&quot;)
+            .split(&quot;\\|&quot;)
+            .foreach { th =&gt;
+          result += &quot;      &lt;th&gt;&quot; + runSpanGamut(new StringEx(th)).toString.trim + &quot;&lt;/th&gt;\n&quot;
+          cols += 1
+        }
+        result += &quot;    &lt;/tr&gt;\n  &lt;/thead&gt;\n&quot;
+      }
+      val data = m.group(4)
+      if (data != null) {
+        result += &quot;  &lt;tbody&gt;\n&quot;
+        data.split(&quot;\\n&quot;)
+            .foreach { tr =&gt;
+          result += &quot;    &lt;tr&gt;\n&quot;
+          tr.replaceAll(&quot;^ *\\|* *&quot;, &quot;&quot;)
+              .replaceAll(&quot; *\\|* *$&quot;, &quot;&quot;)
+              .split(&quot;\\|&quot;)
+              .toList
+              .take(cols)
+              .padTo(cols, &quot;&quot;)
+              .foreach { td =&gt;
+            result += &quot;      &lt;td&gt;&quot; + runSpanGamut(new StringEx(td)).toString.trim + &quot;&lt;/td&gt;\n&quot;
+          }
+          result += &quot;    &lt;/tr&gt;\n&quot;
+        }
+        result += &quot;  &lt;/tbody&gt;\n&quot;
+      }
+      result += &quot;&lt;/table&gt;&quot;
+      result
+    })
+
 
   // Process ordered and unordered lists and list items.
   protected def doLists(text: StringEx): StringEx = {
@@ -452,7 +499,7 @@ class MarkdownText(source: CharSequence) {
       &quot;&lt;pre&quot; + langExpr + &quot;&gt;&lt;code&gt;&quot; + code + &quot;&lt;/code&gt;&lt;/pre&gt;\n\n&quot;
     })
 
-   // Process blockquotes.
+  // Process blockquotes.
   protected def doBlockQuotes(text: StringEx): StringEx =
     text.replaceAll(rBlockQuote, m =&gt; {
       val content = new StringEx(m.group(1))
@@ -460,8 +507,8 @@ class MarkdownText(source: CharSequence) {
       &quot;&lt;blockquote&gt;\n&quot; + runBlockGamut(content) + &quot;\n&lt;/blockquote&gt;\n\n&quot;
     })
 
-   // At this point all HTML blocks should be hashified, so we treat all lines
-   // separated by more than 2 linebreaks as paragraphs.
+  // At this point all HTML blocks should be hashified, so we treat all lines
+  // separated by more than 2 linebreaks as paragraphs.
   protected def formParagraphs(text: StringEx): StringEx = new StringEx(
     rParaSplit.split(text.toString.trim)
         .map(para =&gt; htmlProtector.decode(para) match {
