@@ -308,7 +308,7 @@ definition options.
 The relation object is also the right place for various querying methods:
 
     lang:scala
-    object User extends Table[User] {
+    object User extends Table[Long, User] {
       def findByLogin(l: String): Option[User] = (this AS "u").map(u =>
           SELECT(u.*).FROM(u).WHERE(u.login LIKE l).unique)
     }
