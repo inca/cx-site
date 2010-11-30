@@ -432,7 +432,7 @@ find out how to work with messages.
 Validators are added to the `validation` object inside [relation](#relation):
 
     lang:scala
-    object Country extends Table[Country] {
+    object Country extends Table[String, Country] {
       validation.add(r => ...)
           .add(r => ...)
     }
@@ -463,7 +463,7 @@ It is also fairly easy to implement custom validators. Following example shows a
 for checking unique email addresses:
 
     lang:scala
-    object Account extends Table[Account] {
+    object Account extends Table[Long, Account] {
       validation.add(r => criteria
           .add(r.email EQ r.email())
           .unique
@@ -1026,7 +1026,7 @@ When working with data-centric applications, you often need the same query to be
 different parameters. The most obvious solution is to build `Query` objects dynamically:
 
     lang:scala
-    object Country extends Table[Country] {
+    object Country extends Table[String, Country] {
       def findByCode(code: String): Option[Country] = (this AS "co").map(co =>
           SELECT (co.*) FROM co WHERE (co.code LIKE code) unique)
     }
@@ -1034,7 +1034,7 @@ different parameters. The most obvious solution is to build `Query` objects dyna
 However, you can use *named parameters* to reuse the same `Query` object:
 
     lang:scala
-    object Country extends Table[Country] {
+    object Country extends Table[String, Country] {
       val co = AS("co")
       val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
       def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
