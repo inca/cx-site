@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex
@@ -56,19 +56,13 @@ import collection.mutable.Map</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>The <code>web</code> Package</h1>
-
-<p>Package <code>web</code> contains different shortcuts, utilities, helpers and implicits &mdash;
-the basis of routing DSL of Circumflex Web Framework.</p>
-
+<p>Package <code>web</code> contains different shortcuts, utilities, helpers and implicits &mdash; the basis of routing DSL of Circumflex Web Framework.</p>
 <p>You should import this package to use Circumflex Web Framework in your application:</p>
-
 <pre><code>import ru.circumflex.web._</code></pre>
-
-<p>If you don't wish to import all helpers into your global scope, then import this
-package under an alias:</p>
-
+<p>If you don't wish to import all helpers into your global scope, then import this package under an alias:</p>
 <pre><code>import ru.circumflex.{web =&gt; cx}    // import under alias "cx"
 cx.request                          // access members</code></pre>
+
         </td>
         <td class="code">
           <pre class="scala"><code>package object web {
@@ -79,10 +73,8 @@ cx.request                          // access members</code></pre>
       <tr id="section-2">
         <td class="docs">
           <h1>Heplers</h1>
+<p>Helpers are tiny methods and structures which provide common functionality for web applications like accessing current request, response, session, headers, cookies and other stuff.</p>
 
-<p>Helpers are tiny methods and structures which provide common functionality
-for web applications like accessing current request, response, session, headers, cookies
-and other stuff.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def request = ctx(&quot;cx.request&quot;).asInstanceOf[HttpRequest]
@@ -96,10 +88,8 @@ and other stuff.</p>
       <tr id="section-3">
         <td class="docs">
           <h2>The <code>headers</code> Helper</h2>
+<p>The <code>headers</code> object of package <code>ru.circumflex.web</code> lets you access request headers and set response headers (i.e. mix functionality of <code>request.headers</code> and <code>response.headers</code>).</p>
 
-<p>The <code>headers</code> object of package <code>ru.circumflex.web</code> lets you access request
-headers and set response headers (i.e. mix functionality of <code>request.headers</code>
-and <code>response.headers</code>).</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object headers extends Map[String, String] {
@@ -119,10 +109,8 @@ and <code>response.headers</code>).</p>
       <tr id="section-4">
         <td class="docs">
           <h2>The <code>cookies</code> Helper</h2>
+<p>The <code>cookies</code> object of package <code>ru.circumflex.web</code> lets you access request cookies and set response cookies (i.e. mix functionality of <code>request.cookies</code> and <code>response.cookies</code>).</p>
 
-<p>The <code>cookies</code> object of package <code>ru.circumflex.web</code> lets you access request
-cookies and set response cookies (i.e. mix functionality of <code>request.cookies</code>
-and <code>response.cookies</code>).</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object cookies extends Map[String, HttpCookie] {
@@ -144,9 +132,8 @@ and <code>response.cookies</code>).</p>
       <tr id="section-5">
         <td class="docs">
           <h2>The <code>flash</code> Helper</h2>
+<p>The <code>flash</code> object provides a way to pass temporary objects between requests. Flash variables are stored in session until first access.</p>
 
-<p>The <code>flash</code> object provides a way to pass temporary objects between requests.
-Flash variables are stored in session until first access.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object flash extends Map[String, Any] with UntypedContainer {
@@ -177,12 +164,8 @@ Flash variables are stored in session until first access.</p>
       <tr id="section-6">
         <td class="docs">
           <h2>The <code>param</code> Helper</h2>
+<p>The <code>param</code> object of package <code>ru.circumflex.web</code> is a convenient helper to retrieve the parameters of current match or current request. The parameters are first resolved from <code>MatchResult</code> objects found in context. If no match result contain a parameter with specified name, then the parameter is resolved from request parameters.</p>
 
-<p>The <code>param</code> object of package <code>ru.circumflex.web</code> is a convenient helper to
-retrieve the parameters of current match or current request. The parameters
-are first resolved from <code>MatchResult</code> objects found in context. If no
-match result contain a parameter with specified name, then the parameter is
-resolved from request parameters.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object param extends Map[String, String] {
@@ -201,37 +184,20 @@ resolved from request parameters.</p>
       <tr id="section-7">
         <td class="docs">
           <h2>Response Helpers</h2>
-
-<p>Circumflex Web Framework provides following helpers for sending standard
-HTTP responses:</p>
-
+<p>Circumflex Web Framework provides following helpers for sending standard HTTP responses:</p>
 <ul>
-<li><code>send</code> writes specified <code>text</code> to response buffer and, if specified,
-sets <code>statusCode</code>;</li>
-<li><code>sendError</code> sends an error to the client using specified <code>statusCode</code> and
-<code>message</code>;</li>
-<li><code>sendRedirect</code> sends <code>302 MOVED TEMPORARILY</code> to the client using specified
-<code>url</code> and optional <code>flashes</code>;</li>
-<li><code>sendFile</code> sends specified <code>file</code> to the client; if <code>filename</code> is provided,
-<code>Content-Disposition: attachment</code> is also added to the response with specified
-<code>filename</code>;</li>
-<li><code>xSendFile</code> delegates filesending to the web server; refer to documentation
-of your web server to understand how it works;</li>
-<li><code>sendStream</code> accepts a function, which uses <code>OutputStream</code> to send binary
-data;</li>
-<li><code>sendChars</code> accepts a function, which uses <code>Writer</code> to send character data;</li>
-<li><code>forward</code> delegates further request processing to another component located
-at specified <code>url</code> and immediately flushes the response at the end; note that
-if you want to forward the request to another Circumflex route, you must make
-sure that <code>CircumflexFilter</code> is mapped with <code>&lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;</code>
-in <code>web.xml</code>;</li>
-<li><code>pass_!</code> sends request and response down the filter chain and then immediately
-flushes response.</li>
+  <li><code>send</code> writes specified <code>text</code> to response buffer and, if specified, sets <code>statusCode</code>;</li>
+  <li><code>sendError</code> sends an error to the client using specified <code>statusCode</code> and <code>message</code>;</li>
+  <li><code>sendRedirect</code> sends <code>302 MOVED TEMPORARILY</code> to the client using specified <code>url</code> and optional <code>flashes</code>;</li>
+  <li><code>sendFile</code> sends specified <code>file</code> to the client; if <code>filename</code> is provided, <code>Content-Disposition: attachment</code> is also added to the response with specified <code>filename</code>;</li>
+  <li><code>xSendFile</code> delegates filesending to the web server; refer to documentation of your web server to understand how it works;</li>
+  <li><code>sendStream</code> accepts a function, which uses <code>OutputStream</code> to send binary data;</li>
+  <li><code>sendChars</code> accepts a function, which uses <code>Writer</code> to send character data;</li>
+  <li><code>forward</code> delegates further request processing to another component located at specified <code>url</code> and immediately flushes the response at the end; note that if you want to forward the request to another Circumflex route, you must make sure that <code>CircumflexFilter</code> is mapped with <code>&lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;</code> in <code>web.xml</code>;</li>
+  <li><code>pass_!</code> sends request and response down the filter chain and then immediately flushes response.</li>
 </ul>
+<p>All helpers by convention throw <code>ResponseSentException</code> which is caught by <code>CircumflexFilter</code> to indicate that the response have been processed successfully.</p>
 
-<p>All helpers by convention throw <code>ResponseSentException</code> which is caught by
-<code>CircumflexFilter</code> to indicate that the response have been processed
-successfully.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def send(text: String = &quot;&quot;, statusCode: Int = -1): Nothing = {
@@ -285,13 +251,11 @@ successfully.</p>
       <tr id="section-8">
         <td class="docs">
           <h2>The <code>matchers</code> Helper</h2>
-
-<p>The <code>matchers</code> helper contains shortcuts for various matchers (for example, by known HTTP headers).
-You should import this object if you want to use it:</p>
-
+<p>The <code>matchers</code> helper contains shortcuts for various matchers (for example, by known HTTP headers). You should import this object if you want to use it:</p>
 <pre><code>import ru.circumflex.web.{matchers =&gt; m}
 
 get("/" &amp; m.ACCEPT(":mime")) = "You are accepting " + param("mime")</code></pre>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  object matchers {

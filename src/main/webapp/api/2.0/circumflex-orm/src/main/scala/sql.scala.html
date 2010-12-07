@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm</code></pre>
@@ -47,23 +47,21 @@
       <tr id="section-1">
         <td class="docs">
           <h1>Schema objects</h1>
-
 <p>Following classes represent various database schema objects:</p>
-
 <ul>
-<li><code>Schema</code> corresponds to database schema (or catalog), if such objects
-are supported by database vendor;</li>
-<li><p><code>Constraint</code> corresponds to one of database constraint types:</p>
-
-<ul>
-<li><code>Unique</code>,</li>
-<li><code>ForeignKey</code>,</li>
-<li><code>CheckConstraint</code>;</li>
-</ul></li>
-<li><p><code>Index</code> corresponds to database index.</p></li>
+  <li><code>Schema</code> corresponds to database schema (or catalog), if such objects are supported by database vendor;</li>
+  <li>
+    <p><code>Constraint</code> corresponds to one of database constraint types:</p>
+    <ul>
+      <li><code>Unique</code>,</li>
+      <li><code>ForeignKey</code>,</li>
+      <li><code>CheckConstraint</code>;</li>
+    </ul>
+  </li>
+  <li><code>Index</code> corresponds to database index.</li>
 </ul>
-
 <p>Circumflex ORM also uses some helpers to make DSL-style data definition.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class Schema(val name: String) extends SchemaObject {

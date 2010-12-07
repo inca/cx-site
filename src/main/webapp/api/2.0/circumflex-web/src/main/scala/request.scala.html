@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.web
@@ -65,16 +65,10 @@ import collection.mutable.Map</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>HTTP Request</h1>
+<p>The <code>HttpRequest</code> class wraps specified <code>raw</code> <code>HttpServletRequest</code> and allows you to use core Scala classes to operate with Servlet API.</p>
+<p>This class is designed to efficiently cover mostly used methods of <code>HttpServletRequest</code>, however, you still can access the <code>raw</code> field, which holds actual request. For more information refer to Java Servlet API.</p>
+<p>Since Circumflex is UTF-friendly it will implicitly set character encoding of request body to <code>UTF-8</code>. Feel free to change it if your application requires so.</p>
 
-<p>The <code>HttpRequest</code> class wraps specified <code>raw</code> <code>HttpServletRequest</code> and allows you to
-use core Scala classes to operate with Servlet API.</p>
-
-<p>This class is designed to efficiently cover mostly used methods of <code>HttpServletRequest</code>,
-however, you still can access the <code>raw</code> field, which holds actual request. For more
-information refer to Java Servlet API.</p>
-
-<p>Since Circumflex is UTF-friendly it will implicitly set character encoding of request body
-to <code>UTF-8</code>. Feel free to change it if your application requires so.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class HttpRequest(val raw: HttpServletRequest) {</code></pre>
@@ -83,25 +77,19 @@ to <code>UTF-8</code>. Feel free to change it if your application requires so.</
       <tr id="section-2">
         <td class="docs">
           <h2>Request Basics</h2>
-
 <p>General request information can be accessed using following methods:</p>
-
 <ul>
-<li><code>protocol</code> returns the name and version of the protocol the request uses (e.g. <code>HTTP/1.1</code>);</li>
-<li><code>method</code> returns the name of HTTP method with which the request was made, it's value is
-overriden by request paremeter <code>_method</code> to provide a workaround for browsers;</li>
-<li><code>scheme</code> returns the name of the scheme used to make this request (e.g. &ldquo;http&rdquo;, &ldquo;https&rdquo;
-or &ldquo;ftp&rdquo;);</li>
-<li><code>uri</code> returns the request URI without query string;</li>
-<li><code>queryString</code> returns the query string that is contained in the request URL after the path;</li>
-<li><code>url</code> reconstructs an URL the client used to make the request;</li>
-<li><code>secure_?</code> returns <code>true</code> if the request was made using a secure channel, such as HTTPS.</li>
+  <li><code>protocol</code> returns the name and version of the protocol the request uses (e.g. <code>HTTP/1.1</code>);</li>
+  <li><code>method</code> returns the name of HTTP method with which the request was made, it's value is overriden by request paremeter <code>_method</code> to provide a workaround for browsers;</li>
+  <li><code>scheme</code> returns the name of the scheme used to make this request (e.g. &ldquo;http&rdquo;, &ldquo;https&rdquo; or &ldquo;ftp&rdquo;);</li>
+  <li><code>uri</code> returns the request URI without query string;</li>
+  <li><code>queryString</code> returns the query string that is contained in the request URL after the path;</li>
+  <li><code>url</code> reconstructs an URL the client used to make the request;</li>
+  <li><code>secure_?</code> returns <code>true</code> if the request was made using a secure channel, such as HTTPS.</li>
 </ul>
-
 <p>The result of <code>uri</code>, <code>url</code> and <code>queryString</code> is decoded into UTF-8 string using <code>URLDecoder</code>.</p>
+<p>Also note that if the method is overriden by the <code>_method</code> parameter, the original method is saved in context under the <code>cx.originalMethod</code> key.</p>
 
-<p>Also note that if the method is overriden by the <code>_method</code> parameter, the original method is
-saved in context under the <code>cx.originalMethod</code> key.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def protocol = raw.getProtocol
@@ -125,34 +113,25 @@ saved in context under the <code>cx.originalMethod</code> key.</p>
       </tr>
       <tr id="section-3">
         <td class="docs">
-          <h2>Client <span class="amp">&amp;</span> Server Information</h2>
-
+          <h2>Client &amp; Server Information</h2>
 <p>Following methods provide information about the server:</p>
-
 <ul>
-<li><code>serverHost</code> returns the host name of the server for which this request was originated;</li>
-<li><code>serverPort</code> returns the port number to which the request was sent;</li>
-<li><code>localIp</code> returns the Internet Protocol address of the interface on which the request was
-received;</li>
-<li><code>localHost</code> returns the host name of the IP interface on which the request was received;</li>
-<li><code>localPort</code> returns the IP port on which the request was received.</li>
+  <li><code>serverHost</code> returns the host name of the server for which this request was originated;</li>
+  <li><code>serverPort</code> returns the port number to which the request was sent;</li>
+  <li><code>localIp</code> returns the Internet Protocol address of the interface on which the request was received;</li>
+  <li><code>localHost</code> returns the host name of the IP interface on which the request was received;</li>
+  <li><code>localPort</code> returns the IP port on which the request was received.</li>
 </ul>
-
 <p>Following methods can be used to retrieve basic information about the client:</p>
-
 <ul>
-<li><code>remoteIp</code> returns the Internet Protocol address of the client (or last proxy) that sent
-the request;</li>
-<li><code>remoteHost</code> returns the host name of the client (or last proxy) that sent the request;</li>
-<li><code>remoteLogin</code> returns the login of the user making the request wrapped in <code>Some</code>, if the
-user has been authenticated (via container-managed security), or <code>None</code> if the user has
-not been authenticated;</li>
-<li><code>sessionId</code> returns session identifier specified by the client;</li>
-<li><code>userPrincipal</code> returns <code>java.security.Principal</code> for requests authenticated with
-container-managed security mechanisms;</li>
-<li><code>userInRole_?</code> indicates whether authenticated principal has specified <code>role</code> inside
-container-managed security system.</li>
+  <li><code>remoteIp</code> returns the Internet Protocol address of the client (or last proxy) that sent the request;</li>
+  <li><code>remoteHost</code> returns the host name of the client (or last proxy) that sent the request;</li>
+  <li><code>remoteLogin</code> returns the login of the user making the request wrapped in <code>Some</code>, if the user has been authenticated (via container-managed security), or <code>None</code> if the user has not been authenticated;</li>
+  <li><code>sessionId</code> returns session identifier specified by the client;</li>
+  <li><code>userPrincipal</code> returns <code>java.security.Principal</code> for requests authenticated with container-managed security mechanisms;</li>
+  <li><code>userInRole_?</code> indicates whether authenticated principal has specified <code>role</code> inside container-managed security system.</li>
 </ul>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def serverHost: String = raw.getServerName
@@ -173,10 +152,8 @@ container-managed security system.</li>
       <tr id="section-4">
         <td class="docs">
           <h2>Locale</h2>
+<p>A list of preferred locales is specified by the value of the <code>Accept-Language</code> header of the request. You can access this list and the most preferred locale (with maximum relative quality factor) using <code>locales</code> and <code>locale</code> fields.</p>
 
-<p>A list of preferred locales is specified by the value of the <code>Accept-Language</code> header of
-the request. You can access this list and the most preferred locale (with maximum relative quality
-factor) using <code>locales</code> and <code>locale</code> fields.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def locale: Locale = raw.getLocale
@@ -187,13 +164,11 @@ factor) using <code>locales</code> and <code>locale</code> fields.</p>
       <tr id="section-5">
         <td class="docs">
           <h2>Cookies</h2>
-
-<p>The <code>cookies</code> field provides access to request cookies. You can use rich functionality
-of Scala collections to work with cookies:</p>
-
+<p>The <code>cookies</code> field provides access to request cookies. You can use rich functionality of Scala collections to work with cookies:</p>
 <pre><code>request.cookies.find(_.name == "my.cookie")
 request.cookies.filter(_.secure)
 request.cookies.groupBy(_.maxAge)</code></pre>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  lazy val cookies: Seq[HttpCookie] = {
@@ -206,9 +181,8 @@ request.cookies.groupBy(_.maxAge)</code></pre>
       <tr id="section-6">
         <td class="docs">
           <h2>Headers</h2>
+<p>Request headers contain operational information about the requst. Circumflex Web Framework lets you access request headers via the <code>headers</code> object.</p>
 
-<p>Request headers contain operational information about the requst.
-Circumflex Web Framework lets you access request headers via the <code>headers</code> object.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object headers extends Map[String, String] {
@@ -227,11 +201,9 @@ Circumflex Web Framework lets you access request headers via the <code>headers</
       <tr id="section-7">
         <td class="docs">
           <h2>Attributes</h2>
-
-<p>Request attributes presented by Servlet API are typically used to pass information
-between a servlet and the servlet container or between collaborating servlets.</p>
-
+<p>Request attributes presented by Servlet API are typically used to pass information between a servlet and the servlet container or between collaborating servlets.</p>
 <p>Circumflex Web Framework lets you access request attributes via the <code>attrs</code> object.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  object attrs extends Map[String, Any] with UntypedContainer {
@@ -253,8 +225,8 @@ between a servlet and the servlet container or between collaborating servlets.</
       <tr id="section-8">
         <td class="docs">
           <h2>Parameters</h2>
-
 <p>Request parameters can be accessed via the <code>params</code> object.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  object params extends Map[String, String] {
@@ -275,19 +247,11 @@ between a servlet and the servlet container or between collaborating servlets.</
       <tr id="section-9">
         <td class="docs">
           <h2>Session</h2>
-
-<p>Session is a convenient in-memory storage presented by Servlet API which allows web
-applications to maintain state of their clients.</p>
-
-<p>A special identifier, session ID, is generated once the session is initiated.
-Clients then, to identify themselves within application, send session ID as a cookie
-with every request.</p>
-
+<p>Session is a convenient in-memory storage presented by Servlet API which allows web applications to maintain state of their clients.</p>
+<p>A special identifier, session ID, is generated once the session is initiated. Clients then, to identify themselves within application, send session ID as a cookie with every request.</p>
 <p>Circumflex Web Framework lets you access session attributes via the <code>session</code> object.</p>
+<p>Note that if session was not already created for the request, it will only be created if you attempt to add an attribute into it via <code>update</code> or <code>+</code> method, all other methods will return empty values without implicitly creating a session.</p>
 
-<p>Note that if session was not already created for the request, it will only be created
-if you attempt to add an attribute into it via <code>update</code> or <code>+</code> method, all other methods
-will return empty values without implicitly creating a session.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object session extends Map[String, Any] with UntypedContainer {
@@ -324,28 +288,20 @@ will return empty values without implicitly creating a session.</p>
       <tr id="section-10">
         <td class="docs">
           <h2>Body</h2>
-
-<p>Circumflex Web Framework lets you access the body of the request via <code>body</code> object. Following
-methods can be used to work with request body:</p>
-
+<p>Circumflex Web Framework lets you access the body of the request via <code>body</code> object. Following methods can be used to work with request body:</p>
 <ul>
-<li><code>xhr_?</code> returns true if this request is XMLHttpRequest;</li>
-<li><code>encoding</code> returns or sets the name of the character encoding used in the body of the
-request (as mentioned above, we implicitly set it to <code>UTF-8</code>);</li>
-<li><code>multipart_?</code> returns <code>true</code> if the request has <code>multipart/form-data</code> content and is
-suitable for <a href="#multipart">multipart operations</a>;</li>
-<li><code>length</code> returns the length, in bytes, of the request body;</li>
-<li><code>contentType</code> returns the MIME type of the body of the request;</li>
-<li><code>reader</code> opens <code>java.io.BufferedReader</code> to read the request body;</li>
-<li><code>stream</code> opens <code>javax.servlet.ServletInputStream</code> to read the request body;</li>
-<li><code>asXml</code> attempts to read the request body as XML element, an exception is thrown if parse
-fails;</li>
-<li><code>asString</code> reads request body into <code>String</code> using request <code>encoding</code>.</li>
+  <li><code>xhr_?</code> returns true if this request is XMLHttpRequest;</li>
+  <li><code>encoding</code> returns or sets the name of the character encoding used in the body of the request (as mentioned above, we implicitly set it to <code>UTF-8</code>);</li>
+  <li><code>multipart_?</code> returns <code>true</code> if the request has <code>multipart/form-data</code> content and is suitable for <a href="#multipart">multipart operations</a>;</li>
+  <li><code>length</code> returns the length, in bytes, of the request body;</li>
+  <li><code>contentType</code> returns the MIME type of the body of the request;</li>
+  <li><code>reader</code> opens <code>java.io.BufferedReader</code> to read the request body;</li>
+  <li><code>stream</code> opens <code>javax.servlet.ServletInputStream</code> to read the request body;</li>
+  <li><code>asXml</code> attempts to read the request body as XML element, an exception is thrown if parse fails;</li>
+  <li><code>asString</code> reads request body into <code>String</code> using request <code>encoding</code>.</li>
 </ul>
+<p>Note that due to limitations of Servlet API, you can only access one of <code>reader</code>, <code>stream</code>, <code>xml</code> or <code>toString</code> methods (and only once). An <code>IllegalStateException</code> is thrown if you access more than one of these methods.</p>
 
-<p>Note that due to limitations of Servlet API, you can only access one of <code>reader</code>, <code>stream</code>,
-<code>xml</code> or <code>toString</code> methods (and only once). An <code>IllegalStateException</code> is thrown if you
-access more than one of these methods.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  object body {
@@ -364,35 +320,18 @@ access more than one of these methods.</p>
       </tr>
       <tr id="section-11">
         <td class="docs">
-          <h2 id = "multipart">Multipart Requests <span class="amp">&amp;</span> File Uploading</h2>
-
-<p>Standard Servlet API doesn't provide any capabilities to work with requests of MIME type
-<code>multipart/form-data</code> which are usually used by the clients to upload files on the server.</p>
-
-<p>Circumfex API uses <a href="http://commons.apache.org/fileupload">Apache Commons FileUpload</a> to
-simplify this things for you. Commons FileUpload API is very robust and can be used in a
-number of different ways, depending upon the requirements of your application.</p>
-
+          <h2 id="multipart">Multipart Requests &amp; File Uploading</h2>
+<p>Standard Servlet API doesn't provide any capabilities to work with requests of MIME type <code>multipart/form-data</code> which are usually used by the clients to upload files on the server.</p>
+<p>Circumfex API uses <a href="http://commons.apache.org/fileupload">Apache Commons FileUpload</a> to simplify this things for you. Commons FileUpload API is very robust and can be used in a number of different ways, depending upon the requirements of your application.</p>
 <p>Commons FileUpload offers you two approaches to deal with <code>multipart/form-data</code> requests:</p>
-
 <ul>
-<li><em>traditional API</em> relies on <code>FileItemFactory</code> which can be configured to keep small files
-in memory and to store larger files on the disk, you set threshold sizes and operate with
-convenient <code>FileItem</code> objects, which could be queried for different information, like the
-name of the corresponding field, it's size in bytes, content type, etc.</li>
-<li><em>streaming API</em> does not use intermediate storage facilities and allows you to work with
-<code>FileItemStream</code> objects, which show better performance and lower memory usage.</li>
+  <li><strong>traditional API</strong> relies on <code>FileItemFactory</code> which can be configured to keep small files in memory and to store larger files on the disk, you set threshold sizes and operate with convenient <code>FileItem</code> objects, which could be queried for different information, like the name of the corresponding field, it's size in bytes, content type, etc.</li>
+  <li><strong>streaming API</strong> does not use intermediate storage facilities and allows you to work with <code>FileItemStream</code> objects, which show better performance and lower memory usage.</li>
 </ul>
+<p>Circumflex Web Framework provides support for both FileUpload styles via <code>parseFileItems</code> and <code>parseFileStreams</code> methods respectively.</p>
+<p>Note, however, that you can only use one of them (and only once) while working with the request (it's the limitation of accessing request body in Servlet API mentioned above, so <code>reader</code>, <code>stream</code>, <code>asXml</code> and <code>asString</code> methods will also interfere with FileUpload).</p>
+<p>For more information about configuring a FileUpload environment that will suit your needs, visit <a href="http://commons.apache.org/fileupload">Commons FileUpload Project Page</a>.</p>
 
-<p>Circumflex Web Framework provides support for both FileUpload styles via <code>parseFileItems</code> and
-<code>parseFileStreams</code> methods respectively.</p>
-
-<p>Note, however, that you can only use one of them (and only once) while working with the request
-(it's the limitation of accessing request body in Servlet API mentioned above, so <code>reader</code>,
-<code>stream</code>, <code>asXml</code> and <code>asString</code> methods will also interfere with FileUpload).</p>
-
-<p>For more information about configuring a FileUpload environment that will suit your needs,
-visit <a href="http://commons.apache.org/fileupload">Commons FileUpload Project Page</a>.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>    def parseFileItems(factory: FileItemFactory): Seq[FileItem] =
@@ -420,11 +359,9 @@ visit <a href="http://commons.apache.org/fileupload">Commons FileUpload Project 
       </tr>
       <tr id="section-12">
         <td class="docs">
-          <h2>Include <span class="amp">&amp;</span> Forward</h2>
+          <h2>Include &amp; Forward</h2>
+<p>The methods <code>forward</code> and <code>include</code> use request dispatcher mechanism provided by Servlet API to forward the request processing to or to include partial result from different web application object (such as servlet).</p>
 
-<p>The methods <code>forward</code> and <code>include</code> use request dispatcher mechanism provided by Servlet API
-to forward the request processing to or to include partial result from different web application
-object (such as servlet).</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def forward(uri: String) = raw.getRequestDispatcher(uri).forward(raw, response.raw)

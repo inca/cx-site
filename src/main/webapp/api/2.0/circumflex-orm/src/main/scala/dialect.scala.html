@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -49,15 +49,10 @@ import java.util.Date</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Dialect</h1>
-
 <p>This little thingy does all dirty SQL rendering.</p>
+<p>We are orienting the default dialect on the world's most advanced open-source database, <a href="http://postgresql.org">PostgreSQL</a>.</p>
+<p>If you feel that some of the statements do not work with your RDBMS vendor, trace the exact method and provide it's implementation in your own class. After that, set the <code>orm.dialect</code> configuration parameter accordingly.</p>
 
-<p>We are orienting the default dialect on the world's most advanced open-source
-database, <a href="http://postgresql.org">PostgreSQL</a>.</p>
-
-<p>If you feel that some of the statements do not work with your RDBMS vendor,
-trace the exact method and provide it's implementation in your own class.
-After that, set the <code>orm.dialect</code> configuration parameter accordingly.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class Dialect {</code></pre>
@@ -66,6 +61,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-2">
         <td class="docs">
           <h2>SQL types</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def longType = &quot;BIGINT&quot;
@@ -85,6 +81,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-3">
         <td class="docs">
           <h2>Actions for Foreign Keys</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def fkNoAction = &quot;NO ACTION&quot;
@@ -97,6 +94,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-4">
         <td class="docs">
           <h2>Join Keywords</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def innerJoin = &quot;INNER JOIN&quot;
@@ -108,6 +106,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-5">
         <td class="docs">
           <h2>Predicates</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def EQ = &quot;= ?&quot;
@@ -142,6 +141,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-6">
         <td class="docs">
           <h2>Functions and others</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def NULL = &quot;NULL&quot;
@@ -156,6 +156,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-7">
         <td class="docs">
           <h2>Set operations</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def union = &quot;UNION&quot;
@@ -169,6 +170,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-8">
         <td class="docs">
           <h2>Order specificators</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def asc = &quot;ASC&quot;
@@ -178,6 +180,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-9">
         <td class="docs">
           <h2>Features Compliance</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def supportsSchema_?(): Boolean = true
@@ -187,11 +190,12 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-10">
         <td class="docs">
           <h2>Commons</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def quoteLiteral(expr: String) = &quot;'&quot; + expr.replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;
 
-  def quoteIdentifer(identifier: String) = identifier
+  def quoteIdentifier(identifier: String) = identifier
 
   def escapeParameter(value: Any): String = value match {
     case Some(v) =&gt; escapeParameter(v)
@@ -200,13 +204,13 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
   }
 
   def relationQualifiedName(relation: Relation[_, _]) =
-    quoteIdentifer(relation.schema.name) + &quot;.&quot; + quoteIdentifer(relation.relationName)
+    quoteIdentifier(relation.schema.name) + &quot;.&quot; + quoteIdentifier(relation.relationName)
 
   def alias(expression: String, alias: String) =
-    expression + &quot; AS &quot; + quoteIdentifer(alias)
+    expression + &quot; AS &quot; + quoteIdentifier(alias)
 
   def qualifyColumn(field: Field[_, _], tableAlias: String) =
-    tableAlias + &quot;.&quot; + quoteIdentifer(field.name)
+    tableAlias + &quot;.&quot; + quoteIdentifier(field.name)
 
   def on(expression: String) = &quot;ON (&quot; + expression + &quot;)&quot;
 
@@ -219,10 +223,11 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-11">
         <td class="docs">
           <h2>Data Definition Language</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def constraintDefinition(constraint: Constraint) =
-    &quot;CONSTRAINT &quot; + quoteIdentifer(constraint.constraintName) + &quot; &quot; + constraint.sqlDefinition
+    &quot;CONSTRAINT &quot; + quoteIdentifier(constraint.constraintName) + &quot; &quot; + constraint.sqlDefinition
 
   def alterTable(rel: Relation[_, _], action: String) =
     &quot;ALTER TABLE &quot; + rel.qualifiedName + &quot; &quot; + action
@@ -231,32 +236,32 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
     alterTable(constraint.relation, &quot;ADD &quot; + constraintDefinition(constraint));
 
   def alterTableDropConstraint(constraint: Constraint) =
-    alterTable(constraint.relation, &quot;DROP CONSTRAINT &quot; + quoteIdentifer(constraint.constraintName));
+    alterTable(constraint.relation, &quot;DROP CONSTRAINT &quot; + quoteIdentifier(constraint.constraintName));
 
-  def createSchema(schema: Schema) = &quot;CREATE SCHEMA &quot; + quoteIdentifer(schema.name)
+  def createSchema(schema: Schema) = &quot;CREATE SCHEMA &quot; + quoteIdentifier(schema.name)
 
-  def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + quoteIdentifer(schema.name) + &quot; CASCADE&quot;
+  def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + quoteIdentifier(schema.name) + &quot; CASCADE&quot;
 
   def createTable[PK, R &lt;: Record[PK, R]](table: Table[PK, R]) =
     &quot;CREATE TABLE &quot; + table.qualifiedName + &quot; (&quot; +
         table.fields.map(_.toSql).mkString(&quot;, &quot;) +
-        &quot;, PRIMARY KEY (&quot; + quoteIdentifer(table.PRIMARY_KEY.name) + &quot;))&quot;
+        &quot;, PRIMARY KEY (&quot; + quoteIdentifier(table.PRIMARY_KEY.name) + &quot;))&quot;
 
   def dropTable[PK, R &lt;: Record[PK, R]](table: Table[PK, R]) =
     &quot;DROP TABLE &quot; + table.qualifiedName
 
   def createView[PK, R &lt;: Record[PK, R]](view: View[PK, R]) =
     &quot;CREATE VIEW &quot; + view.qualifiedName + &quot; (&quot; +
-        view.fields.map(f =&gt; quoteIdentifer(f.name)).mkString(&quot;, &quot;) + &quot;) AS &quot; +
+        view.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) + &quot;) AS &quot; +
         view.query.toInlineSql
 
   def dropView[PK, R &lt;: Record[PK, R]](view: View[PK, R]) =
-    &quot;DROP VIEW &quot; + quoteIdentifer(view.qualifiedName)
+    &quot;DROP VIEW &quot; + quoteIdentifier(view.qualifiedName)
 
   def createIndex(idx: Index): String = {
     var result = &quot;CREATE &quot;
     if (idx.unique_?) result += &quot;UNIQUE &quot;
-    result += &quot;INDEX &quot; + quoteIdentifer(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
+    result += &quot;INDEX &quot; + quoteIdentifier(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
         &quot; USING &quot; + idx.using + &quot; (&quot; + idx.expression + &quot;)&quot;
     if (idx.where != EmptyPredicate)
       result += &quot; WHERE &quot; + idx.where.toInlineSql
@@ -264,7 +269,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
   }
 
   def dropIndex(idx: Index) =
-    &quot;DROP INDEX &quot; + quoteIdentifer(idx.relation.schema.name) + &quot;.&quot; + quoteIdentifer(idx.name)
+    &quot;DROP INDEX &quot; + quoteIdentifier(idx.relation.schema.name) + &quot;.&quot; + quoteIdentifier(idx.name)
 
   def columnDefinition[R &lt;: Record[_, R]](field: Field[_, R]): String = {
     var result = field.name + &quot; &quot; + field.sqlType
@@ -298,8 +303,8 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
     }
 
   def sequenceName[R &lt;: Record[_, R]](f: Field[_, R]) =
-    quoteIdentifer(f.record.relation.schema.name) + &quot;.&quot; +
-        quoteIdentifer(f.record.relation.relationName + &quot;_&quot; + f.name + &quot;_seq&quot;)
+    quoteIdentifier(f.record.relation.schema.name) + &quot;.&quot; +
+        quoteIdentifier(f.record.relation.relationName + &quot;_&quot; + f.name + &quot;_seq&quot;)
 
   def uniqueKeyDefinition(uniq: UniqueKey) =
     &quot;UNIQUE (&quot; + uniq.fields.map(_.name).mkString(&quot;, &quot;) + &quot;)&quot;
@@ -318,6 +323,7 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-12">
         <td class="docs">
           <h2>Structured Query Language</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def join(j: JoinNode[_, _, _, _]): String = joinInternal(j, null)
@@ -376,20 +382,21 @@ After that, set the <code>orm.dialect</code> configuration parameter accordingly
       <tr id="section-13">
         <td class="docs">
           <h2>Data Manipulation Language</h2>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def insert[PK, R &lt;: Record[PK, R]](dml: Insert[PK, R]): String =
     &quot;INSERT INTO &quot; + dml.relation.qualifiedName +
-        &quot; (&quot; + dml.fields.map(f =&gt; quoteIdentifer(f.name)).mkString(&quot;, &quot;) +
+        &quot; (&quot; + dml.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) +
         &quot;) VALUES (&quot; + dml.fields.map(f =&gt; &quot;?&quot;).mkString(&quot;, &quot;) + &quot;)&quot;
 
   def insertSelect[PK, R &lt;: Record[PK, R]](dml: InsertSelect[PK, R]) =
     &quot;INSERT INTO &quot; + dml.relation.qualifiedName + &quot; (&quot; +
-        dml.relation.fields.map(f =&gt; quoteIdentifer(f.name)).mkString(&quot;, &quot;) + &quot;) &quot; + dml.query.toSql
+        dml.relation.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) + &quot;) &quot; + dml.query.toSql
 
   def update[PK, R &lt;: Record[PK, R]](dml: Update[PK, R]): String = {
     var result = &quot;UPDATE &quot; + dml.node.toSql + &quot; SET &quot; +
-        dml.setClause.map(f =&gt; quoteIdentifer(f._1.name) + &quot; = ?&quot;).mkString(&quot;, &quot;)
+        dml.setClause.map(f =&gt; quoteIdentifier(f._1.name) + &quot; = ?&quot;).mkString(&quot;, &quot;)
     if (dml.where != EmptyPredicate) result += &quot; WHERE &quot; + dml.where.toSql
     return result
   }

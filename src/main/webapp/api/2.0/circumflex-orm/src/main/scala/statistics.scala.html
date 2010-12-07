@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -49,33 +49,22 @@ import java.util.concurrent.atomic._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>ORM Statistics</h1>
-
-<p>The <code>Statistics</code> singleton is used to gather the statistical information from
-various code points inside Circumflex ORM. Most methods rely on non-blocking
-counters from <code>java.util.concurrent.atomic</code> package.</p>
-
+<p>The <code>Statistics</code> singleton is used to gather the statistical information from various code points inside Circumflex ORM. Most methods rely on non-blocking counters from <code>java.util.concurrent.atomic</code> package.</p>
 <p>Following statistical data is available:</p>
-
 <ul>
-<li><code>connectionsOpened</code> &mdash; the amount of physical JDBC connections opened by
-<code>Transaction</code> objects;</li>
-<li><code>connectionsClosed</code> &mdash; the amount of physical JDBC connections closed by
-<code>Transaction</code> objects;</li>
-<li><code>executions</code> &mdash; the total amount of invokations of the <code>execute</code> method of
-<code>Transaction</code> objects</li>
-<li><code>executionsSucceeded</code> &mdash; the amount of successful invokations of the
-<code>execute</code> method of <code>Transaction</code> objects;</li>
-<li><code>executionsFailed</code> &mdash; the amount of failed invokations of the <code>execute</code>
-method of <code>Transaction</code> objects;</li>
-<li><code>recordCacheHits</code> &mdash; the amount of records successfully retrieved from cache;</li>
-<li><code>recordCacheMisses</code> &mdash; the amount of records retrieved from database and stored
-in cache;</li>
-<li><code>inverseCacheHits</code> &mdash; the amount of inverse associations retrieved from cache;</li>
-<li><code>inverseCacheMisses</code> &mdash; the amount of inverse associations retrieved from database
-and stored in cache;</li>
-<li><code>heaviestSqlTime</code> &mdash; the time (in milliseconds) of the heaviest SQL query execution;</li>
-<li><code>heaviestSql</code> &mdash; the SQL statement of the heaviest data-retrieval query.</li>
+  <li><code>connectionsOpened</code> &mdash; the amount of physical JDBC connections opened by <code>Transaction</code> objects;</li>
+  <li><code>connectionsClosed</code> &mdash; the amount of physical JDBC connections closed by <code>Transaction</code> objects;</li>
+  <li><code>executions</code> &mdash; the total amount of invokations of the <code>execute</code> method of <code>Transaction</code> objects</li>
+  <li><code>executionsSucceeded</code> &mdash; the amount of successful invokations of the <code>execute</code> method of <code>Transaction</code> objects;</li>
+  <li><code>executionsFailed</code> &mdash; the amount of failed invokations of the <code>execute</code> method of <code>Transaction</code> objects;</li>
+  <li><code>recordCacheHits</code> &mdash; the amount of records successfully retrieved from cache;</li>
+  <li><code>recordCacheMisses</code> &mdash; the amount of records retrieved from database and stored in cache;</li>
+  <li><code>inverseCacheHits</code> &mdash; the amount of inverse associations retrieved from cache;</li>
+  <li><code>inverseCacheMisses</code> &mdash; the amount of inverse associations retrieved from database and stored in cache;</li>
+  <li><code>heaviestSqlTime</code> &mdash; the time (in milliseconds) of the heaviest SQL query execution;</li>
+  <li><code>heaviestSql</code> &mdash; the SQL statement of the heaviest data-retrieval query.</li>
 </ul>
+
         </td>
         <td class="code">
           <pre class="scala"><code>object Statistics {

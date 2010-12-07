@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -53,11 +53,8 @@ import scala.math.BigDecimal._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Field</h1>
+<p>The <code>Field</code> class holds atomic values of records. It wraps actual value and provides methods for constructing column definitions for enclosing tables. It also contains the <code>REFERENCES</code> method which is used to create associations.</p>
 
-<p>The <code>Field</code> class holds atomic values of records. It wraps actual value
-and provides methods for constructing column definitions for enclosing
-tables. It also contains the <code>REFERENCES</code> method which is used to create
-associations.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class Field[T, R &lt;: Record[_, R]](name: String, record: R , sqlType: String)

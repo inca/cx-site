@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm</code></pre>
@@ -47,15 +47,14 @@
       <tr id="section-1">
         <td class="docs">
           <h1>Vendor-specific SQL dialects</h1>
-
 <p>Following vendors are currently supported by Circumflex ORM:</p>
-
 <ul>
-<li>PostgreSQL;</li>
-<li>MySQL;</li>
-<li>H2 database;</li>
-<li>Oracle.</li>
+  <li>PostgreSQL;</li>
+  <li>MySQL;</li>
+  <li>H2 database;</li>
+  <li>Oracle.</li>
 </ul>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class PostgreSQLDialect extends Dialect {
@@ -71,7 +70,7 @@ class H2Dialect extends Dialect {
   override def createIndex(idx: Index): String = {
     var result = &quot;CREATE &quot;
     if (idx.unique_?) result += &quot;UNIQUE &quot;
-    result += &quot;INDEX &quot; + quoteIdentifer(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
+    result += &quot;INDEX &quot; + quoteIdentifier(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
         &quot; (&quot; + idx.expression + &quot;)&quot;
     if (idx.where != EmptyPredicate)
       result += &quot; WHERE &quot; + idx.where.toInlineSql

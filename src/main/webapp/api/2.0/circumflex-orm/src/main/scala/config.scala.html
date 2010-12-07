@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -56,20 +56,14 @@ import xml._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>ORM Configuration Objects</h1>
-
-<p>Circumflex ORM needs to know a little about your environment to operate.
-Following objects configure different aspects of Circumflex ORM:</p>
-
+<p>Circumflex ORM needs to know a little about your environment to operate. Following objects configure different aspects of Circumflex ORM:</p>
 <ul>
-<li><em>connection provider</em> is used to acquire JDBC connections, can be
-overriden using the <code>orm.connectionProvider</code> configuration parameter;</li>
-<li><em>type converter</em> handles convertions between JDBC and Scala data types,
-can be overriden using the <code>orm.typeConverter</code> configuration parameter;</li>
-<li><em>dialect</em> handles all SQL rendering throughout the framework,
-can be overriden using the <code>orm.dialect</code> configuration parameter;</li>
-<li><em>transaction manager</em> is responsible for allocating current transactions
-for execution contexts.</li>
+  <li><em>connection provider</em> is used to acquire JDBC connections, can be overriden using the <code>orm.connectionProvider</code> configuration parameter;</li>
+  <li><em>type converter</em> handles convertions between JDBC and Scala data types, can be overriden using the <code>orm.typeConverter</code> configuration parameter;</li>
+  <li><em>dialect</em> handles all SQL rendering throughout the framework, can be overriden using the <code>orm.dialect</code> configuration parameter;</li>
+  <li><em>transaction manager</em> is responsible for allocating current transactions for execution contexts.</li>
 </ul>
+
         </td>
         <td class="code">
           <pre class="scala"><code></code></pre>
@@ -78,9 +72,8 @@ for execution contexts.</li>
       <tr id="section-2">
         <td class="docs">
           <h2>Connection Provider</h2>
+<p>The <code>ConnectionProvider</code> is a simple trait responsible for acquiring JDBC connections throughout the application.</p>
 
-<p>The <code>ConnectionProvider</code> is a simple trait responsible for acquiring JDBC
-connections throughout the application.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>trait ConnectionProvider {
@@ -92,34 +85,26 @@ connections throughout the application.</p>
       </tr>
       <tr id="section-3">
         <td class="docs">
-          <p>Circumflex ORM provides default <code>ConnectionProvider</code> implementation.
-It behaves as follows:</p>
-
+          <p>Circumflex ORM provides default <code>ConnectionProvider</code> implementation. It behaves as follows:</p>
 <ul>
-<li><p>if <code>orm.connection.datasource</code> is set, use it to acquire data source
-from JNDI;</p>
-
-<ul>
-<li>if <code>orm.connection.datasource</code> is missing, construct a connection
-pool using <a href="http://www.mchange.com/projects/c3p0">c3p0</a> and following configuration parameters:
-<ul>
-<li><code>orm.connection.driver</code></li>
-<li><code>orm.connection.url</code></li>
-<li><code>orm.connection.username</code></li>
-<li><code>orm.connection.password</code></li>
-</ul></li>
-<li>set <em>auto-commit</em> for each connection to <code>false</code></li>
-<li>set the transaction isolation level to the value <code>orm.connection.isolation</code>
-(or use <code>READ COMMITTED</code> by default)</li>
+  <li>if <code>orm.connection.datasource</code> is set, use it to acquire data source from JNDI;</li>
+  <li>
+    <p>if <code>orm.connection.datasource</code> is missing, construct a connection pool using <a href="http://www.mchange.com/projects/c3p0">c3p0</a> and following configuration parameters:</p>
+    <ul>
+      <li><code>orm.connection.driver</code></li>
+      <li><code>orm.connection.url</code></li>
+      <li><code>orm.connection.username</code></li>
+      <li><code>orm.connection.password</code></li>
+    </ul>
+  </li>
+  <li>set <em>auto-commit</em> for each connection to <code>false</code></li>
+  <li>
+    <p>set the transaction isolation level to the value <code>orm.connection.isolation</code> (or use <code>READ COMMITTED</code> by default)</p>
+    <p>If c3p0 data source is used you can fine tune it's configuration with <code>c3p0.properties</code> file (see <a href="http://www.mchange.com/projects/c3p0/index.html#configuration&#95;properties">c3p0 documentation</a> for more details).</p>
+    <p>Though <code>DefaultConnectionProvider</code> is an optimal choice for most applications, you can create your own connection provider by implementing the <code>ConnectionProvider</code> trait and setting the <code>orm.connectionProvider</code> configuration parameter.</p>
+  </li>
 </ul>
 
-<p>If c3p0 data source is used you can fine tune it's configuration with <code>c3p0.properties</code>
-file (see <a href="http://www.mchange.com/projects/c3p0/index.html#configuration&#95;properties">c3p0 documentation</a> for more details).</p>
-
-<p>Though <code>DefaultConnectionProvider</code> is an optimal choice for most applications, you
-can create your own connection provider by implementing the <code>ConnectionProvider</code> trait
-and setting the <code>orm.connectionProvider</code> configuration parameter.</p></li>
-</ul>
         </td>
         <td class="code">
           <pre class="scala"><code>class DefaultConnectionProvider extends ConnectionProvider {
@@ -203,9 +188,8 @@ and setting the <code>orm.connectionProvider</code> configuration parameter.</p>
       <tr id="section-4">
         <td class="docs">
           <h2>Type converter</h2>
+<p>The <code>TypeConverter</code> trait is used to set JDBC prepared statement values for execution. If you intend to use custom types, provide your own implementation.</p>
 
-<p>The <code>TypeConverter</code> trait is used to set JDBC prepared statement values for execution.
-If you intend to use custom types, provide your own implementation.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class TypeConverter {
@@ -225,20 +209,11 @@ If you intend to use custom types, provide your own implementation.</p>
       <tr id="section-5">
         <td class="docs">
           <h1>Transaction manager</h1>
-
 <p>No communication with the database can occur outside of a database transaction.</p>
+<p>The <code>Transaction</code> class wraps JDBC <code>Connection</code> and provides simple methods for committing or rolling back underlying transaction as well as for executing various typical JDBC statements.</p>
+<p>The <code>TransactionManager</code> trait is responsible for allocation current transaction for application's execution context. The default implementation uses <code>Context</code>, however, your application may require different approaches to transaction demarcation &mdash; in this case you may provide your own implementation.</p>
+<p>JDBC <code>PreparedStatement</code> objects are also cached within <code>Transaction</code> for performance considerations.</p>
 
-<p>The <code>Transaction</code> class wraps JDBC <code>Connection</code> and provides simple methods
-for committing or rolling back underlying transaction as well as for executing
-various typical JDBC statements.</p>
-
-<p>The <code>TransactionManager</code> trait is responsible for allocation current transaction
-for application's execution context. The default implementation uses <code>Context</code>,
-however, your application may require different approaches to transaction
-demarcation &mdash; in this case you may provide your own implementation.</p>
-
-<p>JDBC <code>PreparedStatement</code> objects are also cached within <code>Transaction</code> for
-performance considerations.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class Transaction {

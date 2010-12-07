@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -49,16 +49,8 @@ import ru.circumflex.core._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Record</h1>
-
-<p>The record is a central abstraction in Circumflex ORM. Every object persisted into
-database should extend the <code>Record</code> class. It provides data definition methods
-necessary to create a domain model for your application as well as methods for
-saving and updating your record to backend database.</p>
-
-<p>Circumflex ORM is all about type safety and domain-specific languages (at a first
-glance the record definition may seem a little verbose). Here's the sample definition
-of fictional record <code>Country</code>:</p>
-
+<p>The record is a central abstraction in Circumflex ORM. Every object persisted into database should extend the <code>Record</code> class. It provides data definition methods necessary to create a domain model for your application as well as methods for saving and updating your record to backend database.</p>
+<p>Circumflex ORM is all about type safety and domain-specific languages (at a first glance the record definition may seem a little verbose). Here's the sample definition of fictional record <code>Country</code>:</p>
 <pre><code>class Country extends Record[String, Country] {
   val code = "code".VARCHAR(2)
   val name = "name".TEXT
@@ -66,6 +58,7 @@ of fictional record <code>Country</code>:</p>
   def PRIMARY_KEY = code
   val relation = Country
 }</code></pre>
+
         </td>
         <td class="code">
           <pre class="scala"><code>abstract class Record[PK, R &lt;: Record[PK, R]] extends Equals { this: R =&gt;
@@ -77,19 +70,10 @@ of fictional record <code>Country</code>:</p>
       <tr id="section-2">
         <td class="docs">
           <h2>Record State</h2>
+<p>Records in relational theory are distinguished from each other by the value of their <strong>primary key</strong>. You should specify what field hold the primary key of your record by implementing the <code>PRIMARY_KEY</code> method.</p>
+<p>The <code>transient_?</code> method indicates, whether the record was not persisted into a database yet or it was. The default logic is simple: if the primary key contains <code>null</code> then the record is <strong>transient</strong> (i.e. not persisted), otherwise the record is considered persistent.</p>
+<p>The <code>relation</code> method points to the relation from which a record came or to which it should go. In general this method should point to the companion object. However, if you do not convey to Circumflex ORM conventions, you may specify another object which will act a relation for this type of records.</p>
 
-<p>Records in relational theory are distinguished from each other by the value of their
-<em>primary key</em>. You should specify what field hold the primary key of your record
-by implementing the <code>PRIMARY_KEY</code> method.</p>
-
-<p>The <code>transient_?</code> method indicates, whether the record was not persisted into a database
-yet or it was. The default logic is simple: if the primary key contains <code>null</code> then the
-record is <em>transient</em> (i.e. not persisted), otherwise the record is considered persistent.</p>
-
-<p>The <code>relation</code> method points to the relation from which a record came or to which it
-should go. In general this method should point to the companion object. However, if
-you do not convey to Circumflex ORM conventions, you may specify another object which
-will act a relation for this type of records.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def PRIMARY_KEY: Field[PK, R]
@@ -100,21 +84,11 @@ will act a relation for this type of records.</p>
       </tr>
       <tr id="section-3">
         <td class="docs">
-          <h2>Persistence <span class="amp">&amp;</span> Validation</h2>
+          <h2>Persistence &amp; Validation</h2>
+<p>The <code>refresh</code> method is used to synchronize an already persisted record with its state in backend. It evicts the record from cache and performs SQL <code>SELECT</code> using primary key-based predicate.</p>
+<p>The <code>INSERT_!</code>, <code>UPDATE_!</code> and <code>DELETE_!</code> methods are used to insert, update or delete a single record. The <code>insert</code> and <code>update</code> do the same as their equivalents except that validation is performed before actual execution. The <code>refresh</code> method performs select with primary key criteria and updates the fields with retrieved values.</p>
+<p>When inserting new record into database the primary key should be generated. It is done either by polling database, by supplying <code>NULL</code> in primary key and then querying last generated identifier or manually by application. The default implementation relies on application-assigned identifiers; to use different strategy mix in one of the <code>Generator</code> traits or simply override the <code>persist</code> method.</p>
 
-<p>The <code>refresh</code> method is used to synchronize an already persisted record with its state in backend.
-It evicts the record from cache and performs SQL <code>SELECT</code> using primary key-based predicate.</p>
-
-<p>The <code>INSERT_!</code>, <code>UPDATE_!</code> and <code>DELETE_!</code> methods are used to insert, update or delete a single
-record. The <code>insert</code> and <code>update</code> do the same as their equivalents except that validation
-is performed before actual execution. The <code>refresh</code> method performs select with primary key
-criteria and updates the fields with retrieved values.</p>
-
-<p>When inserting new record into database the primary key should be generated. It is done either
-by polling database, by supplying <code>NULL</code> in primary key and then querying last generated identifier
-or manually by application. The default implementation relies on application-assigned identifiers;
-to use different strategy mix in one of the <code>Generator</code> traits or simply override the <code>persist</code>
-method.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  def refresh(): this.type = if (transient_?)
@@ -139,6 +113,9 @@ method.</p>
     relation.beforeInsert.foreach(c =&gt; c(this))
     // Prepare and execute query
     val result = _persist(evalFields(fields))
+    // Update cache
+    contextCache.evictRecord(PRIMARY_KEY(), relation)
+    contextCache.cacheRecord(PRIMARY_KEY(), relation, Some(this))
     // Execute events
     relation.afterInsert.foreach(c =&gt; c(this))
     return result
@@ -173,7 +150,7 @@ method.</p>
     f.foreach(f =&gt; q.SET[Any](f.asInstanceOf[Field[Any, R]], f.value))
     val result = q.execute()
     if (relation.autorefresh_?) refresh()
-    // Invalidate inverse caches
+    // Invalidate caches
     contextCache.evictInverse[PK, R](this)
     // Execute events
     relation.afterUpdate.foreach(c =&gt; c(this))
@@ -195,7 +172,8 @@ method.</p>
     // Prepare and execute query
     val result = (relation AS &quot;root&quot;)
         .map(r =&gt; r.criteria.add(r.PRIMARY_KEY EQ PRIMARY_KEY())).mkDelete.execute()
-    // Invalidate inverse caches
+    // Invalidate caches
+    contextCache.evictRecord(PRIMARY_KEY(), relation)
     contextCache.evictInverse[PK, R](this)
     // Execute events
     relation.afterDelete.foreach(c =&gt; c(this))
@@ -210,7 +188,13 @@ method.</p>
 
   def validate_!(): Unit = validate.map(errors =&gt; throw new ValidationException(errors))
 
-  def save_!(): Int = if (transient_?) INSERT_!() else UPDATE_!()
+  def save_!(): Int = if (transient_?)
+    throw new ORMException(&quot;Application-assigned identifier is expected. &quot; +
+        &quot;Use one of the generators if you wish identifiers to be generated automatically.&quot;)
+  else relation.get(PRIMARY_KEY()) match {
+    case Some(_) =&gt; UPDATE_!()
+    case _ =&gt; INSERT_!()
+  }
 
   def save(): Int = {
     validate_!()
@@ -227,9 +211,8 @@ method.</p>
       <tr id="section-4">
         <td class="docs">
           <h2>Inverse Associations</h2>
+<p>One-to-one and one-to-many relationships can be implemented using <code>inverseOne</code> or <code>inverseMany</code> methods.</p>
 
-<p>One-to-one and one-to-many relationships can be implemented using <code>inverseOne</code>
-or <code>inverseMany</code> methods.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  protected def inverseOne[C &lt;: Record[_, C]](association: Association[PK, C, R]) =
@@ -241,18 +224,12 @@ or <code>inverseMany</code> methods.</p>
       </tr>
       <tr id="section-5">
         <td class="docs">
-          <h2>Equality <span class="amp">&amp;</span> Others</h2>
-
-<p>Two record are considered equal if they share the same type and have same primary keys.
-Transient records are never equal to each other.</p>
-
+          <h2>Equality &amp; Others</h2>
+<p>Two record are considered equal if they share the same type and have same primary keys. Transient records are never equal to each other.</p>
 <p>The <code>hashCode</code> method delegates to record's primary key.</p>
-
 <p>The <code>canEqual</code> method indicates that two records share the same type.</p>
+<p>Finally, the default implementation of <code>toString</code> returns fully-qualified class name of the record followed by &ldquo;@" and it's primary key value (or <code>TRANSIENT</code> word if primary key is <code>null</code>).</p>
 
-<p>Finally, the default implementation of <code>toString</code> returns fully-qualified class name
-of the record followed by &ldquo;@" and it's primary key value (or <code>TRANSIENT</code> word if
-primary key is <code>null</code>).</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  override def equals(that: Any) = that match {
@@ -282,24 +259,19 @@ primary key is <code>null</code>).</p>
       <tr id="section-6">
         <td class="docs">
           <h1>Identity Generation Strategies</h1>
-
-<p>Different identity generation strategies can be used by mixing in one of the <code>Generator</code>
-traits. Following identity generators are supported out-of-box:</p>
-
+<p>Different identity generation strategies can be used by mixing in one of the <code>Generator</code> traits. Following identity generators are supported out-of-box:</p>
 <ul>
-<li>application-assigned identifiers (the default one, no need to mixin traits): application
-is responsible for generating and assigning identifiers before attempting to persist a record;</li>
-<li><code>IdentityGenerator</code> is a database-specific strategy: application should persist a record
-with <code>NULL</code> primary key value, database is responsible for generating an identifier value and
-for exposing last generated identifier;</li>
-<li><code>SequenceGenerator</code> assumes that database supports sequences: the database is polled for
-next sequence value which is then used as an identifier for persisting.</li>
+  <li>application-assigned identifiers (the default one, no need to mixin traits): application is responsible for generating and assigning identifiers before attempting to persist a record;</li>
+  <li><code>IdentityGenerator</code> is a database-specific strategy: application should persist a record with <code>NULL</code> primary key value, database is responsible for generating an identifier value and for exposing last generated identifier;</li>
+  <li><code>SequenceGenerator</code> assumes that database supports sequences: the database is polled for next sequence value which is then used as an identifier for persisting.</li>
 </ul>
+
         </td>
         <td class="code">
           <pre class="scala"><code>trait Generator[PK, R &lt;: Record[PK, R]] extends Record[PK, R] { this: R =&gt;
   override protected def _persist(fields: scala.Seq[Field[_, R]]): Int = persist(fields)
   def persist(fields: Seq[Field[_, R]]): Int
+  override def save_!(): Int = if (transient_?) INSERT_!() else UPDATE_!()
 }
 
 trait IdentityGenerator[PK, R &lt;: Record[PK, R]] extends Generator[PK, R] { this: R =&gt;

@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.web
@@ -53,25 +53,16 @@ import org.apache.commons.io.FilenameUtils._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Standalone Server</h1>
-
-<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty to
-start accepting request without even the need to us deployment descriptor
-(which is otherwise required by Servlet Specification).</p>
-
-<p>Following configuration parameters are required to get standalone server
-up and running:</p>
-
+<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty to start accepting request without even the need to us deployment descriptor (which is otherwise required by Servlet Specification).</p>
+<p>Following configuration parameters are required to get standalone server up and running:</p>
 <ul>
-<li><code>cx.root</code> specifies content root of web application (<code>src/main/webapp</code>
-is default;</li>
-<li><code>cx.port</code> specifies port which Jetty will listen to;</li>
-<li><code>cx.router</code> specifies the class name of the main <code>RequestRouter</code>.</li>
+  <li><code>cx.root</code> specifies content root of web application (<code>src/main/webapp</code> is default;</li>
+  <li><code>cx.port</code> specifies port which Jetty will listen to;</li>
+  <li><code>cx.router</code> specifies the class name of the main <code>RequestRouter</code>.</li>
 </ul>
-
-<p>Usage is simple: use <code>start</code> method to bring standalone server up
-and <code>stop</code> method to shut the server down.</p>
-
+<p>Usage is simple: use <code>start</code> method to bring standalone server up and <code>stop</code> method to shut the server down.</p>
 <p>Refer to source code and Jetty documentation for more information.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class StandaloneServer {

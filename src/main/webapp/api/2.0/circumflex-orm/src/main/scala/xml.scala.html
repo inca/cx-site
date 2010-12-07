@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -51,14 +51,9 @@ import java.io.File</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>XML (de)serialization</h1>
+<p>Circumflex ORM allows you to load graphs of associated records from XML files. This is very useful for loading test data and exchanging records between databases with associations preserving (in id-independent style).</p>
+<p>Every <code>Field</code> capable of (de)serializing itself (from)into XML should extend the <code>XmlSerializable</code> trait. A record can be read from XML format if it contains only <code>XmlSerializable</code> fields.</p>
 
-<p>Circumflex ORM allows you to load graphs of associated records from XML files.
-This is very useful for loading test data and exchanging records between databases
-with associations preserving (in id-independent style).</p>
-
-<p>Every <code>Field</code> capable of (de)serializing itself (from)into XML should extend the
-<code>XmlSerializable</code> trait. A record can be read from XML format if it contains only
-<code>XmlSerializable</code> fields.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>abstract class XmlSerializable[T, R &lt;: Record[_, R]](
@@ -72,10 +67,8 @@ with associations preserving (in id-independent style).</p>
       </tr>
       <tr id="section-2">
         <td class="docs">
-          <p>Deployment is a unit of work of XML import tool. It specifies the <code>prefix</code> for record
-classes resolution, the <code>onExist</code> behavior (<code>keep</code>, <code>update</code> or <code>recreate</code>) and whether
-record validation is needed before persisting. One deployment corresponds to one transaction,
-so each deployment is executed atomically.</p>
+          <p>Deployment is a unit of work of XML import tool. It specifies the <code>prefix</code> for record classes resolution, the <code>onExist</code> behavior (<code>keep</code>, <code>update</code> or <code>recreate</code>) and whether record validation is needed before persisting. One deployment corresponds to one transaction, so each deployment is executed atomically.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class Deployment(val id: String,

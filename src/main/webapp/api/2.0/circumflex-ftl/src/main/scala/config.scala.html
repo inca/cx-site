@@ -38,12 +38,12 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.freemarker
 
-import ru.circumflex.md.Markdown
+import ru.circumflex.me.Markeven
 import ru.circumflex.core._
 import ru.circumflex.web._
 import freemarker.template._
@@ -55,20 +55,15 @@ import java.io.StringWriter</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Default FreeMarker Configuration</h1>
-
 <p>The default FreeMarker configuration implies following:</p>
-
 <ul>
-<li>templates are loaded from <code>${webapp-root}/templates directory</code> or,
-if failed, from application classpath;</li>
-<li>all template errors result in exception to be thrown to controller;</li>
-<li>character encoding defaults to UTF-8;</li>
-<li>the <code>ScalaObjectWrapper</code> is used for Scala core types.</li>
+  <li>templates are loaded from <code>${webapp-root}/templates directory</code> or, if failed, from application classpath;</li>
+  <li>all template errors result in exception to be thrown to controller;</li>
+  <li>character encoding defaults to UTF-8;</li>
+  <li>the <code>ScalaObjectWrapper</code> is used for Scala core types.</li>
 </ul>
+<p>You can alter template loading dynamically using <code>addLoader</code> and <code>setLoaders</code> methods, but in general this is only acceptable in initialization code. In any case make sure you know what you are doing first.</p>
 
-<p>You can alter template loading dynamically using <code>addLoader</code> and <code>setLoaders</code>
-methods, but in general this is only acceptable in initialization code. In any
-case make sure you know what you are doing first.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class DefaultConfiguration extends Configuration {
@@ -93,7 +88,7 @@ case make sure you know what you are doing first.</p>
   setObjectWrapper(new ScalaObjectWrapper())
   setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER)
   setDefaultEncoding(&quot;utf-8&quot;)
-  setSharedVariable(&quot;md&quot;, MarkdownDirective)
+  setSharedVariable(&quot;me&quot;, MarkevenDirective)
 
   try {
     addLoader(new WebappTemplateLoader(servletContext, &quot;/templates&quot;))
@@ -105,14 +100,14 @@ case make sure you know what you are doing first.</p>
 
 }
 
-object MarkdownDirective extends TemplateDirectiveModel {
+object MarkevenDirective extends TemplateDirectiveModel {
   def execute(env: Environment,
               params: java.util.Map[_, _],
               loopVars: Array[TemplateModel],
               body: TemplateDirectiveBody) = {
     val nested = new StringWriter
     body.render(nested)
-    env.getOut.write(Markdown(nested.toString))
+    env.getOut.write(Markeven(nested.toString))
   }
 }</code></pre>
         </td>

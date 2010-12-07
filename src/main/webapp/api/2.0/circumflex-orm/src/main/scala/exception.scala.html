@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm</code></pre>
@@ -47,9 +47,8 @@
       <tr id="section-1">
         <td class="docs">
           <h1>Exceptions</h1>
+<p>The <code>ORMException</code>s are thrown by Circumflex ORM components and usually mean that current transaction needs to be rolled back and closed ASAP.</p>
 
-<p>The <code>ORMException</code>s are thrown by Circumflex ORM components and usually mean that current
-transaction needs to be rolled back and closed ASAP.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class ORMException(msg: String, cause: Throwable) extends Exception(msg, cause) {

@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -50,20 +50,11 @@ import ru.circumflex.core._</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Querying</h1>
-
 <p>SQL and DML queries form the heart of Circumflex ORM DSL.</p>
+<p>Common features implemented in the <code>Query</code> trait are <strong>named parameters</strong> which allow query reuse and <strong>ensuring alias uniqueness</strong> which prevents implicit relation node aliases from colliding within a single query.</p>
+<p>The <code>SQLQuery</code> trait represents data-retrieval queries which usually employ the <code>executeQuery</code> method of JDBC <code>PreparedStatement</code> and process JDBC <code>ResultSet</code>.</p>
+<p>The <code>DMLQuery</code> trait represents data-manipulation queries which usually employ the <code>executeUpdate</code> method of JDBC <code>PreparedStatement</code> and return the number of affected rows.</p>
 
-<p>Common features implemented in the <code>Query</code> trait are <em>named parameters</em>
-which allow query reuse and <em>ensuring alias uniqueness</em> which prevents
-implicit relation node aliases from colliding within a single query.</p>
-
-<p>The <code>SQLQuery</code> trait represents data-retrieval queries which usually employ
-the <code>executeQuery</code> method of JDBC <code>PreparedStatement</code> and process JDBC
-<code>ResultSet</code>.</p>
-
-<p>The <code>DMLQuery</code> trait represents data-manipulation queries which usually
-employ the <code>executeUpdate</code> method of JDBC <code>PreparedStatement</code> and return
-the number of affected rows.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>trait Query extends SQLable with ParameterizedExpression with Cloneable {
@@ -117,9 +108,8 @@ the number of affected rows.</p>
       </tr>
       <tr id="section-2">
         <td class="docs">
-          <p>The <code>SQLQuery</code> trait defines a contract for data-retrieval queries.
-It's only type parameter <code>T</code> designates the query result type (it is
-determined by specified <code>projections</code>).</p>
+          <p>The <code>SQLQuery</code> trait defines a contract for data-retrieval queries. It's only type parameter <code>T</code> designates the query result type (it is determined by specified <code>projections</code>).</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>abstract class SQLQuery[T](val projection: Projection[T]) extends Query {
@@ -347,6 +337,7 @@ class Select[T](projection: Projection[T]) extends SQLQuery[T](projection) {
       <tr id="section-3">
         <td class="docs">
           <p>The <code>DMLQuery</code> trait defines a contract for data-manipulation queries.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>trait DMLQuery extends Query {

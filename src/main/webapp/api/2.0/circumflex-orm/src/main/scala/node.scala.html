@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
@@ -49,15 +49,10 @@ import java.lang.String</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Relation Nodes</h1>
-
-<p>The <code>RelationNode</code> is essentially a wrapper around relation which provides
-an <code>alias</code> so that it can participate in complex SQL query plans.</p>
-
-<p>Generally a relation node is created implicitly from <code>Relation</code>.
-A special alias <code>this</code> is assigned to new relation nodes, it is transformed
-inside queries into a query-unique alias so that no collisions occur.</p>
-
+<p>The <code>RelationNode</code> is essentially a wrapper around relation which provides an <code>alias</code> so that it can participate in complex SQL query plans.</p>
+<p>Generally a relation node is created implicitly from <code>Relation</code>. A special alias <code>this</code> is assigned to new relation nodes, it is transformed inside queries into a query-unique alias so that no collisions occur.</p>
 <p>You may assign an alias explicitly using the <code>AS</code> method.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class RelationNode[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R])
@@ -73,11 +68,9 @@ inside queries into a query-unique alias so that no collisions occur.</p>
       </tr>
       <tr id="section-2">
         <td class="docs">
-          <p>Relation nodes allow Scala-like syntactic sugar by using the <code>map</code> method.
-Following example gives table <code>City</code> an alias <code>ci</code> and uses it to construct a
-<code>Criteria</code> object.</p>
-
+          <p>Relation nodes allow Scala-like syntactic sugar by using the <code>map</code> method. Following example gives table <code>City</code> an alias <code>ci</code> and uses it to construct a <code>Criteria</code> object.</p>
 <pre><code>(City AS "ci").map(ci =&gt; ci.criteria.add(ci.name LIKE "Lausanne")).list</code></pre>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def map[T](f: RelationNode[PK, R] =&gt; T): T = f(this)</code></pre>
@@ -85,8 +78,8 @@ Following example gives table <code>City</code> an alias <code>ci</code> and use
       </tr>
       <tr id="section-3">
         <td class="docs">
-          <p>The <code>*</code> method creates a <code>RecordProjection</code> from this node and is
-widely used in the <code>SELECT</code> clause of SQL queries.</p>
+          <p>The <code>*</code> method creates a <code>RecordProjection</code> from this node and is widely used in the <code>SELECT</code> clause of SQL queries.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def * = new RecordProjection[PK, R](this)</code></pre>
@@ -94,8 +87,8 @@ widely used in the <code>SELECT</code> clause of SQL queries.</p>
       </tr>
       <tr id="section-4">
         <td class="docs">
-          <p>Each relation node define which projection it yields. When nodes are joined
-the resulting node contains projections from both nodes.</p>
+          <p>Each relation node define which projection it yields. When nodes are joined the resulting node contains projections from both nodes.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def projections: Seq[Projection[_]] = List(*)</code></pre>
@@ -104,6 +97,7 @@ the resulting node contains projections from both nodes.</p>
       <tr id="section-5">
         <td class="docs">
           <p>Creates new <code>Criteria</code> instance with this node as its query plan root.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def criteria = new Criteria[PK, R](this)</code></pre>
@@ -112,6 +106,7 @@ the resulting node contains projections from both nodes.</p>
       <tr id="section-6">
         <td class="docs">
           <p>Relation nodes can be joined to allow restrictions of associated relations.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>  def findAssociation[T, F &lt;: Record[T, F]](node: RelationNode[T, F]): Option[Association[T, R, F]] =
@@ -145,20 +140,13 @@ the resulting node contains projections from both nodes.</p>
       </tr>
       <tr id="section-7">
         <td class="docs">
-          <h2>Equality <span class="amp">&amp;</span> Others</h2>
-
-<p>Two nodes are considered equal if they wrap the same relation and share
-same aliases.</p>
-
+          <h2>Equality &amp; Others</h2>
+<p>Two nodes are considered equal if they wrap the same relation and share same aliases.</p>
 <p>The <code>hashCode</code> method delegates to node's relation.</p>
-
 <p>The <code>canEqual</code> method indicates that two nodes wrap the same relation.</p>
+<p>The <code>clone</code> methods creates a shallow copy of this node (the underlying relation remains unchanged).</p>
+<p>Finally, both <code>toSql</code> and <code>toString</code> return dialect specific SQL expression which appends an alias to relation's qualified name.</p>
 
-<p>The <code>clone</code> methods creates a shallow copy of this node (the underlying
-relation remains unchanged).</p>
-
-<p>Finally, both <code>toSql</code> and <code>toString</code> return dialect specific SQL expression
-which appends an alias to relation's qualified name.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>  override def equals(that: Any): Boolean = that match {
@@ -184,10 +172,8 @@ which appends an alias to relation's qualified name.</p>
       </tr>
       <tr id="section-8">
         <td class="docs">
-          <p>The <code>ProxyNode</code> wraps a node and provides functionality to arrange
-joined nodes into a query plan (tree-like structure) by allowing to replace
-an underlying <code>node</code> with it's equivalent <code>JoinNode</code>. Most methods delegate
-to underlying <code>node</code>.</p>
+          <p>The <code>ProxyNode</code> wraps a node and provides functionality to arrange joined nodes into a query plan (tree-like structure) by allowing to replace an underlying <code>node</code> with it's equivalent <code>JoinNode</code>. Most methods delegate to underlying <code>node</code>.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class ProxyNode[PK, R &lt;: Record[PK, R]](protected[orm] var node: RelationNode[PK, R])
@@ -221,18 +207,11 @@ to underlying <code>node</code>.</p>
       <tr id="section-9">
         <td class="docs">
           <h1>Joins</h1>
-
-<p>Relations can be joined within one query to allow applying restrictions on
-associated relations. The <code>JoinNode</code> class represends a join between two relations.
-We stick to a general convention called <em>left associativity</em>: two joined nodes
-with equal left nodes are considered equal:</p>
-
+<p>Relations can be joined within one query to allow applying restrictions on associated relations. The <code>JoinNode</code> class represends a join between two relations. We stick to a general convention called <strong>left associativity</strong>: two joined nodes with equal left nodes are considered equal:</p>
 <pre><code>(ci JOIN co) == ci
 (ci JOIN co JOIN ca) == ((ci JOIN co) JOIN ca)</code></pre>
+<p>This way you can compose arbitrary complex query plans. The join condition (the <code>ON</code> subclause) can be either inferred from associations or specified manually using the <code>ON</code> method.</p>
 
-<p>This way you can compose arbitrary complex query plans. The join condition
-(the <code>ON</code> subclause) can be either inferred from associations or specified
-manually using the <code>ON</code> method.</p>
         </td>
         <td class="code">
           <pre class="scala"><code>class JoinNode[PKL, L &lt;: Record[PKL, L], PKR, R &lt;: Record[PKR, R]](

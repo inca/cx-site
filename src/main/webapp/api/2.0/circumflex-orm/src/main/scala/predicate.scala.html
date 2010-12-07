@@ -38,7 +38,7 @@
     <tbody>
       <tr id="section-0">
         <td class="docs">
-          <p></p>
+          
         </td>
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm</code></pre>
@@ -47,11 +47,9 @@
       <tr id="section-1">
         <td class="docs">
           <h1>Predicates</h1>
-
-<p><code>Predicate</code> is essentially a parameterized expression which yields boolean
-value when executed by database.</p>
-
+<p><code>Predicate</code> is essentially a parameterized expression which yields boolean value when executed by database.</p>
 <p>Predicates are designed to participate in <code>WHERE</code> clauses of SQL queries.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>trait Predicate extends ParameterizedExpression
@@ -97,8 +95,8 @@ class SubqueryExpression[T](expression: String,
       </tr>
       <tr id="section-2">
         <td class="docs">
-          <p><code>SimpleExpressionHelper</code> is used to compose predicates in a DSL-style.
-<code>String</code> expressions are converted to <code>SimpleExpressionHelper</code> implicitly.</p>
+          <p><code>SimpleExpressionHelper</code> is used to compose predicates in a DSL-style. <code>String</code> expressions are converted to <code>SimpleExpressionHelper</code> implicitly.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class SimpleExpressionHelper(val expr: String) {
@@ -158,6 +156,7 @@ class SubqueryExpression[T](expression: String,
       <tr id="section-3">
         <td class="docs">
           <p><code>AggregatePredicateHelper</code> is used to compose predicates using infix notation.</p>
+
         </td>
         <td class="code">
           <pre class="scala"><code>class AggregatePredicateHelper(predicate: Predicate) {
