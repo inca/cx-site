@@ -1,0 +1,278 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;util.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.me
+
+import java.lang.StringBuilder
+import java.util.regex._
+import collection.mutable.ListBuffer</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Character protector</h1>
+<p>We use character protector mechanism to ensure that certain elements of markup, such as inline HTML blocks, remain undamaged when processing.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Protector {
+  protected var protectHash: Map[String, CharSequence] = Map()
+  protected var unprotectHash: Map[CharSequence, String] = Map()
+
+  def randomKey = &quot;!}&quot; + (0 until keySize).foldLeft(&quot;&quot;)((s, i) =&gt;
+    s + chars.charAt(rnd.nextInt(chars.length)))
+
+  def addToken(t: CharSequence): String = unprotectHash.get(t) match {
+    case Some(key) =&gt; key
+    case _ =&gt;
+      val key = randomKey
+      protectHash += key -&gt; t
+      unprotectHash += t -&gt; key
+      key
+  }
+
+  def decode(key: String): Option[CharSequence] = protectHash.get(key)
+
+  def keys = protectHash.keys
+
+  def clear: Unit = {
+    protectHash = Map()
+    unprotectHash = Map()
+  }
+
+  override def toString = protectHash.toString
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h1>Mutable Character Buffer</h1>
+<p>We use <code>StringEx</code> internally for various text processing stuff. It wraps a mutable <code>buffer: StringBuilder</code> and enhances it with <code>replaceAll</code> and <code>replaceIndexed</code> functionality. The rationale behind low-level replacements is that <code>java.util.regex.Matcher</code> supports <code>StringBuffer</code> in <code>appendReplacement</code> and <code>appendTail</code> methods. Since our processing environment does not support multithreading, we avoid synchronization costs using <code>StringBuilder</code> instead.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class StringEx(var buffer: StringBuilder) extends CharSequence {
+  def this(cs: CharSequence) = this(new StringBuilder(cs))
+
+  // A tricky one: uses specified `pattern` to point the start of replacement and lets
+  // `replacement` function determine the end index of replacement.
+  def replaceIndexed(pattern: Pattern, replacement: Matcher =&gt; (CharSequence, Int)): this.type = {
+    var startIndex = 0
+    val m = pattern.matcher(buffer)
+    while (m.find(startIndex)) {
+      val r = replacement(m)
+      val text = r._1.toString
+      val endIdx = r._2
+      // apply replacement
+      buffer.replace(m.start, endIdx, text)
+      // evaluate new start index
+      startIndex = m.start + text.length
+    }
+    return this
+  }
+
+  def replaceAll(pattern: Pattern, replacement: Matcher =&gt; CharSequence): this.type = {
+    var lastIndex = 0;
+    val m = pattern.matcher(buffer)
+    val sb = new StringBuilder(buffer.length)
+    while (m.find()) {
+      sb.append(buffer.subSequence(lastIndex, m.start))
+      sb.append(replacement(m))
+      lastIndex = m.end
+    }
+    sb.append(buffer.subSequence(lastIndex, buffer.length))
+    this.buffer = sb
+    return this
+  }
+
+  def replaceFirst(pattern: Pattern, replacement: Matcher =&gt; CharSequence): Int = {
+    var length = -1
+    val m = pattern.matcher(buffer)
+    if (m.find()) {
+      val sb = new StringBuilder(buffer.length)
+      sb.append(buffer.subSequence(0, m.start))
+      sb.append(replacement(m))
+      sb.append(buffer.subSequence(m.end, buffer.length))
+      this.buffer = sb
+      length = m.end - m.start
+    }
+    return length
+  }
+
+  def replaceFirst(pattern: Pattern, replacement: CharSequence): Int =
+    replaceFirst(pattern, m =&gt; replacement)
+
+  def replaceAll(pattern: Pattern, replacement: CharSequence): this.type =
+    replaceAll(pattern, m =&gt; replacement)
+
+  def replaceAll(text: String, replacement: CharSequence): this.type = {
+    if (text.length == 0) return this
+    var i = buffer.indexOf(text)
+    while (i != -1) {
+      buffer.replace(i, i + text.length, replacement.toString)
+      i = buffer.indexOf(text, i + replacement.length)
+    }
+    return this
+  }
+
+  def split(pattern: Pattern): Seq[StringEx] =
+    pattern.split(buffer).map(s =&gt; new StringEx(s))
+
+  def append(cs: CharSequence): this.type = {
+    buffer.append(cs)
+    return this
+  }
+
+  def prepend(cs: CharSequence): this.type = {
+    buffer.replace(0, 0, cs.toString)
+    return this
+  }
+
+  def outdent(): this.type = replaceAll(regexes.outdent(4), &quot;&quot;)
+
+  def startsWith(cs: CharSequence): Boolean = {
+    if (cs.length == 0) return true
+    if (cs.length &gt; buffer.length) return false
+    var i = 0
+    while (i &lt; cs.length) {
+      if (cs.charAt(i) != buffer.charAt(i))
+        return false
+      i += 1
+    }
+    return true
+  }
+
+  def endsWith(cs: CharSequence): Boolean = {
+    if (cs.length == 0) return true
+    if (cs.length &gt; buffer.length) return false
+    var i = 1
+    while (i &lt;= cs.length) {
+      if (cs.charAt(cs.length - i) != buffer.charAt(buffer.length - i))
+        return false
+      i += 1
+    }
+    return true
+  }
+
+  def equals(cs: CharSequence): Boolean = {
+    if (cs.length != buffer.length)
+      return false
+    return startsWith(cs)
+  }
+
+  def trimLeft(): Int = {
+    var i = 0
+    while ((i &lt; buffer.length) &amp;&amp; (buffer.charAt(i) &lt;= ' '))
+      i += 1
+    if (i &gt; 0)
+      buffer.delete(0, i)
+    return i
+  }
+  
+  def trimRight(): Int = {
+    var i = 0
+    while ((i &lt; buffer.length) &amp;&amp; (buffer.charAt(buffer.length - i - 1) &lt;= ' '))
+      i += 1
+    if (i &gt; 0) buffer.delete(buffer.length - i, buffer.length)
+    return i
+  }
+
+  def trim(): this.type = {
+    trimLeft
+    trimRight
+    return this
+  }
+
+  def matches(pattern: Pattern): Boolean =
+    pattern.matcher(buffer).matches
+
+  def matches[B](pattern: Pattern, function: Matcher =&gt; B): Option[B] = {
+    val m = pattern.matcher(buffer)
+    if (m.matches) Some(function(m))
+    else None
+  }
+
+  // inherited from `CharSequence`
+
+  def length: Int = buffer.length
+
+  def subSequence(start: Int, end: Int): CharSequence = buffer.subSequence(start, end)
+
+  def charAt(index: Int): Char = buffer.charAt(index)
+
+  override def toString = buffer.toString
+
+}
+
+class ChunkIterator(val chunks: Seq[StringEx]) {
+  private var index = -1
+  def hasNext: Boolean = (index + 1) &lt; chunks.length
+  def next: StringEx = {
+    index += 1
+    return chunks(index)
+  }
+  def peek: StringEx = chunks(index + 1)
+  def reset: this.type = {
+    index = -1
+    return this
+  }
+  def stepBack: Unit = if (index &gt; -1) index -= 1
+  def size = chunks.size
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+
