@@ -4,8 +4,7 @@ Circumflex Web Framework is a DSL for quick and robust web application developme
 
 Here's the sample web application:
 
-    lang:scala
-    class Main extends RequestRouter {
+    class Main extends RequestRouter {                                    {.scala}
       get("/") = "Hello world!"
       get("/posts/:id") = "Post #" + uri("id")
       post("/form") = {
@@ -26,8 +25,7 @@ the classpath (add `<dependency>` with `circumflex-core` and `circumflex-web` as
 
 Second, configure `CircumflexFilter` in `/WEB-INF/web.xml`:
 
-    lang:xml
-    <web-app version="2.5">
+    <web-app version="2.5">                                                 {.xml}
       <filter>
         <filter-name>Circumflex Filter</filter-name>
         <filter-class>ru.circumflex.web.CircumflexFilter</filter-class>
@@ -58,8 +56,7 @@ to configure your application.
 
 All code examples assume that you have following `import` statement in code where necessary:
 
-    lang:scala
-    import ru.circumflex._, core._, web._
+    import ru.circumflex._, core._, web._                                 {.scala}
 
 # Sample Applications   {#samples}
 
@@ -75,12 +72,11 @@ There's a couple of projects hosted on [GitHub](http://github.com) which can hel
 
 ## Request Routers {#routers}
 
-Each Circumflex web application is composed of one or more *request routers*.
+Each Circumflex web application is composed of one or more _request routers_.
 Request router is a subclass of `RequestRouter` which sequentionally defines [routes](#routes)
 directly within its body:
 
-    lang:scala
-    class Main extends RequestRouter {
+    class Main extends RequestRouter {                                    {.scala}
       get("/") = "Hello world!"
       get("/posts/:id") = "Post #" + uri.get("id")
       post("/form") = {
@@ -98,8 +94,7 @@ It dispatches all requests of web application.
 
 Request routers can also be easily nested:
 
-    lang:scala
-    class MainRouter extends RequestRouter {
+    class MainRouter extends RequestRouter {                              {.scala}
       // with matching
       any("/users/*") => new UsersRouter
       any("/posts/*") => new PostsRouter
@@ -114,7 +109,7 @@ modular, more organized and easier to maintain.
 
 ## Routes   {#routes}
 
-[Circumflex Web Framework](#web) is designed around the *route concept*. A route is an HTTP method
+[Circumflex Web Framework](#web) is designed around the _route concept_. A route is an HTTP method
 with matching mechanism and attached block.
 
 Routes are defined using one of the following members of `RequestRouter`:
@@ -137,8 +132,7 @@ Each route also has an associated block which gets executed if matching succeeds
 evaluate to `RouteResponse` which will be sent to client (`String` and `scala.xml.Node` are
 converted to `RouteResponse` implicitly):
 
-    lang:scala
-    class MyRouter extends RequestRouter {
+    class MyRouter extends RequestRouter {                                  {.scala}
       get("/hello/:name.txt") = "Hello, " + param("name") + "!"
       get("/hello/:name.xml") = {
         val name = param("name")
@@ -153,23 +147,20 @@ and finalizes request processing.
 
 Various helpers throw `ResponseSentException` instead of yielding `RouteResponse`:
 
-    lang:scala
-    get("/") = redirect("/index.html")
+    get("/") = redirect("/index.html")                                      {.scala}
 
 ## Matchers  {#matchers}
 
 Request matching can be performed against request URI and zero or more request headers.
 The syntax is self-descriptive:
 
-    lang:scala
-    get("/")        // matches GET /
+    get("/")        // matches GET /                                        {.scala}
     get("/posts")   // matches GET /posts
     post("/posts")  // matches POST /posts
 
 You can combine several matchers in one route using the `&` method:
 
-    lang:scala
-    get("/mail" & Accept("text/html") & Host("localhost"))
+    get("/mail" & Accept("text/html") & Host("localhost"))                  {.scala}
     // matches following request:
     // GET /mail
     // Host: localhost
@@ -181,28 +172,24 @@ Routes can include patterns with named parameters which can be accessed in the a
 The following route matches `GET /posts/43` or `GET /posts/foo`; the construct `uri("id")`
 is used to capture the parameter from request URI:
 
-    lang:scala
-    get("/posts/:id") = "Post #" + uri("id")
+    get("/posts/:id") = "Post #" + uri("id")                                {.scala}
 
 Route patterns may also include wildcard parameters (`*` for zero or more characters,
 `+` for one or more characters), they can be accessed via index (starting with `1` like
 in regex groups):
 
-    lang:scala
-    get("/files/+") = "Downloading file " + uri(1)
+    get("/files/+") = "Downloading file " + uri(1)                          {.scala}
 
 You may also refer to the whole match with `0` index:
 
-    lang:scala
-    get("/files/:name.:ext") = {
+    get("/files/:name.:ext") = {                                            {.scala}
       println("The URI is: " + uri(0))
       "Filename is " + uri("name") + ", extension is " + uri("ext")
     }
 
 Named parameters are indexed too:
 
-    lang:scala
-    get("*/:two/+/:four") = {
+    get("*/:two/+/:four") = {                                               {.scala}
       // uri(2) == uri("two")
       // uri(4) == uri("four")
       (1 to 4).map(i => i + " -> " + uri(i)).mkString("\n")
@@ -211,13 +198,11 @@ Named parameters are indexed too:
 Parameters can also be extracted using the `param` helper. Unlike `uri`, which represents match
 results from URI only, the `param` helper can extract named parameters from headers:
 
-    lang:scala
-    get("/" & Accept("text/:format")) = "The format is " + param("format")
+    get("/" & Accept("text/:format")) = "The format is " + param("format")  {.scala}
 
 You can also extract request parameters using `param`:
 
-    lang:scala
-    get("/") = "Limit is " + param("limit") + ", offset is " + param.getOrElse("offset", "0")
+    get("/") = "Limit is " + param("limit") + ", offset is " + param.getOrElse("offset", "0")    {.scala}
     // >> GET /?limit=50&offset=10
     // << Limit is 50, offset is 10
     // >> GET /?limit=5
@@ -232,14 +217,12 @@ by setting `cx.public` configuration parameter.
 
 You can send `302 Found` HTTP redirect:
 
-    lang:scala
-    get("/") = sendRedirect("/index.html")
+    get("/") = sendRedirect("/index.html")                                  {.scala}
 
 You can also perform request forwarding (a.k.a. URI rewriting) -- the request will be dispatched
 again, but with different URI):
 
-    lang:scala
-    get("/") = forward("/index.html")
+    get("/") = forward("/index.html")                                       {.scala}
 
 Note that you should add `<dispatcher>FORWARD</dispatcher>` to `CircumflexFilter` mapping in
 your `web.xml` to make forwarding work. You should also avoid infinite forwarding loops manually.
@@ -248,26 +231,22 @@ your `web.xml` to make forwarding work. You should also avoid infinite forwardin
 
 You can send errors with specific status code and optional message:
 
-    lang:scala
-    get("/") = sendError(500, "We don't work yet.")
+    get("/") = sendError(500, "We don't work yet.")                         {.scala}
 
 ## Sending Files   {#send-file}
 
 You can use the `sendFile` helper to send arbitrary file to client:
 
-    lang:scala
-    get("/") = sendFile(new File("/path/to/file.txt"))
+    get("/") = sendFile(new File("/path/to/file.txt"))                      {.scala}
 
 You can also specify optional `filename` so that `Content-Disposition: attachment` could be
 added to response:
 
-    lang:scala
-    get("/") = sendFile(new File("/path/to/file.txt"), "greetings.txt")
+    get("/") = sendFile(new File("/path/to/file.txt"), "greetings.txt")     {.scala}
 
 The content type of the file is guessed based on it's extension. You may override it:
 
-    lang:scala
-    get("/") = {
+    get("/") = {                                                            {.scala}
       response.contentType("text/plain")
       sendFile(new File("/path/to/file.text"), "greetings.txt")
     }
@@ -280,20 +259,19 @@ Consult your web server documentation to obtain more information on this feature
 
 You can determine if current request is `XmlHttpRequest`:
 
-    lang:scala
-    get("/") = if (request.body.xhr_?) "AJAX" else "plain old request"
+    get("/") = if (request.body.xhr_?) "AJAX" else "plain old request"      {.scala}
 
 ## Accessing Headers   {#headers}
 
 You get the contents of request headers using the `header` helper:
 
-    get("/") = "Serving to host: " + headers("Host")
+    get("/") = "Serving to host: " + headers("Host")                        {.scala}
 
 ## Accessing Session   {#session}
 
 Dealing with session attributes is fairly easy:
 
-    get("/") = {
+    get("/") = {                                                            {.scala}
       // get attribute
       session("attr1")
       // set attribute
@@ -304,8 +282,7 @@ Dealing with session attributes is fairly easy:
 
 Flashes provide a way to pass temporary objects between requests:
 
-    lang:scala
-    get("/") = flash.get("note") match {
+    get("/") = flash.get("note") match {                                    {.scala}
       case Some(value) => "Having a note: " + value
       case None => "No notes for now..."
     }
@@ -334,8 +311,7 @@ The central abstractions of the route matching mechanism are:
 `Match` objects are designed to be used inside attached blocks of routes, where you can
 naturally assume that match succeeded:
 
-    lang:scala
-    get("/:name") = uri("name")
+    get("/:name") = uri("name")                                             {.scala}
 
 `Match` also has `name` which reflects the context where match has occured. URI-based matcher
 returns `Match` with name `uri` while headers-based matchers create `Match` objects with the name
@@ -343,8 +319,7 @@ of corresponding HTTP header.
 
 You can lookup certain `Match` object in `CircumflexContext` by it's name:
 
-    lang:scala
-    get("/foo" & Accept("text/:format")) = ctx("Accept") match {
+    get("/foo" & Accept("text/:format")) = ctx("Accept") match {            {.scala}
       case m: Match => "Requested format is " + m("format")
       case _ => ""
     }
@@ -353,14 +328,12 @@ In general you don't have to lookup `Match` objects, the `param` helper can retr
 parameters from all matches that appear in `CircumflexContext`. So the previous example could be
 rewritten in much more convenient manner:
 
-    lang:scala
-    get("/foo" & Accept("text/:format")) = "Requested format is " + param("format")
+    get("/foo" & Accept("text/:format")) = "Requested format is " + param("format")     {.scala}
 
 However, there are situations where looking up a `Matcher` can come in handy. For example, you
 cannot access splats (wildcard matches) or indexed parameters with `param`:
 
-    lang:scala
-    get("/foo" & Accept("text/+")) = ctx("Accept") match {
+    get("/foo" & Accept("text/+")) = ctx("Accept") match {                  {.scala}
       case m: Match => "Requested format is " + m(1)
       case _ => ""
     }
@@ -368,7 +341,7 @@ cannot access splats (wildcard matches) or indexed parameters with `param`:
 Standard `RegexMatcher` can also accept an arbitrary regular expression, the groups will be
 accessible from `Match` by their index:
 
-    get("/posts/(\\d+)".r) = {
+    get("/posts/(\\d+)".r) = {                                              {.scala}
       val id = uri(1).toLong
       // lookup the post by id and render response
       "..."
@@ -379,16 +352,14 @@ accessible from `Match` by their index:
 You may optionally specify the `prefix` for request router. All URI-based matchers inside the
 router will be prepended by this prefix:
 
-    lang:scala
-    class PostsRouter extends RequestRouter("/posts") {
+    class PostsRouter extends RequestRouter("/posts") {                     {.scala}
       get("/") = "Showing posts"                  // matches GET /posts/
       get("/show/:id") = "Post " + param("id")    // matches GET /posts/show/149
     }
 
 Alternatively, you can let the enclosing router specify a prefix for subrouter:
 
-    lang:scala
-    class SubRouter(prefix: String) extends RequestRouter(prefix)
+    class SubRouter(prefix: String) extends RequestRouter(prefix)           {.scala}
 
     class MainRouter extends RequestRouter {
       new SubRouter("/prefix-a")

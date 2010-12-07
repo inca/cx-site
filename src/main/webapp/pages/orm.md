@@ -18,8 +18,7 @@ There's a couple of things you need to do in order to get started with Circumfle
 First, make sure that `circumflex-orm-<version>.jar` is in the classpath. The easiest way
 to do so is to add corresponding `dependency` to your `pom.xml`:
 
-    lang:xml
-    <properties>
+    <properties>                                                  {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
@@ -41,8 +40,7 @@ Second, configure database access by specifying following configuration paramete
 
 Here's the example `cx.properties` file:
 
-    lang:no-highlight
-    orm.connection.driver=org.postgresql.Driver
+    orm.connection.driver=org.postgresql.Driver                   {.no-highlight}
     orm.connection.url=jdbc:postgresql://localhost:5432/mydb
     orm.connection.username=myuser
     orm.connection.password=mypassword
@@ -54,8 +52,7 @@ to configure your application.
 
 All code examples assume that you have following `import` statement in code where necessary:
 
-    lang:scala
-    import ru.circumflex.orm._
+    import ru.circumflex.orm._                                    {.scala}
 
 # Central abstractions   {#abstractions}
 
@@ -76,22 +73,21 @@ Applications built with Circumflex ORM usually operate on following abstractions
 
 # Data Definition   {#ddl}
 
-The process of creating the domain model of application is refered to as *data definition*.
+The process of creating the domain model of application is refered to as _data definition_.
 It usually involves following steps:
 
-  * defining a *record*, a subclass of `Record`;
-  * defining *fields* and *associations* of the record;
-  * defining the *primary key* of the record;
-  * defining the *relation*, a companion object subclassed from corresponding record and mixed
+  * defining a _record_, a subclass of `Record`;
+  * defining _fields_ and _associations_ of the record;
+  * defining the _primary key_ of the record;
+  * defining the _relation_, a companion object subclassed from corresponding record and mixed
   with one of the `Relation` traits (`Table` or `View`);
-  * adding *constraints*, *indexes* and other *auxiliary database objects* to relation;
+  * adding _constraints_, _indexes_ and other _auxiliary database objects_ to relation;
   * adding methods for [querying](#sql) and [manipulating](#dml) records to relation;
   * specifying, how the record should be [validated](#validation).
 
 Here's a simple example of fictional domain model:
 
-    lang:scala
-    class Country extends Record[String, Country] {
+    class Country extends Record[String, Country] {               {.scala}
       val code = "code".VARCHAR(2).NOT_NULL
       val name = "name".TEXT.NOT_NULL
 
@@ -126,8 +122,7 @@ definition of target column.
 Generally, spaces may be used to delimit method calls and improve readability of column definitions.
 However, sometimes Scala compiler forces you to use dot-notation:
 
-    lang:scala
-    val name = "name".TEXT.NOT_NULL
+    val name = "name".TEXT.NOT_NULL                               {.scala}
 
 Following methods are used to create field definitions:
 
@@ -210,35 +205,30 @@ which can be overriden in vendor-specific dialects. Besides it is possible to de
 custom SQL type by subclassing the `Field` class.
 Refer to [Circumflex ORM API documentation](/api/2.0/circumflex-orm/field.scala) for details. 
 
-Since version 2.0 genearated columns **will not have** `NOT NULL` constraints by default (this
+Since version 2.0 genearated columns *will not have* `NOT NULL` constraints by default (this
 behavior is consistent with SQL specifications). You should call `NOT_NULL` method to express
 `NOT NULL` constraint in column definition:
 
-    lang:scala
-    val mandatory = "mandatory".TEXT.NOT_NULL
+    val mandatory = "mandatory".TEXT.NOT_NULL                     {.scala}
     val optional = "optional".TEXT
 
 You can optionally initialize a field with value with `NOT_NULL`:
 
-    lang:scala
-    val createdAt = "created_at".TIMESTAMP.NOT_NULL(new Date)
+    val createdAt = "created_at".TIMESTAMP.NOT_NULL(new Date)     {.scala}
 
 You can also specify the default expression for the field, it will be rendered in database
 column definition:
 
-    lang: scala
-    val radius = "radius".NUMERIC.NOT_NULL
+    val radius = "radius".NUMERIC.NOT_NULL                        {.scala}
     val square = "square".NUMERIC.NOT_NULL.DEFAULT("PI() * (radius ^ 2)")
 
 You can also create a single-column unique constraint using the `UNIQUE` method:
 
-    lang:scala
-    val login = "login".VARCHAR(64).NOT_NULL.UNIQUE
+    val login = "login".VARCHAR(64).NOT_NULL.UNIQUE               {.scala}
 
 Fields operate with values. The syntax for accessing and setting values is self-descriptive:
 
-    lang:scala
-    val age = "age".INTEGER  // Field[Int, R]
+    val age = "age".INTEGER  // Field[Int, R]                     {.scala}
     // accessing
     age.value                     // Option[Int]
     age.get                       // Option[Int]
@@ -255,8 +245,7 @@ Fields operate with values. The syntax for accessing and setting values is self-
 It is a good practice to place domain-specific logic inside record classes. The following example
 shows the most trivial case: overriding `toString` and providing alternative constructor:
 
-    lang:scala
-    class Country extends Record[String, Country] {
+    class Country extends Record[String, Country] {               {.scala}
       def PRIMARY_KEY = code
       def relation = Country
       // Constructor shortcuts
@@ -278,8 +267,7 @@ Relation is defined as a companion object for corresponding [record](#record). A
 the relation object should have the same name as its corresponding record class, should extend
 that record class and should mix in one of the `Relation` traits (`Table` or `View`):
 
-    lang:scala
-    class Country extends Record[String, Country] {
+    class Country extends Record[String, Country] {               {.scala}
       def relation = Country
       // ...
     }
@@ -288,8 +276,7 @@ that record class and should mix in one of the `Relation` traits (`Table` or `Vi
 You can place the definitions of constraints and indexes inside the body of relation, they should
 be public immutable (`val`) members of relation:
 
-    lang:scala
-    object Country extends Country with Table[String, Country] {
+    object Country extends Country with Table[String, Country] {  {.scala}
       // a named UNIQUE constraint
       val codeKey = CONSTRAINT("code_uniq").UNIQUE(this.code)
       // a UNIQUE constraint with default name
@@ -307,8 +294,7 @@ definition options.
 
 The relation object is also the right place for various querying methods:
 
-    lang:scala
-    object User extends Table[Long, User] {
+    object User extends Table[Long, User] {                       {.scala}
       def findByLogin(l: String): Option[User] = (this AS "u").map(u =>
           SELECT(u.*).FROM(u).WHERE(u.login LIKE l).unique)
     }
@@ -321,7 +307,7 @@ more information.
 Circumflex ORM allows you to use database-generated identifiers as primary keys.
 Let's take a look at following data definition snippet:
 
-    class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+    class City extends Record[Long, City] with IdentityGenerator[Long, City] {    {.scala}
       val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
       val name = "name".TEXT.NOT_NULL
       def PRIMARY_KEY = id
@@ -337,10 +323,9 @@ For more information refer to [Circumflex ORM API Documentation](/api/2.0/circum
 
 ## Associations   {#association}
 
-An *association* provides a way to link one relation with another.
+An _association_ provides a way to link one relation with another.
 
-    lang:scala
-    class City extends Record[Long, City] {
+    class City extends Record[Long, City] {                        {.scala}
       val country = "country_code".TEXT.REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(NO_ACTION)
     }
 
@@ -357,13 +342,12 @@ actions can be specified by invoking `ON_DELETE` and `ON_UPDATE` with one of the
   * `SET_DEFAULT`.
 
 Associations are directed: the relation that owns an association is often refered to as a
-*child relation*, while the relation to which an associations references is often refered to
-as a *parent relation*.
+_child relation_, while the relation to which an associations references is often refered to
+as a _parent relation_.
 
 Like with regular field, you can set an retrieve the association's value:
 
-    lang:scala
-    // accessing
+    // accessing                                                   {.scala}
     country.value                       // Option[Country]
     country.get                         // Option[Country]
     country()                           // Country
@@ -379,34 +363,30 @@ Like with regular field, you can set an retrieve the association's value:
 Associations do not store objects themselves. Instead they store the primary key of an object
 in their internal field. You can access and set this value directly using the `field` method:
 
-    lang:scala
-    country.field   // Field[String, R]
+    country.field   // Field[String, R]                            {.scala}
     country.field := "ch"
 
 When you access association using its `get`, `apply`, `value` or `getOrElse` methods, the
 actual record is returned from cache of current transaction. However, if record does not
 exist in cache yet, a transparent SQL select will be issued to fetch this record. This technique
-is usually refered to as *lazy initialization* or *lazy fetching*:
+is usually refered to as _lazy initialization_ or _lazy fetching_:
 
-    lang:scala
-    val c = new City
+    val c = new City                                               {.scala}
     c.id := 16
     c.country()   // a SELECT query is executed to retrieve a Country
                   // for the City with id = 16
     c.country()   // further selects are not issued
 
-The other side of association can optionally define an *inverse association* using following syntax:
+The other side of association can optionally define an _inverse association_ using following syntax:
 
-    lang:scala
-    class Country extends Record[String, Country] {
+    class Country extends Record[String, Country] {                {.scala}
       def cities = inverseMany(City.country)
     }
 
 Inverse associations are not represented by field in their relation, they are initialized by
 issuing the `SELECT` statement against child relation:
 
-    lang:scala
-    val c = new Country
+    val c = new Country                                            {.scala}
     c.code := 'ch'
     c.cities()   // a SELECT query is executed to retrieve a set of City objects
                  // which have country_code = 'ch'
@@ -416,14 +396,14 @@ Here we have the so-called &laquo;one-to-many&raquo; relationship. The &laquo;on
 relationship is simulated by placing a unique constraint on association (in child table) and
 using `inverseOne` in parent table.
 
-You can also perform *association prefetching* for both straight and inverse associations using
+You can also perform _association prefetching_ for both straight and inverse associations using
 the [Criteria API](#criteria).
 
 ## Validation   {#validation}
 
 A record can be optionally validated before it is saved into database.
 
-The validation is performed using one or more *validators*, functions which take a `Record`
+The validation is performed using one or more _validators_, functions which take a `Record`
 and return `Option[Msg]`: `None` if validation succeeds or `Some[Msg]` otherwise. In case of
 failed validation the `Msg` object is used to describe the exact problem.
 Refer to [Circumflex Messages API Documentation](/api/2.0/circumflex-core/messages.scala) to
@@ -431,15 +411,14 @@ find out how to work with messages.
 
 Validators are added to the `validation` object inside [relation](#relation):
 
-    lang:scala
-    object Country extends Table[String, Country] {
+    object Country extends Table[String, Country] {                {.scala}
       validation.add(r => ...)
           .add(r => ...)
     }
 
 There are several predefined validators available for your convenience:
 
-    object Country extends Table[String, Country] {
+    object Country extends Table[String, Country] {                {.scala}
       validation.notNull(_.code)
           .notEmpty(_.code)
           .pattern(_.code, "(?i:[a-z]{2})")
@@ -448,8 +427,7 @@ There are several predefined validators available for your convenience:
 A record is validated when either `validate` or `validate_!` is invoked.
 The first one returns `Option[MsgGroup]`:
 
-    lang:scala
-    rec.validate match {
+    rec.validate match {                                           {.scala}
       case None => ...            // validation succeeded
       case Some(errors) => ...    // validation failed
     }
@@ -462,8 +440,7 @@ more in [Insert, Update & Delete](#iud) section.
 It is also fairly easy to implement custom validators. Following example shows a validator
 for checking unique email addresses:
 
-    lang:scala
-    object Account extends Table[Long, Account] {
+    object Account extends Table[Long, Account] {                  {.scala}
       validation.add(r => criteria
           .add(r.email EQ r.email())
           .unique
@@ -475,8 +452,7 @@ for checking unique email addresses:
 Database schema scripts are generated with `DDLUnit`. You can use this class to create and drop
 database objects programmatically:
 
-    lang:scala
-    val ddl = new DDLUnit(Country, City)
+    val ddl = new DDLUnit(Country, City)                           {.scala}
     // drop objects
     ddl.DROP
     // create objects
@@ -501,7 +477,7 @@ build profile. Read more on [Circumflex Maven Plugin page](/plugin.html#schema).
 
 # Querying   {#sql}
 
-A precise request for information retrieval from database is often refered to as *query*.
+A precise request for information retrieval from database is often refered to as _query_.
 There are various ways you can query your data with Circumflex ORM:
 
   * using [select queries](#select), a neat object-oriented DSL for retrieving [records](#record)
@@ -525,8 +501,7 @@ for query execution:
 Select queries are used to retrieve [records](#record) or arbitrary [projections](#projection)
 with neat object-oriented DSL which closely resembles SQL syntax:
 
-    lang:scala
-    // prepare relation nodes which will participate in query:
+    // prepare relation nodes which will participate in query:     {.scala}
     val co = Country AS "co"
     val ci = City AS "ci"
     // prepare a query:
@@ -558,29 +533,27 @@ The `Select` class provides functionality for select queries. It has following s
 Relation nodes are represented by the `RelationNode` class, they are created by calling the
 `AS` method of [`Relation`](#relation):
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     // fetch all countries
     SELECT (co.*) FROM (co) list
 
 A handy `map` method can be used to make code a bit clearer:
 
-    lang:scala
-    // fetch all countries
+    // fetch all countries                                         {.scala}
     SELECT (co.*) FROM (co) list
 
-Relation nodes can be organized into *query trees* using [joins](#join).
+Relation nodes can be organized into _query trees_ using [joins](#join).
 
 ## Projections   {#projection}
 
-*Projection* reflects the type of data returned by query. Generally, it consists of expression
+_Projection_ reflects the type of data returned by query. Generally, it consists of expression
 which can be understood in the `SELECT` clause of database and a logic to translate the
 corresponding part of result set into specific type.
 
 Projections are represented by the `Projection[T]` trait, where `T` denotes to the type of objects
 which should be read from result set. Projections which only read from single database column
-are refered to as *atomic projections*, they are subclassed from the `AtomicProjection` trait.
-Projections which span across multiple database columns are refered to as *composite projections*,
+are refered to as _atomic projections_, they are subclassed from the `AtomicProjection` trait.
+Projections which span across multiple database columns are refered to as _composite projections_,
 they are subclassed from the `CompositeProjection` trait and consist of one or more
 `subProjections`.
 
@@ -590,22 +563,19 @@ The `*` method of [`RelationNode`](#node) returns a corresponding `RecordProject
 You can also query single fields, `Field` is converted to `FieldProjection` implicitly when called
 against `RelationNode`:
 
-    lang:scala
-    val ci = City AS "ci"
+    val ci = City AS "ci"                                          {.scala}
     (SELECT (ci.id) FROM ci).list      // returns Seq[Long]
     (SELECT (ci.name) FROM ci).list    // returns Seq[String]
 
 You can also query a pair of two projections with following syntax:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     SELECT (ci.* -> co.*) FROM (co JOIN ci) list    // returns Seq[(Option[City], Option[Country])]
 
 Another useful projection is `AliasMapProjection`:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     SELECT(ci.* AS "city", co.* AS "country").FROM(co JOIN ci).list    // returns Seq[Map[String, Any]]
 
@@ -616,8 +586,7 @@ arbitrary quantity of projections.
 You can even use arbitrary expression which your database understands as long as you specify
 the expected type:
 
-    lang:scala
-    SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]
+    SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]  {.scala}
 
 There are also some predefined projection helpers for your convenience:
 
@@ -630,16 +599,14 @@ There are also some predefined projection helpers for your convenience:
 
 For example, following snippet will return the count of records in the `City` table:
 
-    lang:scala
-    (City AS "ci").map(ci => SELECT(COUNT(ci.id)).FROM(ci).unique)
+    (City AS "ci").map(ci => SELECT(COUNT(ci.id)).FROM(ci).unique) {.scala}
 
 You can easily implement your own projection helper. For example, if you use SQL `substring` function
 frequently, you can &laquo;teach&raquo; Circumflex ORM to select substrings.
 
 Here's the code you should place somewhere in your library (or utility singleton):
 
-    lang:scala
-    object MyOrmUtils {
+    object MyOrmUtils {                                            {.scala}
       def SUBSTR(f: TextField, from: Int = 0, length: Int = 0) = {
         var sql = "substring(" + f.name
         if (from > 0) sql += " from " + from
@@ -651,14 +618,13 @@ Here's the code you should place somewhere in your library (or utility singleton
 
 And here's the code to use it:
 
-    lang:scala
-    import MyOrmUtils._
+    import MyOrmUtils._                                            {.scala}
     (Country AS "co")
         .map(co => SELECT(SUBSTR(co.code, 1, 1)).FROM(co).list)   // returns Seq[String]
 
 ## Predicates   {#predicate}
 
-*Predicate* is a parameterized expression which is resolved by database into a boolean-value
+_Predicate_ is a parameterized expression which is resolved by database into a boolean-value
 function. Generally, predicates are used inside `WHERE` or `HAVING` clauses of SQL queries
 to filter the rows in result set.
 
@@ -666,8 +632,7 @@ Predicates are represented by the `Predicate` class. The easiest way to compose 
 instance is to use implicit conversion from `String` or `Field` to `SimpleExpressionHelper`
 and call one of it's methods:
 
-    lang:scala
-    SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")
+    SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")          {.scala}
 
 Following helper methods are available in `SimpleExpressionHelper`:
 
@@ -793,25 +758,21 @@ Following helper methods are available in `SimpleExpressionHelper`:
 
 You can combine several predicates into `AggregatePredicate` using either `OR` or `AND` methods:
 
-    lang:scala
-    AND(co.name LIKE "Switz%", co.code EQ "ch")
+    AND(co.name LIKE "Switz%", co.code EQ "ch")                    {.scala}
     // or in infix notation:
     (co.name LIKE "Switz%") OR (co.code EQ "ch")
 
 You can negotiate a predicate using the `NOT` method:
 
-    lang:scala
-    NOT(co.name LIKE "Switz%")
+    NOT(co.name LIKE "Switz%")                                     {.scala}
 
 `String` values are implicitly converted into `SimpleExpression` predicate without parameters:
 
-    lang:scala
-    SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'"))
+    SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'"))           {.scala}
 
 You can also use `prepareExpr` to compose a custom expression with parameters:
 
-    lang:scala
-    prepareExpr("co.name like :name or co.code like :code", "name" -> "Switz%", "code" -> "ch")
+    prepareExpr("co.name like :name or co.code like :code", "name" -> "Switz%", "code" -> "ch")     {.scala}
 
 ## Ordering   {#order-by}
 
@@ -819,20 +780,19 @@ Ordering expressions appear in `ORDER_BY` clause of `Select`, they determine how
 result set will be sorted. The easiest way to specify ordering expressions is to use implicit
 convertions from `String` or `Field` into `Order`:
 
-    lang:scala
-    SELECT (co.*) FROM (co) ORDER_BY (co.name)
+    SELECT (co.*) FROM (co) ORDER_BY (co.name)                     {.scala}
 
 You can also add either `ASC` or `DESC` ordering specificator to explicitly set the direction of
 sorting:
 
-    lang:scala
+    lang:scala                                                     {.scala}
     SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)
 
 If no specificator given, ascending sorting is assumed by default.
 
 ## Joins   {#join}
 
-*Joins* are used to combine records from two or more relations within a query.
+_Joins_ are used to combine records from two or more relations within a query.
 
 Joins concept is a part of [relational algebra][rel-algebra-wiki]. If you are not familiar with
 joins in relational databases, consider spending some time to learn a bit about them. A good place
@@ -840,8 +800,7 @@ to start will be the [Join_(SQL) article on Wikipedia][joins-wiki].
 
 Joins allow you to build queries which span across several associated relations:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     // find cities by the name of their corresponding countries:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
@@ -849,36 +808,32 @@ Joins allow you to build queries which span across several associated relations:
 As the example above shows, joins are intended to be used in the `FROM` clause of query.
 The result of calling the `JOIN` method is an instance of `JoinNode` class:
 
-    lang:scala
-    val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]
+    val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]      {.scala}
 
-Every `JoinNode` has it's left side and right side (`co JOIN ci` is **not** equivalent to
+Every `JoinNode` has it's left side and right side (`co JOIN ci` is *not* equivalent to
 `ci JOIN co`).
 
 ### Left Associativity    {#joins-left-ass}
 
-An important thing to know is that the join operation is **left-associative**: if join
+An important thing to know is that the join operation is *left-associative*: if join
 is applied to `JoinNode` instance, the operation will be delegated to the `left` side
 of `JoinNode`.
 
 To illustrate this, let's take three associated tables, `Country`, `City` and `Street`:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     val st = Street AS "st"
 
 We want to join them in following order: `Country` -> (`City` -> `Street`).
 Since join operation is left-associative, we need extra parentheses:
 
-    lang:scala
-    co JOIN (ci JOIN st)
+    co JOIN (ci JOIN st)                                           {.scala}
 
 Now let's join the same tables in following order: (`City` -> `Street`) -> `Country`. In this
 case the parentheses can be omitted:
 
-    lang:scala
-    ci JOIN st JOIN co
+    ci JOIN st JOIN co                                             {.scala}
 
 ### Joining Predicate    {#joins-predicate}
 
@@ -888,8 +843,7 @@ by searching the [associations](#association) between relations.
 Let's say we have two associated relations, `Country` and `City`.
 We can use implicit joins between `Country` and `City`:
 
-    lang:scala
-    Country AS "co" JOIN (City AS "ci")
+    Country AS "co" JOIN (City AS "ci")                            {.scala}
     // country AS co LEFT JOIN city AS ci ON ci.country_code = co.code
     City AS "ci" JOIN (Country AS "co")
     // city AS ci LEFT JOIN country AS co ON ci.country_code = co.code
@@ -897,8 +851,7 @@ We can use implicit joins between `Country` and `City`:
 However, if no explicit association exist between relations (or if they are ambiguous), you
 may need to specify the join predicate explicitly:
 
-    lang:scala
-    ci.JOIN(co).ON("ci.country_code = co.code")
+    ci.JOIN(co).ON("ci.country_code = co.code")                    {.scala}
 
 ### Join Types    {#joins-type}
 
@@ -921,13 +874,11 @@ If no join type specified explicitly, `LEFT` join is assumed by default.
 
 You can specify the type of join by passing an argument to the `JOIN` method:
 
-    lang:scala
-    (Country AS "co").JOIN(City AS "ci", INNER)
+    (Country AS "co").JOIN(City AS "ci", INNER)                    {.scala}
 
 Or you may call one of specific methods instead:
 
-    lang:scala
-    Country AS "co" INNER_JOIN (City AS "ci")
+    Country AS "co" INNER_JOIN (City AS "ci")                      {.scala}
     Country AS "co" LEFT_JOIN (City AS "ci")
     Country AS "co" RIGHT_JOIN (City AS "ci")
     Country AS "co" FULL_JOIN (City AS "ci")
@@ -935,13 +886,12 @@ Or you may call one of specific methods instead:
 ## Grouping & Having   {#group-by}
 
 A query can optionally condense into a single row all selected rows that share the same value for
-a subset of query [projections](#projection). Such queries are often refered to as *grouping queries*
-and the projections are usually refered to as *grouping projections*.
+a subset of query [projections](#projection). Such queries are often refered to as _grouping queries_
+and the projections are usually refered to as _grouping projections_.
 
 Grouping queries are built using the `GROUP_BY` clause:
 
-    lang:scala
-    SELECT (co.*) FROM co GROUP_BY (co.*)
+    SELECT (co.*) FROM co GROUP_BY (co.*)                          {.scala}
 
 As the example above shows, grouping projections are specified as arguments to the `GROUP_BY`
 method.
@@ -951,16 +901,14 @@ are used, they are computed across all rows making up each group, producing sepa
 each group, whereas without `GROUP_BY` an aggregate produces a single value computed across all
 the selected rows:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     // how many cities correspond to each selected country?
     SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*)
 
 Groups can be optionally filtered using the `HAVING` clause. It accepts a [predicate](#predicate):
 
-    lang:scala
-    SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) HAVING (co.code LIKE "c_")
+    SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) HAVING (co.code LIKE "c_")  {.scala}
 
 Note that `HAVING` is different from `WHERE`: `WHERE` filters individual rows before the
 application of `GROUP_BY`, while `HAVING` filters group rows created by `GROUP_BY`.
@@ -969,16 +917,14 @@ application of `GROUP_BY`, while `HAVING` filters group rows created by `GROUP_B
 
 The `LIMIT` clause specifies the maximum number of rows a query will return:
 
-    lang:scala
-    // select 10 first countries:
+    // select 10 first countries:                                  {.scala}
     SELECT (co.*) FROM co LIMIT 10
 
 The `OFFSET` clause specifies the number of rows to skip before starting to return results.
 When both are specified, the amount of rows specified in the `OFFSET` clause is skipped before
 starting to count the maximum amount of returned rows specified in the `LIMIT` clause:
 
-    lang:scala
-    // select 5 countries starting from 10th:
+    // select 5 countries starting from 10th:                      {.scala}
     SELECT (co.*) FROM co LIMIT 5 OFFSET 10
 
 Note that query planners in database engines often take `LIMIT` and `OFFSET` into account when
@@ -989,7 +935,7 @@ consistent and predictable results when selecting different subsets of a query r
 
 ## Union, Intersect & Except   {#set-ops}
 
-Most database engines allow to comine the results of two queries using the *set operations*.
+Most database engines allow to comine the results of two queries using the _set operations_.
 Following set operations are available:
 
   * `UNION` -- appends the result of one query to another, eliminating duplicate rows from
@@ -1004,37 +950,32 @@ Following set operations are available:
 
 The syntax for using set operations is:
 
-    lang:scala
-    // select the names of both countries and cities in a single result set:
+    // select the names of both countries and cities in a single result set:    {.scala}
     SELECT (co.name) FROM co UNION (SELECT (ci.name) FROM ci)
 
 Set operations can also be nested and chained:
 
-    lang:scala
-    q1 INTERSECT q2 EXCEPT q3
+    q1 INTERSECT q2 EXCEPT q3                                      {.scala}
     (q1 UNION q2) INTERSECT q3
 
 The queries combined using set operations should have matching [projections](#projection).
 Following will not compile:
 
-    lang:scala
-    SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)
+    SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)            {.scala}
 
 ## Reusing Query Objects   {#query-reuse}
 
 When working with data-centric applications, you often need the same query to be executed with
 different parameters. The most obvious solution is to build `Query` objects dynamically:
 
-    lang:scala
-    object Country extends Table[String, Country] {
+    object Country extends Table[String, Country] {                {.scala}
       def findByCode(code: String): Option[Country] = (this AS "co").map(co =>
           SELECT (co.*) FROM co WHERE (co.code LIKE code) unique)
     }
 
-However, you can use *named parameters* to reuse the same `Query` object:
+However, you can use _named parameters_ to reuse the same `Query` object:
 
-    lang:scala
-    object Country extends Table[String, Country] {
+    object Country extends Table[String, Country] {                {.scala}
       val co = AS("co")
       val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
       def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
@@ -1043,11 +984,10 @@ However, you can use *named parameters* to reuse the same `Query` object:
 ## Criteria API   {#criteria}
 
 Most (if not all) of your data retrieval queries will be focused to retrieve only one type of
-[records](#record). *Criteria API* aims to minimize your effort on writing such queries. Following
+[records](#record). _Criteria API_ aims to minimize your effort on writing such queries. Following
 snippet shows three equivalents of the same query:
 
-    lang:scala
-    // Select query:
+    // Select query:                                               {.scala}
     (Country AS "co").map(co => SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list)
     // Criteria query:
     Country.criteria.add(Country.name LIKE "Sw%").list
@@ -1075,22 +1015,19 @@ You can use [predicates](#predicate) to narrow the result set. Unlike [`Select` 
 predicates are added to `Criteria` object using the `add` method and then are assembled into the
 conjunction:
 
-    lang:scala
-    co.criteria
+    co.criteria                                                    {.scala}
         .add(co.name LIKE "Sw%")
         .add(co.code LIKE "ch")
         .list
 
 You can apply [ordering](#order-by) using the `addOrder` method:
 
-    lang:scala
-    co.criteria.addOrder(co.name).addOrder(co.code).list
+    co.criteria.addOrder(co.name).addOrder(co.code).list           {.scala}
 
 Also you can add one or more [associated](#association) [relations](#relation) to the query plan
 using the `addJoin` method so that you can specify constraints upon them:
 
-    lang:scala
-    val co = Country AS "co"
+    val co = Country AS "co"                                       {.scala}
     val ci = City AS "ci"
     co.criteria.addJoin(ci).add(ci.name LIKE "Lausanne").list
 
@@ -1113,13 +1050,12 @@ every record in a possibly big result set, it would result in significant perfor
 (see the [n + 1 selects problem explained][n+1] blogpost).
 
 With Criteria API you have an option to fetch as many associations as you want in a single query.
-This technique is refered to as *associations prefetching* or *eager fetching*.
+This technique is refered to as _associations prefetching_ or _eager fetching_.
 
 To understand how associations prefetching works, let's take a look at the following domain model
 sample:
 
-    lang:scala
-    class Country extends Record[String, Country] {
+    class Country extends Record[String, Country] {                {.scala}
       def PRIMARY_KEY = code
       def relation = Country
       val code = "code" VARCHAR(2) DEFAULT("'ch'")
@@ -1145,15 +1081,13 @@ You see two [relations](#relation), `Country` and `City`. Each city has one [ass
 
 Now you wish to fetch all cities with their corresponding countries in a single query:
 
-    lang:scala
-    val cities = City.criteria.prefetch(City.country).list
+    val cities = City.criteria.prefetch(City.country).list         {.scala}
     cities.foreach(c => println(c.country()))   // no selects issued
 
 The example above shows the prefetching for straight associations. Same logic applies to inverse
 associations prefetching, for example, fetching all countries with their corresponding cities:
 
-    lang:scala
-    val countries = Country.criteria.prefetch(City.country).list
+    val countries = Country.criteria.prefetch(City.country).list   {.scala}
     countries.foreach(c => println(c.cities()))   // no selects issued
 
 Okay. Now we totally hear you saying: "How is that really possible?" -- so let's explain a bit.
@@ -1175,7 +1109,7 @@ Aside from information retrieval tasks, queries may be intended to change data i
   * update existing records (either partially or fully);
   * delete existing records.
 
-Such queries are often refered to as *data manipulation queries*.
+Such queries are often refered to as _data manipulation queries_.
 
 ## Insert, Update & Delete   {#iud}
 
@@ -1231,8 +1165,7 @@ Also note that each execution of any data manipulation query evicts all records 
 
 The `InsertSelect` query has following syntax:
 
-    lang:scala
-    // prepare query
+    // prepare query                                               {.scala}
     val q = (Country AS "co").map(co => INSERT_INTO (co) SELECT ...)
     // execute it
     q.execute
@@ -1247,19 +1180,16 @@ equivalent abstractions for these operations, `Update` and `Delete` respectively
 
 The `Update` query allows you to use DSL for updating fields of multiple records at a time:
 
-    lang:scala
-    (Country AS "co").map(co =>
+    (Country AS "co").map(co =>                                    {.scala}
       UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk") execute)
 
 The `Delete` query allows you to delete multiple records from a single [relation](#relation):
 
-    lang:scala
-    (Country AS "co").map(co => DELETE (co) execute)
+    (Country AS "co").map(co => DELETE (co) execute)               {.scala}
 
 An optional `WHERE` clause specifies [predicate](#predicate) for searched update or delete:
 
-    lang:scala
-    UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
+    UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')   {.scala}
     DELETE (co) WHERE (co.code LIKE 'uk')
 
 Many database vendors also allow `USING` clause in `UPDATE` and `DELETE` statements.

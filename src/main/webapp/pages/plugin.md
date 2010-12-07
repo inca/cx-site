@@ -19,8 +19,7 @@ advantages:
 
 All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
 
-    lang:xml
-    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml version="1.0" encoding="UTF-8"?>                              {.xml}
     <project xmlns="http://maven.apache.org/POM/4.0.0"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -48,10 +47,9 @@ All you have to do is configure the `cfg` goal of `maven-cx-plugin`:
 
 After that you may specify configuration properties right in the `properties` section of
 your `pom.xml` (note that `cx.properties` from your `src/main/resourses`
-**will not be used anymore**):
+*will not be used anymore*):
 
-    lang:xml
-    <project xmlns="http://maven.apache.org/POM/4.0.0"
+    <project xmlns="http://maven.apache.org/POM/4.0.0"                  {.xml}
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/maven-v4_0_0.xsd">
@@ -66,8 +64,7 @@ your `pom.xml` (note that `cx.properties` from your `src/main/resourses`
 You can configure your application to execute schema export scripts on build.
 Just add a configuration for `maven-cx-plugin` to your `pom.xml`:
 
-    lang:xml
-    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml version="1.0" encoding="UTF-8"?>                              {.xml}
     <project xmlns="http://maven.apache.org/POM/4.0.0"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -97,8 +94,7 @@ Just add a configuration for `maven-cx-plugin` to your `pom.xml`:
 
 Then simply execute following string in your project root:
 
-    lang:no-highlight
-    $ mvn clean compile cx:schema
+    $ mvn clean compile cx:schema                                       {.no-highlight}
 
 The database objects from specified `package` (`com.myapp.model` in our example) will be
 created. To drop objects first, add `-Ddrop` to execution line. Note that plugin
@@ -107,7 +103,7 @@ Make sure you `clean compile` your project before running `cx:schema` to avoid a
 situations.
 
 Also note that specifying the `dependency` to JDBC driver inside `maven-cx-plugin`
-configuration is **mandatory** even if you already have one in your project. This is caused
+configuration is *mandatory* even if you already have one in your project. This is caused
 by classloading limitations of [c3p0](http://www.mchange.com/projects/c3p0/index.html).
 
 # Generating Source Documentation   {#docco}
@@ -125,8 +121,7 @@ Circumflex Docco recognizes documentation in following format:
 
 The API generation is simple: you add a configuration for `maven-cx-plugin` to your `pom.xml`:
 
-    lang:xml
-    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml version="1.0" encoding="UTF-8"?>                              {.xml}
     <project xmlns="http://maven.apache.org/POM/4.0.0"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -144,7 +139,6 @@ The API generation is simple: you add a configuration for `maven-cx-plugin` to y
 
 Then you execute following in your project root:
 
-    lang:no-highlight
-    $ mvn cx:docco
+    $ mvn cx:docco                                                      {.no-highlight}
 
 The documentation will be created in `target/docco`.

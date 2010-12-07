@@ -28,8 +28,7 @@ You may specify configuration parameters in two different ways.
   * Specify configuration parameters in the `<properties>` section your `pom.xml` and configure
   `maven-cx-plugin`:
 
-        lang:xml
-        <project xmlns="http://maven.apache.org/POM/4.0.0">
+        <project xmlns="http://maven.apache.org/POM/4.0.0">             {.xml}
           <properties>
             <cx.router>com.myapp.web.MainRouter</cx.router>
           </properties>
@@ -59,8 +58,7 @@ You may specify configuration parameters in two different ways.
 Of course, nothing stops you from using Circumflex to deal with your own configuration.
 It's pretty simple:
 
-    lang:scala
-    val cfg = cx.get("myCfgParam") match {
+    val cfg = cx.get("myCfgParam") match {                              {.scala}
       case s: String => ...
       case cfg: MyConfigurationObject => ...
       case _ => ...
@@ -68,8 +66,7 @@ It's pretty simple:
 
 You can also configure your application programmatically:
 
-    lang:scala
-    cx("myCfgParam") = new MyConfigurationObject
+    cx("myCfgParam") = new MyConfigurationObject                        {.scala}
 
 For further information refer to [Circumflex API documentation](/api/2.0/circumflex-core/circumflex.scala).
 
@@ -89,8 +86,7 @@ and finalization inside `CircumflexFilter`.
 
 Inside context scope you can store and access context variables using following syntax:
 
-    lang:scala
-    // store
+    // store                                                            {.scala}
     ctx("myParam") = new MyObject
     'myParam := new MyObject
     'myParam.update(new MyObject)
@@ -116,16 +112,14 @@ delegating resolving, messages grouping, parameters interpolation and formatting
 The usage is pretty simple: you use the `msg` method of package object `ru.circumflex.core`
 to retrieve localized messages by keys:
 
-    lang:scala
-    val greeting = msg("hello")
+    val greeting = msg("hello")                                         {.scala}
     val tagName = msg.getOrElse("someTag", "unknown")
 
 Then you specify message bundles in `src/main/resources` with base name `Messages`
 (the location and the base name can be changed with `cx.messages.root` and `cx.messages.name`
 configuration parameters):
 
-    lang:no-highlight
-    # src/main/resources/Messages.properties
+    # src/main/resources/Messages.properties                            {.no-highlight}
     hello=Hello!
     # src/main/resources/Messages_pt.properties
     hello=Hola!
