@@ -4,7 +4,7 @@ development using [Scala][] programming language.
   * [Circumflex Web Framework](#web)
   * [Circumflex ORM](#orm)
   * [Circumflex FreeMarker Helper](#ftl)
-  * [Circumflex Markdown](#md)
+  * [Circumflex Markeven](#me)
   * [Circumflex Docco](#docco)
   * [Circumflex Maven Plugin](/plugin.html)
 
@@ -86,14 +86,16 @@ with [Maven plugin](/plugin.html#schema) and other cute stuff for data-centric a
 
 For more information, please check out the [Circumflex ORM page](/orm.html).
 
-# Markdown  {#md}
+# Markeven  {#me}
 
-The infamous text-to-html conversion tool for writers, [Markdown][], is now available for Scala
+The new text-to-html conversion tool for writers
+[Markeven](/api/2.0/circumflex-markeven/src/main/scala/processor.scala.html),
+based on infamous [Markdown][], is now available for Scala
 users with some extensions and improved performance. The usage is pretty simple:
 
-    val html = Markdown(text)                                             {.scala}
+    val html = toHtml(text)                                             {.scala}
 
-You are welcome to try it [online](/.mdwn)!
+You are welcome to try it [online](/me)!
 
 # Freemarker  {#ftl}
 
@@ -153,10 +155,10 @@ add the corresponding dependency to your project's `pom.xml`:
         <artifactId>circumflex-ftl</artifactId>
         <version>{cx.version}</version>
       </dependency>
-      <!-- Circumflex Markdown -->
+      <!-- Circumflex Markeven -->
       <dependency>
         <groupId>ru.circumflex</groupId>
-        <artifactId>circumflex-md</artifactId>
+        <artifactId>circumflex-markeven</artifactId>
         <version>{cx.version}</version>
       </dependency>
       <!-- Circumflex Docco -->

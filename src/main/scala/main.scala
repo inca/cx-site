@@ -2,17 +2,15 @@ package ru.circumflex.site
 
 import _root_.freemarker.cache._
 import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
-import ru.circumflex._, core._, web._, freemarker._, md._
+import ru.circumflex._, core._, web._, freemarker._, markeven._
 import ru.ciridiri.{Page, CiriDiri}
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.lang.StringBuilder
 import java.io.File
 import org.apache.commons.io.FileUtils._
+import java.lang.{String, StringBuilder}
 
 class MainRouter extends RequestRouter {
-
-  'sitemap := Page.findByUri("/sitemap")    // read sitemap
 
   // API documentation
 
@@ -32,13 +30,6 @@ class MainRouter extends RequestRouter {
   new CiriDiri {    // let ciridiri handle the rest
     override def onFound(page: Page) = 'toc := new TOC(page.toHtml)
   }
-
-  // Markdown Live
-  get("/.mdwn") = ftl("/mdwn.ftl")
-  post("/.mdwn") = Markdown(param('md))
-  get("/.md-cheatsheet") = if (request.body.xhr_?)
-    Page.findByUriOrEmpty("/.md-cheatsheet").toHtml
-  else forward("/.md-cheatsheet.html")
 
   // None matched, let's try to guess a page
   get("+/") = redirect(uri(1) + "/index.html")

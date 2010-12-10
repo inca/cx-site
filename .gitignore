@@ -8,5 +8,6 @@ target
 .DS_Store
 nohup.out
 *.md.html
+*.txt.html
 
 

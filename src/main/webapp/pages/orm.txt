@@ -68,7 +68,7 @@ Applications built with Circumflex ORM usually operate on following abstractions
   with another, this relationship is expressed by foreign keys in the database;
   * `Query` -- communicates with database either for [data retrieval](#sql) or
   [data manipulation](#dml);
-  * `SchemaObject` -- represents an abstract [database object](#aux) (such as trigger, index,
+  * `SchemaObject` -- represents an abstract database object (such as trigger, index,
   constraint or stored procedure); tables and views are database objects, too.
 
 # Data Definition   {#ddl}
@@ -200,7 +200,7 @@ Following methods are used to create field definitions:
   </tbody>
 </table>
 
-In the table above the default SQL types show the types defined in default [dialect](#dialect),
+In the table above the default SQL types show the types defined in default dialect,
 which can be overriden in vendor-specific dialects. Besides it is possible to define a field with
 custom SQL type by subclassing the `Field` class.
 Refer to [Circumflex ORM API documentation](/api/2.0/circumflex-orm/field.scala) for details. 
@@ -484,7 +484,7 @@ There are various ways you can query your data with Circumflex ORM:
   as well as arbitrary [projections](#projection) with SQL-like syntax;
   * using the [Criteria API](#criteria), an alternative DSL for retrieving [records](#record)
   with associations prefetching capabilities;
-  * using [native queries](#native) for executing vendor-specific queries for
+  * using native queries for executing vendor-specific queries for
   [records](#record) or arbitrary [projections](#projection).
 
 All data retrieval queries derive from the `SQLQuery[T]` class. It defines following methods
@@ -785,8 +785,7 @@ convertions from `String` or `Field` into `Order`:
 You can also add either `ASC` or `DESC` ordering specificator to explicitly set the direction of
 sorting:
 
-    lang:scala                                                     {.scala}
-    SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)
+    SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)                  {.scala}
 
 If no specificator given, ascending sorting is assumed by default.
 
@@ -1031,12 +1030,12 @@ using the `addJoin` method so that you can specify constraints upon them:
     val ci = City AS "ci"
     co.criteria.addJoin(ci).add(ci.name LIKE "Lausanne").list
 
-[Automatic joins](#joins-auto) are used to update query plan properly. There is no limitation on
+Automatic joins are used to update query plan properly. There is no limitation on
 quantity or depth of joined relations. However, some database vendors have limitations on maximum
 size of queries or maximum amount of relations participating in a single query.
 
 One serious limitation of Criteria API is that it does not support `LIMIT` and `OFFSET` clauses
-due to the fact that [association prefetching](#prefetching) normally causes result set to yield
+due to the fact that [association prefetching](#prefetch) normally causes result set to yield
 more than one row per record. You can still use `LIMIT` and `OFFSET` with
 [SQL queries](#limit-offset);
 

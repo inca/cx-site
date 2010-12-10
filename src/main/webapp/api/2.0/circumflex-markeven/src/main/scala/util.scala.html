@@ -41,7 +41,7 @@
           
         </td>
         <td class="code">
-          <pre class="scala"><code>package ru.circumflex.me
+          <pre class="scala"><code>package ru.circumflex.markeven
 
 import java.lang.StringBuilder
 import java.util.regex._
@@ -245,19 +245,41 @@ import collection.mutable.ListBuffer</code></pre>
 }
 
 class ChunkIterator(val chunks: Seq[StringEx]) {
-  private var index = -1
-  def hasNext: Boolean = (index + 1) &lt; chunks.length
+  private var _index = -1
+  def index = _index
+  def hasNext: Boolean = (_index + 1) &lt; chunks.length
   def next: StringEx = {
-    index += 1
-    return chunks(index)
+    _index += 1
+    return chunks(_index)
   }
-  def peek: StringEx = chunks(index + 1)
+  def peek: StringEx = chunks(_index + 1)
   def reset: this.type = {
-    index = -1
+    _index = -1
     return this
   }
-  def stepBack: Unit = if (index &gt; -1) index -= 1
+  def stepBack: Unit = if (_index &gt; -1) _index -= 1
   def size = chunks.size
+}
+
+class CharIterator(val chunk: StringEx) {
+  private var _index = -1
+  def index = _index
+  def hasNext: Boolean = (_index + 1) &lt; chunk.length
+  def next: Char = {
+    _index += 1
+    return chunk.charAt(_index)
+  }
+  def peek: Char = chunk.charAt(_index + 1)
+  def reset: this.type = {
+    _index = -1
+    return this
+  }
+  def startFrom(i: Int): this.type = {
+    _index = i - 1
+    return this
+  }
+  def stepBack: Unit = if (_index &gt; -1) _index -= 1
+  def size = chunk.length
 }</code></pre>
         </td>
       </tr>

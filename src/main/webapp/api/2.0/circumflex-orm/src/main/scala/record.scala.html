@@ -70,8 +70,8 @@ import ru.circumflex.core._</code></pre>
       <tr id="section-2">
         <td class="docs">
           <h2>Record State</h2>
-<p>Records in relational theory are distinguished from each other by the value of their <strong>primary key</strong>. You should specify what field hold the primary key of your record by implementing the <code>PRIMARY_KEY</code> method.</p>
-<p>The <code>transient_?</code> method indicates, whether the record was not persisted into a database yet or it was. The default logic is simple: if the primary key contains <code>null</code> then the record is <strong>transient</strong> (i.e. not persisted), otherwise the record is considered persistent.</p>
+<p>Records in relational theory are distinguished from each other by the value of their <em>primary key</em>. You should specify what field hold the primary key of your record by implementing the <code>PRIMARY_KEY</code> method.</p>
+<p>The <code>transient_?</code> method indicates, whether the record was not persisted into a database yet or it was. The default logic is simple: if the primary key contains <code>null</code> then the record is <em>transient</em> (i.e. not persisted), otherwise the record is considered persistent.</p>
 <p>The <code>relation</code> method points to the relation from which a record came or to which it should go. In general this method should point to the companion object. However, if you do not convey to Circumflex ORM conventions, you may specify another object which will act a relation for this type of records.</p>
 
         </td>

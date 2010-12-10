@@ -47,7 +47,7 @@ configuration parameter:
 
         cx.router=com.myapp.web.MainRouter
 
-  * or via `pom.xml` [using Circumflex Maven Plugin](/plugins.html#cfg).
+  * or via `pom.xml` [using Circumflex Maven Plugin](/plugin.html#cfg).
 
 Please refer to [Circumflex Configuration API](/core.html#cfg) for more information on how
 to configure your application.

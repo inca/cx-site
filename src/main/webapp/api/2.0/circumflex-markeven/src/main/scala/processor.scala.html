@@ -41,33 +41,19 @@
           
         </td>
         <td class="code">
-          <pre class="scala"><code>package ru.circumflex.me
+          <pre class="scala"><code>package ru.circumflex
+package markeven
 
 import java.util.regex._
+import java.io._
 import collection.mutable.{HashMap, ListBuffer}
-import ru.circumflex.core._</code></pre>
+import org.apache.commons.io.FileUtils</code></pre>
         </td>
       </tr>
       <tr id="section-1">
         <td class="docs">
           <h1>The Markeven Processor</h1>
 <p><code>Markeven</code> transforms text files into HTML using a set of simple rules. It takes most ideas from <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a>, but has more strict rules, which lead to better source structure and enhanced performance.</p>
-<p>The usage is pretty simple:</p>
-<pre class="scala"><code>val text = """
-Hello world!              {#hi.greeting.example}
-============
-
-This is a test.
-"""
-val html = Markeven(text)</code></pre>
-<p>The example above yields following HTML:</p>
-<pre class="html"><code>&lt;h1 id="hi" class="greeting example"&gt;Hello world!&lt;/h1&gt;
-&lt;p&gt;This is a test.&lt;/p&gt;</code></pre>
-<p>Markeven uses <code>MarkevenProcessor</code> to perform transforming, it is instantiated upon every transformation. You can use your own implementation of <code>MarkevenProcessor</code>:</p>
-<pre class="scala"><code>class MyMarkevenProcessor extends MarkevenProcessor { ... }
-
-new MyMarkevenProcessor().toHtml(text)</code></pre>
-<p>You can also set the <code>me.processor</code> configuration parameter to fully-qualified name of your processor implementation and continue to use <code>Markeven(text)</code>.</p>
 <h1 id="syntax">Syntax cheatsheet</h1>
 <h2>Block elements</h2>
 <p>Markeven recognizes following block-level elements:</p>
@@ -214,6 +200,26 @@ This paragraph, however, is outside list.</code></pre>
      |  * ...
 
 2. And that's it.</code></pre>
+<p>Note that list items belong to the same list only if their markers are equaly indented. Following example shows two different lists:</p>
+<pre class="no-highlight"><code>  * List one item one
+
+  * List one item two
+
+* List two item one
+
+* List two item two
+
+And a paragraph.</code></pre>
+<p>Here's the markup:</p>
+<pre class="html"><code>&lt;ul&gt;
+  &lt;li&gt;List one item one&lt;/li&gt;
+  &lt;li&gt;List one item two&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul&gt;
+  &lt;li&gt;List two item one&lt;/li&gt;
+  &lt;li&gt;List two item two&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;And a paragraph.&lt;/p&gt;</code></pre>
 <h3 id="table">Tables</h3>
 <p>Markeven supports simple syntax for tables:</p>
 <pre class="no-highlight"><code>---------------------------------------------
@@ -337,22 +343,17 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>object Markeven {
-  def processor = cx.instantiate[MarkevenProcessor](&quot;me.processor&quot;, new MarkevenProcessor)
-  def apply(cs: CharSequence): String = processor.toHtml(cs)
-}
-
-class MarkevenProcessor() {
+          <pre class="scala"><code>class MarkevenProcessor() {
 
   val protector = new Protector
   val links = new HashMap[String, LinkDefinition]()
   var level = 0
-  val macros = new HashMap[String, CharSequence =&gt; CharSequence]()
+  val macros = new HashMap[String, StringEx =&gt; CharSequence]()
 
   def increaseIndent: Unit = level += 1
   def decreaseIndent: Unit = if (level &gt; 0) level -= 1
 
-  def addMacro(name: String, function: CharSequence =&gt; CharSequence): this.type = {
+  def addMacro(name: String, function: StringEx =&gt; CharSequence): this.type = {
     macros += (name -&gt; function)
     return this
   }
@@ -381,7 +382,7 @@ class MarkevenProcessor() {
 
   def hashInlineHtml(s: StringEx, pattern: Pattern, out: String =&gt; String): StringEx =
     s.replaceIndexed(pattern, m =&gt; {
-      var startIdx = m.start
+      val startIdx = m.start
       var endIdx = 0
       if (m.group(2) != null) {
         // self-closing tag, escape as is
@@ -427,30 +428,36 @@ class MarkevenProcessor() {
     // strip selector if any
     val selector = stripSelector(s)
     // assume hashed inline HTML
-    if (s.buffer.length == keySize + 2 &amp;&amp; s.buffer.charAt(0) == '!' &amp;&amp; s.buffer.charAt(1) == '}')
+    if (s.buffer.length == keySize + 2 &amp;&amp;
+        s.buffer.charAt(0) == '!' &amp;&amp; s.buffer.charAt(1) == '}')
       protector.decode(s.buffer.toString) match {
         case Some(content) =&gt; return new InlineHtmlBlock(new StringEx(content))
         case _ =&gt; return new ParagraphBlock(s, selector)
       }
     // assume code block
     if (s.matches(regexes.d_code))
-      return processComplexChunk(chunks, new CodeBlock(s, selector), c =&gt; c.matches(regexes.d_code))
+      return processComplexChunk(chunks, new CodeBlock(s, selector),
+        c =&gt; c.matches(regexes.d_code))
     // trim any leading whitespace
     val indent = s.trimLeft
     // do not include empty freaks
     if (s.length == 0) return EmptyBlock
     // assume unordered list and ordered list
     if (s.startsWith(&quot;* &quot;))
-      return processComplexChunk(chunks, new UnorderedListBlock(s, selector, indent), c =&gt; {
-        c.startsWith(&quot;* &quot;) || c.startsWith(&quot; &quot;)
-      })
+      return processComplexChunk(chunks, new UnorderedListBlock(s, selector, indent),
+        c =&gt; ul_?(c, indent))
     if (s.startsWith(&quot;1. &quot;))
-      return processComplexChunk(chunks, new OrderedListBlock(s, selector, indent), c =&gt; {
-        c.startsWith(&quot; &quot;) || c.matches(regexes.d_ol)
-      })
+      return processComplexChunk(chunks, new OrderedListBlock(s, selector, indent),
+        c =&gt; ol_?(c, indent))
     // assume blockquote and section
-    if (s.startsWith(&quot;&gt; &quot;)) return new BlockquoteBlock(s, selector)
-    if (s.startsWith(&quot;| &quot;)) return new SectionBlock(s, selector)
+    if (s.startsWith(&quot;&gt;&quot;))
+      if (s.matches(regexes.d_blockquote)) {
+        return new BlockquoteBlock(s, selector)
+      } else return new ParagraphBlock(s, selector)
+    if (s.startsWith(&quot;|&quot;))
+      if (s.matches(regexes.d_div)) {
+        return new SectionBlock(s, selector)
+      } else return new ParagraphBlock(s, selector)
     // assume table, headings and hrs
     s.matches(regexes.d_table, m =&gt; {
       new TableBlock(s, selector)
@@ -478,11 +485,40 @@ class MarkevenProcessor() {
     while (chunks.hasNext &amp;&amp; !eob) {
       val c = chunks.peek
       if (accept(c)) {
-        block.text.append(&quot;\n\n&quot;).append(c.buffer)
+        block.text.append(&quot;\n\n&quot;).append(c)
         chunks.next
       } else eob = true
     }
     return block
+  }
+
+  def ol_?(s: StringEx, indent: Int): Boolean = {
+    val i = new CharIterator(s)
+    while (i.hasNext &amp;&amp; i.index &lt; indent - 1)
+      if (i.next != ' ') return false
+    if (!i.hasNext) return false
+    // first char must be digit or space
+    var c = i.next
+    if (c == ' ') return true
+    if (!c.isDigit) return false
+    // look for more digits or `. `
+    while(i.hasNext) {
+      c = i.next
+      if (c == '.' &amp;&amp; i.hasNext &amp;&amp; i.peek == ' ') return true
+      else if (!c.isDigit) return false
+    }
+    return false
+  }
+
+  def ul_?(s: StringEx, indent: Int): Boolean = {
+    val i = new CharIterator(s)
+    while (i.hasNext &amp;&amp; i.index &lt; indent - 1)
+      if (i.next != ' ') return false
+    if (!i.hasNext) return false
+    // first char must be asterisk or space
+    var c = i.next
+    if (c == ' ') return true
+    return (c == '*' &amp;&amp; i.hasNext &amp;&amp; i.peek == ' ')
   }
 
   def stripSelector(s: StringEx): Selector = {
@@ -503,15 +539,14 @@ class MarkevenProcessor() {
     return new Selector(id, classes)
   }
 
-  def process(cs: CharSequence): StringEx = {
+  def process(cs: CharSequence, out: Writer): Unit = {
     val s = new StringEx(cs)
     normalize(s)
     stripLinkDefinitions(s)
     hashHtmlBlocks(s)
     hashHtmlComments(s)
     cleanEmptyLines(s)
-    val blocks = readBlocks(s)
-    return formHtml(blocks)
+    writeHtml(readBlocks(s), out)
   }
 
   def transform(s: StringEx): StringEx = {
@@ -541,9 +576,8 @@ class MarkevenProcessor() {
     if (name == null) name = &quot;&quot;
     if (name.length &gt; 0)
       name = name.substring(0, name.length - 1)
-    val contents = m.group(2)
-    val replacement = macros.get(name).map(f =&gt; f(contents)).getOrElse(
-      &quot;&lt;span class=\&quot;&quot; + name + &quot;\&quot;&gt;&quot; + contents + &quot;&lt;/span&gt;&quot;)
+    val contents = new StringEx(m.group(2))
+    val replacement = macros.get(name).map(f =&gt; f(contents)).getOrElse(m.group(0))
     protector.addToken(replacement)
   })
 
@@ -555,10 +589,11 @@ class MarkevenProcessor() {
     protector.addToken(s.append(&quot;&lt;/code&gt;&quot;).prepend(&quot;&lt;code&gt;&quot;))
   })
 
-  def encodeBackslashEscapes(s: StringEx): StringEx = s.replaceAll(regexes.backslashChar, m =&gt; {
-    val c = m.group(0)
-    escapeMap.getOrElse(c, c)
-  })
+  def encodeBackslashEscapes(s: StringEx): StringEx =
+    s.replaceAll(regexes.backslashChar, m =&gt; {
+      val c = m.group(0)
+      escapeMap.getOrElse(c, c)
+    })
 
   def doRefLinks(s: StringEx): StringEx = s.replaceAll(regexes.refLinks, m =&gt; {
     val linkText = m.group(1)
@@ -587,17 +622,19 @@ class MarkevenProcessor() {
     s
   }
 
-  protected def recurseSpanEnhancements(s: StringEx): StringEx = s.replaceAll(regexes.spanEnhancements, m =&gt; {
-    val element = m.group(1) match {
-      case &quot;*&quot; =&gt; &quot;strong&quot;
-      case &quot;_&quot; =&gt; &quot;em&quot;
-      case &quot;~&quot; =&gt; &quot;del&quot;
-      case _ =&gt; &quot;span&quot;
-    }
-    val content = new StringEx(m.group(2))
-    recurseSpanEnhancements(content)
-    new StringEx(&quot;&lt;&quot;).append(element).append(&quot;&gt;&quot;).append(content).append(&quot;&lt;/&quot;).append(element).append(&quot;&gt;&quot;)
-  })
+  protected def recurseSpanEnhancements(s: StringEx): StringEx =
+    s.replaceAll(regexes.spanEnhancements, m =&gt; {
+      val element = m.group(1) match {
+        case &quot;*&quot; =&gt; &quot;strong&quot;
+        case &quot;_&quot; =&gt; &quot;em&quot;
+        case &quot;~&quot; =&gt; &quot;del&quot;
+        case _ =&gt; &quot;span&quot;
+      }
+      val content = new StringEx(m.group(2))
+      recurseSpanEnhancements(content)
+      new StringEx(&quot;&lt;&quot;).append(element).append(&quot;&gt;&quot;)
+          .append(content).append(&quot;&lt;/&quot;).append(element).append(&quot;&gt;&quot;)
+    })
 
   def doTypographics(s: StringEx): StringEx = {
     s.replaceAll(regexes.ty_dash, typographics.dash)
@@ -617,18 +654,42 @@ class MarkevenProcessor() {
     protector.decode(key).getOrElse(key)
   })
 
+  def writeHtml(blocks: Seq[Block], out: Writer): Unit =
+    blocks.foreach(b =&gt; if (b != EmptyBlock) {
+      b.writeHtml(this, out)
+      out.write(newLine)
+    })
+
   def formHtml(blocks: Seq[Block], indent: Boolean = false): StringEx = {
     val result = new StringEx(&quot;&quot;)
     if (indent) level += 1
     blocks.foreach(b =&gt;
-      if (b != EmptyBlock) result.append(b.toHtml(this).buffer).append(newLine))
+      if (b != EmptyBlock) result.append(b.toHtml(this)).append(newLine))
     if (indent) level -= 1
     return result
   }
 
   def newLine: String = &quot;\n&quot;
 
-  def toHtml(cs: CharSequence): String = process(cs).toString
+  def toHtml(cs: CharSequence): String = {
+    val out = new StringWriter(cs.length)
+    process(cs, out)
+    return out.toString
+  }
+
+  def renderToFile(src: File, dst: File, force: Boolean = false): Unit = {
+    if (!src.isFile)
+      throw new FileNotFoundException(&quot;File &quot; + src.toString + &quot; not found.&quot;)
+    if (!force &amp;&amp; dst.isFile &amp;&amp; src.lastModified &lt; dst.lastModified) return
+    else {
+      val sourceText = FileUtils.readFileToString(src, &quot;UTF-8&quot;)
+      val out = new FileWriter(dst)
+      try {
+      } finally {
+        out.close
+      }
+    }
+  }
 
 }</code></pre>
         </td>

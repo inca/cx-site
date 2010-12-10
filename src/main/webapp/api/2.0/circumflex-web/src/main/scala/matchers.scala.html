@@ -52,7 +52,7 @@ import collection.Iterator</code></pre>
         <td class="docs">
           <h1>Matchers</h1>
 <p>The <code>Matcher</code> trait and the <code>MatchResult</code> class are the cornerstone of request routing.</p>
-<p>Matchers define mechanisms which perform request matching. They yield zero or more match results on successfull match and are used in routes definition.</p>
+<p>Matchers define mechanisms which perform request matching. They yield zero or more match results on successful match and are used in routes definition.</p>
 <p>Match results are subsequently used inside matched route's block.</p>
 
         </td>
@@ -135,7 +135,7 @@ class CompositeMatcher extends Matcher {
           <h2>The <code>RegexMatcher</code></h2>
 <p>The <code>RegexMatcher</code> is designed to provide common request matching functionality to all matchers.</p>
 <p>It can be used either with regular expressions or with String expressions.</p>
-<p>When using regular expressions, if match is successfull, the matched groups can be accessed using the <code>params</code> method of corresponding <code>MatchResult</code>.</p>
+<p>When using regular expressions, if match is successful, the matched groups can be accessed using the <code>params</code> method of corresponding <code>MatchResult</code>.</p>
 <p>When using String expressions, following processing occurs:</p>
 <ul>
   <li>the characters <code>.</code>, <code>(</code> and <code>)</code> are escaped so that they are not mistreated by regex engine;</li>
@@ -144,7 +144,7 @@ class CompositeMatcher extends Matcher {
   <li>all occurences of the <code>+</code> character is replaced with reluctant groups <code>(.+?)</code> which match one or more characters;</li>
   <li><code>?</code> remains the same and indicates that the preceding character is optional for matching (for example, <code>get("/files/?")</code> matches both <code>/files</code> and <code>/files/</code> requests).</li>
 </ul>
-<p>Then, if match is successfull, named parameters are accessible by their name from the corresponding <code>MatchResult</code>. All other parameters are accessible via the <code>params</code> method (note that named parameters are groups too, so they appear inside <code>params</code> and have their index as well).</p>
+<p>Then, if match is successful, named parameters are accessible by their name from the corresponding <code>MatchResult</code>. All other parameters are accessible via the <code>params</code> method (note that named parameters are groups too, so they appear inside <code>params</code> and have their index as well).</p>
 
         </td>
         <td class="code">

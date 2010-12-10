@@ -181,7 +181,7 @@ request.cookies.groupBy(_.maxAge)</code></pre>
       <tr id="section-6">
         <td class="docs">
           <h2>Headers</h2>
-<p>Request headers contain operational information about the requst. Circumflex Web Framework lets you access request headers via the <code>headers</code> object.</p>
+<p>Request headers contain operational information about the request. Circumflex Web Framework lets you access request headers via the <code>headers</code> object.</p>
 
         </td>
         <td class="code">
@@ -325,8 +325,8 @@ request.cookies.groupBy(_.maxAge)</code></pre>
 <p>Circumfex API uses <a href="http://commons.apache.org/fileupload">Apache Commons FileUpload</a> to simplify this things for you. Commons FileUpload API is very robust and can be used in a number of different ways, depending upon the requirements of your application.</p>
 <p>Commons FileUpload offers you two approaches to deal with <code>multipart/form-data</code> requests:</p>
 <ul>
-  <li><strong>traditional API</strong> relies on <code>FileItemFactory</code> which can be configured to keep small files in memory and to store larger files on the disk, you set threshold sizes and operate with convenient <code>FileItem</code> objects, which could be queried for different information, like the name of the corresponding field, it's size in bytes, content type, etc.</li>
-  <li><strong>streaming API</strong> does not use intermediate storage facilities and allows you to work with <code>FileItemStream</code> objects, which show better performance and lower memory usage.</li>
+  <li><em>traditional API</em> relies on <code>FileItemFactory</code> which can be configured to keep small files in memory and to store larger files on the disk, you set threshold sizes and operate with convenient <code>FileItem</code> objects, which could be queried for different information, like the name of the corresponding field, it's size in bytes, content type, etc.</li>
+  <li><em>streaming API</em> does not use intermediate storage facilities and allows you to work with <code>FileItemStream</code> objects, which show better performance and lower memory usage.</li>
 </ul>
 <p>Circumflex Web Framework provides support for both FileUpload styles via <code>parseFileItems</code> and <code>parseFileStreams</code> methods respectively.</p>
 <p>Note, however, that you can only use one of them (and only once) while working with the request (it's the limitation of accessing request body in Servlet API mentioned above, so <code>reader</code>, <code>stream</code>, <code>asXml</code> and <code>asString</code> methods will also interfere with FileUpload).</p>

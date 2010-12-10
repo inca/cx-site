@@ -98,12 +98,10 @@ import xml._</code></pre>
     </ul>
   </li>
   <li>set <em>auto-commit</em> for each connection to <code>false</code></li>
-  <li>
-    <p>set the transaction isolation level to the value <code>orm.connection.isolation</code> (or use <code>READ COMMITTED</code> by default)</p>
-    <p>If c3p0 data source is used you can fine tune it's configuration with <code>c3p0.properties</code> file (see <a href="http://www.mchange.com/projects/c3p0/index.html#configuration&#95;properties">c3p0 documentation</a> for more details).</p>
-    <p>Though <code>DefaultConnectionProvider</code> is an optimal choice for most applications, you can create your own connection provider by implementing the <code>ConnectionProvider</code> trait and setting the <code>orm.connectionProvider</code> configuration parameter.</p>
-  </li>
+  <li>set the transaction isolation level to the value <code>orm.connection.isolation</code> (or use <code>READ COMMITTED</code> by default)</li>
 </ul>
+<p>If c3p0 data source is used you can fine tune it's configuration with <code>c3p0.properties</code>  file (see <a href="http://www.mchange.com/projects/c3p0/index.html#configuration&#95;properties">c3p0 documentation</a> for more details).</p>
+<p>Though <code>DefaultConnectionProvider</code> is an optimal choice for most applications, you  can create your own connection provider by implementing the <code>ConnectionProvider</code> trait  and setting the <code>orm.connectionProvider</code> configuration parameter.</p>
 
         </td>
         <td class="code">

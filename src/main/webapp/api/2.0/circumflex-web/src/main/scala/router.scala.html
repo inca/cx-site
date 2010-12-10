@@ -51,11 +51,11 @@ import xml.Node</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Routing</h1>
-<p>Circumflex Web Framework is designed around the <strong>route</strong> concept. A route is an HTTP method paired with some matching mechanism and attached block.</p>
+<p>Circumflex Web Framework is designed around the <em>route</em> concept. A route is an HTTP method paired with some matching mechanism and attached block.</p>
 <p>Each route defines a <code>Matcher</code> which describes the conditions a request must satisfy in order to be matched. If such conditions are met, an attached block is executed which yields <code>RouteResponse</code> to the client.</p>
 <p>Routes are declared right inside the body of <code>RequestRouter</code> and are executed one-by-one until first successful match. If no routes match the request, the <code>404 NOT FOUND</code> is sent to the client (unless <code>onNoMatch</code> method is overriden in <code>CircumflexFilter</code>).</p>
 <p>Inside an attached block you can access <code>MatchResult</code> object produced by enclosing route. Match results are stored in <code>Context</code>, you can look them up by name.</p>
-<p>Take a look at our test sources at <a href="http://github.com/inca/circumflex/tree/master/circumflex-web/src/test/scala/">!}ZjyJo4MV12i91axTb2vY</a> to see routers in action.</p>
+<p>Take a look at our test sources at <a href="http://github.com/inca/circumflex/tree/master/circumflex-web/src/test/scala/">!}Z2PEip3uSO1PbeBi9JVy</a> to see routers in action.</p>
 
         </td>
         <td class="code">
