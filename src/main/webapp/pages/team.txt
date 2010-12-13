@@ -1,7 +1,7 @@
 # The Circumflex Team
 
 Circumflex is in active development stage. For now, it is primarily maintained
-by [whiteants.net (Russia)][whiteants].
+by [whiteants.net][whiteants] (Russia).
 
 If you wish to join the team, please contact one of the team members below.
 

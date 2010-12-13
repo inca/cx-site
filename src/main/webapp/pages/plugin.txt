@@ -109,11 +109,11 @@ by classloading limitations of [c3p0](http://www.mchange.com/projects/c3p0/index
 # Generating Source Documentation   {#docco}
 
 You can use Docco to build your source documentation (just like we did to document
-[our codebase](/api).
+[our codebase](/api)).
 
 Circumflex Docco recognizes documentation in following format:
 
-    /*! Your documentation in Markdown
+    /*! Your documentation in Markeven
     ...
     ...
     */
