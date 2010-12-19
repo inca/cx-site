@@ -49,8 +49,8 @@ import java.sql.ResultSet</code></pre>
       <tr id="section-1">
         <td class="docs">
           <h1>Projections</h1>
-<p>In relational algebra a <strong>projection</strong> is a function which describes a subset of columns returned from an SQL query. In Circumflex ORM instances of the <code>Projection</code> trait are used to process <code>ResultSet</code> and determine the result type of SQL queries.</p>
-<p>We distinguish between <strong>atomic</strong> and <strong>composite</strong> projections: the former ones span across only one column of <code>ResultSet</code>, the latter ones contain a list of internal projections and therefore span across multiple columns.</p>
+<p>In relational algebra a <em>projection</em> is a function which describes a subset of columns returned from an SQL query. In Circumflex ORM instances of the <code>Projection</code> trait are used to process <code>ResultSet</code> and determine the result type of SQL queries.</p>
+<p>We distinguish between <em>atomic</em> and <em>composite</em> projections: the former ones span across only one column of <code>ResultSet</code>, the latter ones contain a list of internal projections and therefore span across multiple columns.</p>
 <p>Like with relation nodes, special alias <code>this</code> is expanded into query-unique alias to prevent collisions when aliases are not assigned explicitly.</p>
 <p>Circumflex ORM supports querying arbitrary expressions which your database understands, you only need to explicitly specify an expected type.</p>
 

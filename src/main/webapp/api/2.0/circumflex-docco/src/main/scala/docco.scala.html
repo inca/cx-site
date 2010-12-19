@@ -46,7 +46,7 @@
 import ru.circumflex.core._
 import ru.circumflex.freemarker._
 import java.io._
-import ru.circumflex.me.Markeven
+import ru.circumflex.markeven
 import org.apache.commons.io.filefilter.{TrueFileFilter, RegexFileFilter}
 import java.util.{Collection =&gt; JCollection}
 import collection.mutable.ListBuffer
@@ -76,7 +76,7 @@ case class Section(private var _doc: String = &quot;&quot;, private var _code: S
   }
   def doc: String = {
     if (_md == null)
-      _md = Markeven(_doc)
+      _md = markeven.toHtml(_doc)
     return _md
   }
 

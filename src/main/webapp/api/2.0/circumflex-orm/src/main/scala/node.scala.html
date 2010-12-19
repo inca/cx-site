@@ -207,7 +207,7 @@ import java.lang.String</code></pre>
       <tr id="section-9">
         <td class="docs">
           <h1>Joins</h1>
-<p>Relations can be joined within one query to allow applying restrictions on associated relations. The <code>JoinNode</code> class represends a join between two relations. We stick to a general convention called <strong>left associativity</strong>: two joined nodes with equal left nodes are considered equal:</p>
+<p>Relations can be joined within one query to allow applying restrictions on associated relations. The <code>JoinNode</code> class represents a join between two relations. We stick to a general convention called <em>left associativity</em>: two joined nodes with equal left nodes are considered equal:</p>
 <pre><code>(ci JOIN co) == ci
 (ci JOIN co JOIN ca) == ((ci JOIN co) JOIN ca)</code></pre>
 <p>This way you can compose arbitrary complex query plans. The join condition (the <code>ON</code> subclause) can be either inferred from associations or specified manually using the <code>ON</code> method.</p>

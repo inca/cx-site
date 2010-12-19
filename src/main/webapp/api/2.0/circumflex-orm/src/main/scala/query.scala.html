@@ -51,7 +51,7 @@ import ru.circumflex.core._</code></pre>
         <td class="docs">
           <h1>Querying</h1>
 <p>SQL and DML queries form the heart of Circumflex ORM DSL.</p>
-<p>Common features implemented in the <code>Query</code> trait are <strong>named parameters</strong> which allow query reuse and <strong>ensuring alias uniqueness</strong> which prevents implicit relation node aliases from colliding within a single query.</p>
+<p>Common features implemented in the <code>Query</code> trait are <em>named parameters</em> which allow query reuse and <em>ensuring alias uniqueness</em> which prevents implicit relation node aliases from colliding within a single query.</p>
 <p>The <code>SQLQuery</code> trait represents data-retrieval queries which usually employ the <code>executeQuery</code> method of JDBC <code>PreparedStatement</code> and process JDBC <code>ResultSet</code>.</p>
 <p>The <code>DMLQuery</code> trait represents data-manipulation queries which usually employ the <code>executeUpdate</code> method of JDBC <code>PreparedStatement</code> and return the number of affected rows.</p>
 
@@ -170,16 +170,49 @@ class NativeSQLQuery[T](projection: Projection[T],
     extends SQLQuery[T](projection) {
   def parameters = expression.parameters
   def toSql = expression.toSql.replaceAll(&quot;\\{\\*\\}&quot;, projection.toSql)
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p><code>SearchQuery</code> represents a query with a <code>WHERE</code> clause.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SearchQuery extends Query {
+  protected var _where: Predicate = EmptyPredicate
+
+  def where: Predicate = this._where
+  def WHERE(predicate: Predicate): this.type = {
+    this._where = predicate
+    return this
+  }
+  def WHERE(expression: String, params: Pair[String,Any]*): this.type =
+    WHERE(prepareExpr(expression, params: _*))
+
+  def add(predicates: Predicate*): this.type = {
+    where match {
+      case EmptyPredicate =&gt;
+        this._where = AND(predicates: _*)
+      case p: AggregatePredicate if (p.operator == dialect.and) =&gt;
+        p.add(predicates: _*)
+      case p =&gt;
+        this._where = _where.AND(predicates: _*)
+    }
+    return this
+  }
+  def add(expression: String, params: Pair[String, Any]*): this.type =
+    add(prepareExpr(expression, params: _*))
 }
 
-class Select[T](projection: Projection[T]) extends SQLQuery[T](projection) {
+class Select[T](projection: Projection[T]) extends SQLQuery[T](projection)
+    with SearchQuery {
 
   // Commons
-
   protected var _distinct: Boolean = false
   protected var _auxProjections: Seq[Projection[_]] = Nil
   protected var _relations: Seq[RelationNode[_, _]] = Nil
-  protected var _where: Predicate = EmptyPredicate
+
   protected var _having: Predicate = EmptyPredicate
   protected var _groupBy: Seq[Projection[_]] = Nil
   protected var _setOps: Seq[Pair[SetOperation, SQLQuery[T]]] = Nil
@@ -187,7 +220,7 @@ class Select[T](projection: Projection[T]) extends SQLQuery[T](projection) {
   protected var _limit: Int = -1
   protected var _offset: Int = 0
 
-  def parameters: Seq[Any] = _where.parameters ++
+  def parameters: Seq[Any] = where.parameters ++
       _having.parameters ++
       _setOps.flatMap(p =&gt; p._2.parameters) ++
       _orders.flatMap(_.parameters)
@@ -222,30 +255,6 @@ class Select[T](projection: Projection[T]) extends SQLQuery[T](projection) {
       case n: RelationNode[_, _] if (n.alias == &quot;this&quot;) =&gt; node.AS(nextAlias)
       case n =&gt; n
     }
-
-  // WHERE clause
-
-  def where: Predicate = this._where
-  def WHERE(predicate: Predicate): Select[T] = {
-    this._where = predicate
-    return this
-  }
-  def WHERE(expression: String, params: Pair[String,Any]*): Select[T] =
-    WHERE(prepareExpr(expression, params: _*))
-
-  def add(predicates: Predicate*): Select[T] = {
-    where match {
-      case EmptyPredicate =&gt;
-        this._where = AND(predicates: _*)
-      case p: AggregatePredicate if (p.operator == dialect.and) =&gt;
-        p.add(predicates: _*)
-      case p =&gt;
-        this._where = _where.AND(predicates: _*)
-    }
-    return this
-  }
-  def add(expression: String, params: Pair[String, Any]*): Select[T] =
-    add(prepareExpr(expression, params: _*))
 
   // HAVING clause
 
@@ -334,7 +343,7 @@ class Select[T](projection: Projection[T]) extends SQLQuery[T](projection) {
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-3">
+      <tr id="section-4">
         <td class="docs">
           <p>The <code>DMLQuery</code> trait defines a contract for data-manipulation queries.</p>
 
@@ -381,24 +390,17 @@ class InsertSelectHelper[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R
 }
 
 class Delete[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
-    extends DMLQuery {
+    extends DMLQuery with SearchQuery {
   val relation = node.relation
   if (relation.readOnly_?)
     throw new ORMException(&quot;The relation &quot; + relation.qualifiedName + &quot; is read-only.&quot;)
 
-  protected var _where: Predicate = EmptyPredicate
-  def where: Predicate = this._where
-  def WHERE(predicate: Predicate): Delete[PK, R] = {
-    this._where = predicate
-    return this
-  }
-
-  def parameters = _where.parameters
+  def parameters = where.parameters
   def toSql: String = dialect.delete(this)
 }
 
 class Update[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
-    extends DMLQuery {
+    extends DMLQuery with SearchQuery {
   val relation = node.relation
   if (relation.readOnly_?)
     throw new ORMException(&quot;The relation &quot; + relation.qualifiedName + &quot; is read-only.&quot;)
@@ -418,14 +420,7 @@ class Update[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
   def SET_NULL[K, P &lt;: Record[K, P]](association: Association[K, R, P]): Update[PK, R] =
     SET_NULL(association.field)
 
-  protected var _where: Predicate = EmptyPredicate
-  def where: Predicate = this._where
-  def WHERE(predicate: Predicate): Update[PK, R] = {
-    this._where = predicate
-    return this
-  }
-
-  def parameters = _setClause.map(_._2) ++ _where.parameters
+  def parameters = _setClause.map(_._2) ++ where.parameters
   def toSql: String = dialect.update(this)
 
 }</code></pre>

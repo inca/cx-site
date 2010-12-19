@@ -91,13 +91,13 @@ import collection.mutable.{HashMap, Map}</code></pre>
 <pre class="scala"><code>cx.instantiate[MyService]("myApp.myService", DefaultMyService)</code></pre>
 <p>Then you can override this implementation by setting the configuration parameter (<code>myApp.myService</code> in our example) to one of the following values:</p>
 <ul>
-  <li>
+  <li class="scala">
     <p>the class of the desired object, if you run some initialization code:</p>
-    <pre class="scala"><code>cx("myApp.myService") = classOf[MyServiceImpl]</code></pre>
+    <pre><code>cx("myApp.myService") = classOf[MyServiceImpl]</code></pre>
   </li>
-  <li>
+  <li class="scala">
     <p>class name of your implementation, if you use <code>cx.properties</code>:</p>
-    <pre class="scala"><code>myApp.myService=com.myapp.MyServiceImpl</code></pre>
+    <pre><code>myApp.myService=com.myapp.MyServiceImpl</code></pre>
   </li>
 </ul>
 <p>Scala singletons might also work pretty fine as service implementations, but you should remember to add a dollar sign (<code>$</code>) to the class name.</p>
