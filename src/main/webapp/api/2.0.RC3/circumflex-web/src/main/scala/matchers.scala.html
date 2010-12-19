@@ -1,0 +1,229 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;matchers.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.web
+
+import util.matching.Regex
+import scala.collection.immutable.Map
+import collection.Iterator</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Matchers</h1>
+<p>The <code>Matcher</code> trait and the <code>MatchResult</code> class are the cornerstone of request routing.</p>
+<p>Matchers define mechanisms which perform request matching. They yield zero or more match results on successful match and are used in routes definition.</p>
+<p>Match results are subsequently used inside matched route's block.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code></code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Match Results</h2>
+<p>The results of matching contain information about successful match. The <code>name</code> reflects the name of the <code>Matcher</code> which yielded this match result, and the <code>params</code> contains strings captured by <code>Matcher</code>. The special name <code>splat</code> is assigned to parameters with unknown name (<code>+</code>, <code>*</code> or any group, if you use regular expressions).</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class MatchResult(val name: String,
+                  val params: (String, String)*) extends Map[String, String] {
+  def +[B1 &gt;: String](kv: (String, B1)): Map[String, B1] = this
+  def -(key: String): Map[String, String] = this
+  def iterator: Iterator[(String, String)] = params.iterator
+
+  def get(index: Int): Option[String] =
+    if (params.indices.contains(index)) Some(params(index)._2)
+    else None
+  def get(name: String): Option[String] = params.find(_._1 == name) match {
+    case Some(param: Pair[String, String]) =&gt; Some(param._2)
+    case _ =&gt; None
+  }
+
+  def apply(): String = apply(0)
+  def apply(index: Int): String = get(index).getOrElse(&quot;&quot;)
+
+  def splat: Seq[String] = params.filter(_._1 == &quot;splat&quot;).map(_._2).toSeq
+
+  override def default(key: String): String = &quot;&quot;
+  override def toString = apply(0)
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p>Matchers can be composed together using the <code>&amp;</code> method. The <code>CompositeMatcher</code> will only yield match results if all it's matchers succeed.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Matcher {
+  def apply(): Option[Seq[MatchResult]]
+  def add(matcher: Matcher): CompositeMatcher
+  def &amp;(matcher: Matcher) = add(matcher)
+}
+
+trait AtomicMatcher extends Matcher {
+  def name: String
+  def add(matcher: Matcher) = new CompositeMatcher()
+          .add(this)
+          .add(matcher)
+}
+
+class CompositeMatcher extends Matcher {
+  private var _matchers: Seq[Matcher] = Nil
+  def matchers = _matchers
+  def add(matcher: Matcher): CompositeMatcher = {
+    _matchers ++= List(matcher)
+    return this
+  }
+  def apply() = try {
+    val matches = _matchers.flatMap(m =&gt; m.apply match {
+      case Some(matches: Seq[MatchResult]) =&gt; matches
+      case _ =&gt; throw new MatchError
+    })
+    if (matches.size &gt; 0) Some(matches)
+    else None
+  } catch {
+    case e: MatchError =&gt; None
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <h2>The <code>RegexMatcher</code></h2>
+<p>The <code>RegexMatcher</code> is designed to provide common request matching functionality to all matchers.</p>
+<p>It can be used either with regular expressions or with String expressions.</p>
+<p>When using regular expressions, if match is successful, the matched groups can be accessed using the <code>params</code> method of corresponding <code>MatchResult</code>.</p>
+<p>When using String expressions, following processing occurs:</p>
+<ul>
+  <li>the characters <code>.</code>, <code>(</code> and <code>)</code> are escaped so that they are not mistreated by regex engine;</li>
+  <li>the named parameters like &ldquo;:param&rdquo; are recognized within the expression; they are transformed into reluctant regex groups <code>([^/?&amp;#.]+?)</code> which match any characters except <code>/</code>, <code>?</code>, <code>?</code>, <code>&amp;</code>, <code>#</code> and <code>.</code>;</li>
+  <li>all occurences of the <code>*</code> character is replaced with reluctant groups <code>(.*?)</code> which match zero or more characters;</li>
+  <li>all occurences of the <code>+</code> character is replaced with reluctant groups <code>(.+?)</code> which match one or more characters;</li>
+  <li><code>?</code> remains the same and indicates that the preceding character is optional for matching (for example, <code>get("/files/?")</code> matches both <code>/files</code> and <code>/files/</code> requests).</li>
+</ul>
+<p>Then, if match is successful, named parameters are accessible by their name from the corresponding <code>MatchResult</code>. All other parameters are accessible via the <code>params</code> method (note that named parameters are groups too, so they appear inside <code>params</code> and have their index as well).</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class RegexMatcher(val name: String,
+                   val value: String,
+                   protected var regex: Regex,
+                   protected var groupNames: Seq[String] = Nil) extends AtomicMatcher {
+  def this(name: String, value: String, pattern: String) = {
+    this(name, value, null, Nil)
+    processPattern(pattern)
+  }
+  protected def processPattern(pattern: String): Unit = {
+    this.groupNames = List(&quot;splat&quot;)    // for `group(0)`
+    this.regex = (&quot;&quot;&quot;:\w+|[\*+.()]&quot;&quot;&quot;.r.replaceAllIn(pattern, m =&gt; m.group(0) match {
+      case &quot;*&quot; | &quot;+&quot; =&gt;
+        groupNames ++= List(&quot;splat&quot;)
+        &quot;(.&quot; + m.group(0) + &quot;?)&quot;
+      case &quot;.&quot; | &quot;(&quot; | &quot;)&quot; =&gt;
+        &quot;\\\\&quot; + m.group(0)
+      case _ =&gt;
+        groupNames ++= List(m.group(0).substring(1))
+        &quot;([^/?#]+?)&quot;
+    })).r
+  }
+  def groupName(index: Int): String=
+    if (groupNames.indices.contains(index)) groupNames(index)
+    else &quot;splat&quot;
+  def apply(): Option[Seq[MatchResult]] = {
+    val m = regex.pattern.matcher(value)
+    if (m.matches) {
+      val matches = (0 to m.groupCount).map(i =&gt; groupName(i) -&gt; m.group(i))
+      Some(List(new MatchResult(name, matches: _*)))
+    } else None
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <p><code>HeaderMatcher</code> is used to match the requests by contents of their headers.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class HeaderMatcher(name: String,
+                    regex: Regex,
+                    groupNames: Seq[String] = Nil)
+        extends RegexMatcher(name, request.headers.getOrElse(name,&quot;&quot;), regex, groupNames) {
+  def this(name: String, pattern: String) = {
+    this(name, null, Nil)
+    processPattern(pattern)
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <p><code>HeaderMatcherHelper</code> provides DSL for matching requests by headers. See <code>matchers</code> object in package <code>ru.circumflex.web</code> for more information.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class HeaderMatcherHelper(name: String) {
+  def apply(regex: Regex, groupNames: Seq[String] = Nil) =
+    new HeaderMatcher(name, regex, groupNames)
+  def apply(pattern: String) = new HeaderMatcher(name, pattern)
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

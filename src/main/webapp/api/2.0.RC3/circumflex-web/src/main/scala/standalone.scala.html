@@ -1,0 +1,115 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;standalone.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.web
+
+import ru.circumflex.core._
+import javax.servlet.Filter
+import org.mortbay.jetty.servlet.{ServletHolder, DefaultServlet, Context =&gt; JettyContext}
+import org.mortbay.jetty.{Handler, Server}
+import org.apache.commons.io.FilenameUtils._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Standalone Server</h1>
+<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty to start accepting request without even the need to us deployment descriptor (which is otherwise required by Servlet Specification).</p>
+<p>Following configuration parameters are required to get standalone server up and running:</p>
+<ul>
+  <li><code>cx.root</code> specifies content root of web application (<code>src/main/webapp</code> is default;</li>
+  <li><code>cx.port</code> specifies port which Jetty will listen to;</li>
+  <li><code>cx.router</code> specifies the class name of the main <code>RequestRouter</code>.</li>
+</ul>
+<p>Usage is simple: use <code>start</code> method to bring standalone server up and <code>stop</code> method to shut the server down.</p>
+<p>Refer to source code and Jetty documentation for more information.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class StandaloneServer {
+
+  def filters: Seq[Class[_ &lt;: Filter]] = List(classOf[CircumflexFilter])
+
+  protected var jetty: Server = null
+  protected var context: JettyContext = null
+
+  def init() = {
+    val webappRoot = cx.get(&quot;cx.root&quot;) match {
+      case Some(s: String) =&gt; s
+      case _ =&gt; &quot;src/main/webapp&quot;
+    }
+    jetty = new Server(cx.get(&quot;cx.port&quot;) match {
+      case Some(p: Int) =&gt; p
+      case Some(s: String) =&gt; try { s.toInt } catch { case _ =&gt; 8180 }
+      case _ =&gt; 8180
+    })
+    context = new JettyContext(jetty, &quot;/&quot;, JettyContext.SESSIONS)
+    context.setResourceBase(separatorsToSystem(webappRoot))
+    context.addServlet(new ServletHolder(new DefaultServlet), &quot;/*&quot;)
+    filters.foreach(f =&gt; context.addFilter(f, &quot;/*&quot;, Handler.ALL))
+  }
+
+  def start = {
+    init()
+    jetty.start
+  }
+
+  def stop = if (jetty != null) jetty.stop
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

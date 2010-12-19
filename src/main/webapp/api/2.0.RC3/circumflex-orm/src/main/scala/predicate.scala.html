@@ -1,0 +1,184 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;predicate.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Predicates</h1>
+<p><code>Predicate</code> is essentially a parameterized expression which yields boolean value when executed by database.</p>
+<p>Predicates are designed to participate in <code>WHERE</code> clauses of SQL queries.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Predicate extends ParameterizedExpression
+
+object EmptyPredicate extends Predicate {
+  def parameters: scala.Seq[Any] = Nil
+  def toSql: String = dialect.emptyPredicate
+}
+
+class SimpleExpression(val expression: String,
+                       val parameters: Seq[Any])
+    extends Predicate {
+  def toSql = expression
+}
+
+class AggregatePredicate(val operator: String,
+                         protected var _predicates: Seq[Predicate])
+    extends Predicate {
+  def parameters = predicates.flatMap(_.parameters)
+  def add(predicate: Predicate*): this.type = {
+    _predicates ++= predicate.toList
+    return this
+  }
+  def predicates: Seq[Predicate] = _predicates.flatMap {
+    case EmptyPredicate =&gt; None
+    case p: AggregatePredicate if (p.predicates.size == 0) =&gt; None
+    case p: AggregatePredicate if (p.predicates.size == 1) =&gt;
+      Some(p.predicates(0))
+    case p =&gt; Some(p)
+  }
+  def toSql: String = {
+    val p = predicates
+    if (p.size == 0) EmptyPredicate.toSql
+    else &quot;(&quot; + p.map(_.toSql).mkString(&quot; &quot; + operator + &quot; &quot;) + &quot;)&quot;
+  }
+}
+
+class SubqueryExpression[T](expression: String,
+                            val subquery: SQLQuery[T])
+    extends SimpleExpression(
+      dialect.subquery(expression, subquery), subquery.parameters)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p><code>SimpleExpressionHelper</code> is used to compose predicates in a DSL-style. <code>String</code> expressions are converted to <code>SimpleExpressionHelper</code> implicitly.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class SimpleExpressionHelper(val expr: String) {
+
+  // Simple expressions
+
+  def EQ(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.EQ, List(value))
+  def NE(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.NE, List(value))
+  def GT(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.GT, List(value))
+  def GE(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.GE, List(value))
+  def LT(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.LT, List(value))
+  def LE(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.LE, List(value))
+  def IS_NULL = new SimpleExpression(expr + &quot; &quot; + dialect.isNull, Nil)
+  def IS_NOT_NULL = new SimpleExpression(expr + &quot; &quot; + dialect.isNotNull, Nil)
+  def LIKE(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.like, List(value))
+  def ILIKE(value: Any) = new SimpleExpression(expr + &quot; &quot; + dialect.ilike, List(value))
+  def IN(params: Any*) =
+    new SimpleExpression(expr + &quot; &quot; + dialect.parameterizedIn(params), params.toList)
+  def BETWEEN(lowerValue: Any, upperValue: Any) =
+    new SimpleExpression(expr + &quot; &quot; + dialect.between, List(lowerValue, upperValue))
+
+  // Simple subqueries
+
+  def IN(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.in, query)
+  def NOT_IN(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.notIn, query)
+
+  def EQ_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.EQ + &quot; &quot; + dialect.all, query)
+  def NE_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.NE + &quot; &quot; + dialect.all, query)
+  def GT_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.GT + &quot; &quot; + dialect.all, query)
+  def GE_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.GE + &quot; &quot; + dialect.all, query)
+  def LT_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.LT + &quot; &quot; + dialect.all, query)
+  def LE_ALL(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.LE + &quot; &quot; + dialect.all, query)
+
+  def EQ_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.EQ + &quot; &quot; + dialect.some, query)
+  def NE_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.NE + &quot; &quot; + dialect.some, query)
+  def GT_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.GT + &quot; &quot; + dialect.some, query)
+  def GE_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.GE + &quot; &quot; + dialect.some, query)
+  def LT_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.LT + &quot; &quot; + dialect.some, query)
+  def LE_SOME(query: SQLQuery[_]) =
+    new SubqueryExpression(expr + &quot; &quot; + dialect.LE + &quot; &quot; + dialect.some, query)
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p><code>AggregatePredicateHelper</code> is used to compose predicates using infix notation.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class AggregatePredicateHelper(predicate: Predicate) {
+  def AND(predicates: Predicate*) =
+    new AggregatePredicate(dialect.and, predicate::predicates.toList)
+  def OR(predicates: Predicate*) =
+    new AggregatePredicate(dialect.or, predicate::predicates.toList)
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

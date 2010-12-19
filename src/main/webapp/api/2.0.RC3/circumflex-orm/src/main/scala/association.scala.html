@@ -1,0 +1,181 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;association.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Association</h1>
+<p>The <code>Association</code> class lets you create associations between relations which are typically represented by foreign key constraints in database. This kind of relationship is often referred to as <em>one-to-one</em> or <em>many-to-one</em> (the former is implemented by adding a <code>UNIQUE</code> constraint).</p>
+<p>We use some terminology when speaking about associations:</p>
+<ul>
+  <li>the <code>C</code> type parameter points to the relation which owns this association (we refer to it as the <em>child relation</em>);</li>
+  <li>the <code>P</code> type parameter points to the referenced relation (we refer to it as the <em>parent relation</em>);</li>
+  <li>the <code>K</code> type parameter is a type of this association field's value, it must match the type of parent relation's primary key.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Association[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](val field: Field[K, C],
+                                                           val parentRelation: Relation[K, P])
+    extends ValueHolder[P, C](field.name, field.record, field.sqlType) { assoc =&gt;</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p>Column definition methods delegate to underlying field.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  override def notNull_?(): Boolean = field.notNull_?
+  override def NOT_NULL(): this.type = {
+    field.NOT_NULL
+    return this
+  }
+  override def unique_?(): Boolean = field.unique_?
+  override def UNIQUE(): this.type = {
+    field.UNIQUE
+    return this
+  }
+  override def defaultExpression: Option[String] = field.defaultExpression
+  override def DEFAULT(expr: String): this.type = {
+    field.DEFAULT(expr)
+    return this
+  }
+
+  // Cascading actions
+
+  protected var _onDelete: ForeignKeyAction = NO_ACTION
+  def onDelete = _onDelete
+  def ON_DELETE(action: ForeignKeyAction): this.type = {
+    _onDelete = action
+    return this
+  }
+
+  protected var _onUpdate: ForeignKeyAction = NO_ACTION
+  def onUpdate = _onUpdate
+  def ON_UPDATE(action: ForeignKeyAction): this.type = {
+    _onUpdate = action
+    return this
+  }
+
+  // State maintenance
+
+  override def value: Option[P] =
+    field.value.flatMap(id =&gt; parentRelation.get(id))
+
+  override def set(v: Option[P]): this.type = {
+    field.set(v.flatMap(_.PRIMARY_KEY.value))
+    return this
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h1>Inverse Associations</h1>
+<p>Inverse assocations provide a way to access child records from parent relation. This type of relationship is often referred to as <em>one-to-one</em> or <em>one-to-many</em> (the former one is implemented by applying a <code>UNIQUE</code> constraint). They are essentially useful in a combination with <code>Criteria</code> for fetching whole hierarchy of associated records in a single SQL <code>SELECT</code>.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait InverseAssociation[K, C &lt;: Record[_, C], P &lt;: Record[K, P], T]
+    extends Wrapper[T] {
+  def item: T = get()
+  def association: Association[K, C, P]
+  def record: P
+  def fetch(): Seq[C] = if (record.transient_?) Nil
+  else contextCache.cacheInverse(record.PRIMARY_KEY(), association, {
+    val root = association.field.record.relation AS &quot;root&quot;
+    ctx(&quot;orm.lastAlias&quot;) = root.alias
+    SELECT(root.*).FROM(root).WHERE(association.field EQ record.PRIMARY_KEY()).list
+  })
+  def get(): T
+  def apply(): T = get()
+
+  override def equals(that: Any): Boolean = that match {
+    case that: InverseAssociation[_, _, _, _] =&gt;
+      that.association == this.association
+    case _ =&gt; false
+  }
+  override def hashCode: Int = association.hashCode
+}
+
+class InverseMany[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+    val record: P, val association: Association[K, C, P])
+    extends InverseAssociation[K, C, P, Seq[C]] {
+  def get(): Seq[C] = fetch()
+}
+
+class InverseOne[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+    val record: P, val association: Association[K, C, P])
+    extends InverseAssociation[K, C, P, Option[C]] {
+  def get(): Option[C] = {
+    val children = fetch()
+    if (children.size &lt;= 0) return None
+    if (children.size &gt; 1)
+      throw new ORMException(&quot;One-to-one relationship expected, by multiple records found. &quot; +
+          &quot;Add a UNIQUE constraint or stick with InverseMany.&quot;)
+    return Some(children(0))
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

@@ -1,0 +1,125 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import core._, web._
+import org.fusesource.scalate._
+import org.fusesource.scalate.servlet._
+import java.util.Enumeration
+import javax.servlet.ServletContext</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>scalate</code> package</h1>
+<p>Package <code>scalate</code> contains rendering methods and configuration objects for <a href="http://scalate.fusesource.org/">Scalate Templating Engine</a>.</p>
+<p>You should import this package if you intend to use Scalate in your web application:</p>
+<pre><code>import ru.circumflex.scalate._</code></pre>
+<p>You can also use aliased imports to prevent collisions between method names:</p>
+<pre><code>import ru.circumflex.{scalate =&gt; sc}    // import under alias "sc"
+sc.render("/path/to/template.ssp")      // access members</code></pre>
+<p>Here's the example usage from Circumflex Web Application:</p>
+<pre><code>import ru.circumflex._, core._, web._, scalate._
+
+class Main extends RequestRouter {
+   get("/hello/:name") = render("/templates/hello.ssp")
+}</code></pre>
+<p>Two methods are used for rendering: <code>render(template: String, statusCode: Int = 200, layout: Boolean = true)</code> and <code>view(view: String, it: AnyRef)</code>. Consult <a href="http://scalate.fusesource.org/documentation/user-guide.html">Scalate Documentation</a> for more details.</p>
+<p>By default, the <code>ServletTemplateEngine</code> is used which resolves templates from servlet context. If you wish to use your own <code>TemplateEngine</code> implementation with the methods of <code>scalate</code> package, just set the <code>scalate.engine</code> configuration parameter to fully-qualified class name of templage engine implementation.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object scalate {
+
+  object defaultConfiguration extends Config {
+    def getServletContext = servletContext
+    def getName = getServletContext.getServletContextName
+    def getInitParameterNames = getServletContext.getInitParameterNames
+    def getInitParameter(name: String) = getServletContext.getInitParameter(name)
+  }
+
+  val defaultEngine = new ServletTemplateEngine(defaultConfiguration)
+  defaultEngine.bindings ::= Binding(&quot;ctx&quot;, &quot;ru.circumflex.core.Context&quot;, true, None, &quot;val&quot;, true)
+
+  val engine = cx.instantiate[TemplateEngine](&quot;scalate.engine&quot;, defaultEngine)
+
+  def acquireRenderContext: RenderContext = {
+    val rctx = new ServletRenderContext(engine, response.raw.getWriter, request.raw, response.raw, servletContext)
+    // add context parameters
+    ctx.foreach(p =&gt; rctx.attributes(p._1) = p._2)
+    rctx.attributes(&quot;ctx&quot;) = ctx
+    return rctx
+  }
+
+  def render(template: String,
+             statusCode: Int = 200,
+             layout: Boolean = true): Nothing = {
+    response.statusCode(statusCode)
+    acquireRenderContext.include(template, layout)
+    response.flush_!
+  }
+
+  def view(view: String, it: AnyRef): Nothing = {
+    acquireRenderContext.view(it, view)
+    response.flush_!
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

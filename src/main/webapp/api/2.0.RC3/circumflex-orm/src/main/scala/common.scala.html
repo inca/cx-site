@@ -1,0 +1,287 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;common.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._
+import java.util.regex.Matcher</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>SQLable</h1>
+<p>Every object capable of rendering itself into an SQL statement should extend the <code>SQLable</code> trait.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SQLable {
+  def toSql: String
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h1>Parameterized expressions</h1>
+<p>The <code>ParameterizedExpression</code> trait provides basic functionality for dealing with SQL expressions with JDBC-style parameters.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait ParameterizedExpression extends SQLable {
+
+  def parameters: Seq[Any]
+
+  def toInlineSql: String = parameters.foldLeft(toSql)((sql, p) =&gt;
+    sql.replaceFirst(&quot;\\?&quot;, dialect.escapeParameter(p)
+        .replaceAll(&quot;\\\\&quot;, &quot;\\\\\\\\&quot;)
+        .replaceAll(&quot;\\$&quot;, &quot;\\\\\\$&quot;)))
+
+  override def equals(that: Any) = that match {
+    case e: ParameterizedExpression =&gt;
+      e.toSql == this.toSql &amp;&amp; e.parameters.toList == this.parameters.toList
+    case _ =&gt; false
+  }
+
+  override def hashCode = 0
+
+  override def toString = toSql
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h1>Schema Object</h1>
+<p>Every database object which could be created or dropped should implement the <code>SchemaObject</code> trait.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SchemaObject {
+  def sqlCreate: String
+
+  def sqlDrop: String
+
+  def objectName: String
+
+  override def hashCode = objectName.toLowerCase.hashCode
+
+  override def equals(obj: Any) = obj match {
+    case so: SchemaObject =&gt; so.objectName.equalsIgnoreCase(this.objectName)
+    case _ =&gt; false
+  }
+
+  override def toString = objectName
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <h1>Value holders</h1>
+<p>Value holder is an atomic data-carrier unit of a record. Two implementations of <code>ValueHolder</code> are known: <code>Field</code> and <code>Association</code>.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>abstract class ValueHolder[T, R &lt;: Record[_, R]](
+    val name: String, val record: R, val sqlType: String)
+    extends Equals with Wrapper[Option[T]] {
+
+  def item = value</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <h2>Setters</h2>
+<p>Setters provide a handy mechanism for preprocessing values before setting them. They are functions <code>T =&gt; T</code> which are applied one-by-one each time you set new non-null value. You can add a setter by invoking the <code>addSetter</code> method:</p>
+<pre><code>val pkg = "package".TEXT.NOT_NULL
+    .addSetter(_.trim)
+    .addSetter(_.toLowerCase)
+    .addSetter(_.replaceAll("/","."))
+
+pkg := "  ru/circumflex/ORM  "  // "ru.circumflex.orm" will be assigned</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _setters: Seq[T =&gt; T] = Nil
+  def setters: Seq[T =&gt; T] = _setters
+  def addSetter(f: T =&gt; T): this.type = {
+    _setters ++= List(f)
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <h2>Accessing &amp; Setting Values</h2>
+<p>Values are stored internally as <code>Option[T]</code>. <code>None</code> stands both for uninitialized and <code>null</code> values. Following examples show how field values can be accessed or set:</p>
+<pre><code>val id = "id" BIGINT
+
+// accessing
+id.value    // Option[Long]
+id.get      // Option[Long]
+id()        // Long or exception
+getOrElse(default: Long)  // Long
+
+// setting
+id.set(Some(1l))
+id.setNull
+id := 1l</code></pre>
+<p>The <code>null_?</code> method indicates whether the underlying value is <code>null</code> or not.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _value: Option[T] = None
+
+  // Accessing
+
+  def value: Option[T] = _value
+  def get: Option[T] = value
+  def apply(): T = value.get
+  def getOrElse(default: T): T = value.getOrElse(default)
+
+  def null_?(): Boolean = value == None
+
+  // Setting
+
+  def set(v: Option[T]): this.type = {
+    // process value with setters
+    _value = v.map { v =&gt;
+      setters.foldLeft(v) { (v, f) =&gt; f(v) }
+    }
+    return this
+  }
+  def set(v: T): this.type = set(any2option(v))
+  def setNull: this.type = set(None)
+  def :=(v: T): Unit = set(v)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-7">
+        <td class="docs">
+          <h2>Column Definition Methods</h2>
+<p>Following methods help you construct a definition of the column where the field will be persisted:</p>
+<ul>
+  <li>
+    <p><code>NOT_NULL</code> will render <code>NOT NULL</code> constraint in column's definition; note that starting from 2.0, by default the <code>NOT NULL</code> constraint is omitted and <code>NULLABLE</code> construct is no longer supported; this method can also be used as a shortcut for specifying the <code>NOT NULL</code> constraint and assigning default field value:</p>
+    <p>// following declarations are identical   val createdAt = &ldquo;created<em>at&rdquo;.TIMESTAMP.NOT</em>NULL.set(new Date())   val createdAt = &ldquo;created<em>at&rdquo;.TIMESTAMP.NOT</em>NULL(new Date())</p>
+  </li>
+  <li><code>DEFAULT</code> will render the <code>DEFAULT</code> expression in column's definition (if not overriden by dialect);</li>
+  <li><code>UNIQUE</code> will create a <code>UNIQUE</code> constraint for enclosing table on the field.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _notNull: Boolean = false
+  def notNull_?(): Boolean = _notNull
+  def NOT_NULL(): this.type = {
+    _notNull = true
+    return this
+  }
+  def NOT_NULL(initialValue: T): this.type = NOT_NULL().set(initialValue)
+
+  protected var _unique: Boolean = false
+  def unique_?(): Boolean = _unique
+  def UNIQUE(): this.type = {
+    _unique = true
+    return this
+  }
+
+  protected var _defaultExpression: Option[String] = None
+  def defaultExpression: Option[String] = _defaultExpression
+  def DEFAULT(expr: String): this.type = {
+    _defaultExpression = Some(expr)
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-8">
+        <td class="docs">
+          <h2>Methods from <code>Option</code></h2>
+<p>Since <code>ValueHolder</code> is just a wrapper around <code>Option</code>, we provide some methods to work with your values in functional style (they delegate to their equivalents in <code>Option</code>).</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def map[B](f: T =&gt; B): Option[B] =
+    value.map(f)
+  def flatMap[B](f: T =&gt; Option[B]): Option[B] =
+    value.flatMap(f)
+  def orElse[B &gt;: T](alternative: =&gt; Option[B]): Option[B] =
+    value.orElse(alternative)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-9">
+        <td class="docs">
+          <h2>Equality &amp; Others</h2>
+<p>Two fields are considered equal if they belong to the same type of records and share the same name.</p>
+<p>The <code>hashCode</code> calculation is consistent with <code>equals</code> definition.</p>
+<p>The <code>canEqual</code> method indicates whether the two fields belong to the same type of records.</p>
+<p>Finally, <code>toString</code> returns the qualified name of relation which it belongs to followed by a dot and the field name.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  override def equals(that: Any): Boolean = that match {
+    case that: ValueHolder[_, _] =&gt; this.canEqual(that) &amp;&amp;
+      this.name == that.name
+    case _ =&gt; false
+  }
+  override lazy val hashCode: Int =  record.relation.qualifiedName.hashCode * 31 +
+      name.hashCode
+  def canEqual(that: Any): Boolean = that match {
+    case that: ValueHolder[_, _] =&gt; this.record.canEqual(that.record)
+    case _ =&gt; false
+  }
+  override def toString: String = record.relation.qualifiedName + &quot;.&quot; + name
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

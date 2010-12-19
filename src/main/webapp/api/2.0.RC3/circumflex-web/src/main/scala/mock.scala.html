@@ -1,0 +1,171 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;mock.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.web
+
+import ru.circumflex.core._
+import javax.servlet.http.Cookie
+import org.mortbay.jetty.Handler
+import org.mortbay.jetty.servlet.{DefaultServlet}
+import org.mortbay.jetty.testing.{HttpTester, ServletTester}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Testing your application</h1>
+<p>Circumflex Web Framework lets you test your web application using the <code>MockApp</code>.</p>
+<p>Refer to our test sources at <a href="http://github.com/inca/circumflex/tree/master/circumflex-web/src/test/scala/"><code>circumflex-web/src/test/scala</code></a> to see it in action.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait MockServer extends StandaloneServer {
+
+  protected var _tester: ServletTester = null
+
+  def tester = _tester
+
+  def initTester() = {
+    _tester = new ServletTester()
+    _tester.setContextPath(&quot;/&quot;)
+    _tester.setResourceBase(Circumflex.get(&quot;cx.root&quot;) match {
+      case Some(s: String) =&gt; s
+      case _ =&gt; &quot;src/main/webapp&quot;
+    })
+    _tester.addServlet(classOf[DefaultServlet], &quot;/*&quot;)
+    filters.foreach(f =&gt; _tester.addFilter(f, &quot;/*&quot;, Handler.ALL))
+  }
+
+  override def start = {
+    initTester()
+    _tester.start
+  }
+
+  override def stop = if (_tester != null) _tester.stop
+
+  // ## HTTP Methods
+
+  def get(uri: String) = new MockRequest(this, &quot;GET&quot;, uri)
+  def head(uri: String) = new MockRequest(this, &quot;HEAD&quot;, uri)
+  def post(uri: String) = new MockRequest(this, &quot;POST&quot;, uri)
+          .setHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)
+  def put(uri: String) = new MockRequest(this, &quot;PUT&quot;, uri)
+          .setHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)
+  def delete(uri: String) = new MockRequest(this, &quot;DELETE&quot;, uri)
+          .setHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)
+  def options(uri: String) = new MockRequest(this, &quot;OPTIONS&quot;, uri)
+          .setHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)
+  def patch(uri: String) = new MockRequest(this, &quot;PATCH&quot;, uri)
+          .setHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;)
+
+}
+
+class MockRequest(val mockServer: MockServer, val method: String, val uri: String) {
+
+  private val req = new HttpTester
+
+  req.setMethod(method)
+  req.setURI(uri)
+  req.setVersion(&quot;HTTP/1.1&quot;)
+  req.setHeader(&quot;Host&quot;, &quot;localhost&quot;)
+
+  def setHeader(name: String, value: String): this.type = {
+    req.setHeader(name, value)
+    return this
+  }
+
+  def setDateHeader(name: String, value: Long): this.type = {
+    req.setDateHeader(name, value)
+    return this
+  }
+
+  def setLongHeader(name: String, value: Long): this.type = {
+    req.setLongHeader(name, value)
+    return this
+  }
+
+  def setContent(content: String): this.type = {
+    req.setContent(content)
+    return this
+  }
+
+  def setCookie(cookie: Cookie): this.type = {
+    req.addSetCookie(cookie)
+    return this
+  }
+
+  def get_? = req.getMethod.equalsIgnoreCase(&quot;GET&quot;)
+  def post_? = req.getMethod.equalsIgnoreCase(&quot;POST&quot;)
+  def put_? = req.getMethod.equalsIgnoreCase(&quot;PUT&quot;)
+  def delete_? = req.getMethod.equalsIgnoreCase(&quot;DELETE&quot;)
+  def head_? = req.getMethod.equalsIgnoreCase(&quot;HEAD&quot;)
+  def options_? = req.getMethod.equalsIgnoreCase(&quot;OPTIONS&quot;)
+  def patch_? = req.getMethod.equalsIgnoreCase(&quot;PATCH&quot;)
+
+  override def toString = req.generate
+
+  def execute(): HttpTester = {
+    val result = new HttpTester
+    result.parse(mockServer.tester.getResponses(req.generate))
+    return result
+  }
+
+}
+
+object MockApp extends MockServer</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+
