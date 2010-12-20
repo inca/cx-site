@@ -1,0 +1,19 @@
+# ORM: Querying
+
+## Reusing Query Objects   {#query-reuse}
+
+When working with data-centric applications, you often need the same query to be executed with
+different parameters. The most obvious solution is to build `Query` objects dynamically:
+
+    object Country extends Table[String, Country] {                {.scala}
+      def findByCode(code: String): Option[Country] = (this AS "co").map(co =>
+          SELECT (co.*) FROM co WHERE (co.code LIKE code) unique)
+    }
+
+However, you can use _named parameters_ to reuse the same `Query` object:
+
+    object Country extends Table[String, Country] {                {.scala}
+      val co = AS("co")
+      val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
+      def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
+    }

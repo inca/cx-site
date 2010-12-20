@@ -1,0 +1,23 @@
+# ORM: Querying   {#sql}
+
+A precise request for information retrieval from database is often refered to as _query_.
+There are various ways you can query your data with Circumflex ORM:
+
+  * using [select queries](select.html), a neat object-oriented DSL for retrieving
+  [records](/products/orm/ddl/part_1.html#record)
+  as well as arbitrary [projections](/products/orm/querying/part_1.html#projection) with SQL-like syntax;
+  * using the [Criteria API](/products/orm/querying/part_6.html#criteria), an alternative DSL for retrieving
+  [records](/products/orm/ddl/part_1.html#record)
+  with associations prefetching capabilities;
+  * using native queries for executing vendor-specific queries for
+  [records](/products/orm/ddl/part_1.html#record) or arbitrary
+  [projections](/products/orm/querying/part_1.html#projection).
+
+All data retrieval queries derive from the `SQLQuery[T]` class. It defines following methods
+for query execution:
+
+  * `list()` executes a query and returns `Seq[T]`;
+  * `unique()` executes a query and returns `Option[T]`, an exception is thrown if more than one
+  row is returned from database;
+  * `resultSet[A](actions: ResultSet => A)` executes a query and passes JDBC `ResultSet` object
+  to specified `actions` function, the result is determined by that function.

@@ -1,0 +1,99 @@
+# ORM: Querying
+
+## Joins   {#join}
+
+_Joins_ are used to combine records from two or more relations within a query.
+
+Joins concept is a part of [relational algebra][rel-algebra-wiki]. If you are not familiar with
+joins in relational databases, consider spending some time to learn a bit about them. A good place
+to start will be the [Join_(SQL) article on Wikipedia][joins-wiki].
+
+Joins allow you to build queries which span across several associated relations:
+
+    val co = Country AS "co"                                       {.scala}
+    val ci = City AS "ci"
+    // find cities by the name of their corresponding countries:
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')
+
+As the example above shows, joins are intended to be used in the `FROM` clause of query.
+The result of calling the `JOIN` method is an instance of `JoinNode` class:
+
+    val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]      {.scala}
+
+Every `JoinNode` has it's left side and right side (`co JOIN ci` is *not* equivalent to
+`ci JOIN co`).
+
+### Left Associativity    {#joins-left-ass}
+
+An important thing to know is that the join operation is *left-associative*: if join
+is applied to `JoinNode` instance, the operation will be delegated to the `left` side
+of `JoinNode`.
+
+To illustrate this, let's take three associated tables, `Country`, `City` and `Street`:
+
+    val co = Country AS "co"                                       {.scala}
+    val ci = City AS "ci"
+    val st = Street AS "st"
+
+We want to join them in following order: `Country` -> (`City` -> `Street`).
+Since join operation is left-associative, we need extra parentheses:
+
+    co JOIN (ci JOIN st)                                           {.scala}
+
+Now let's join the same tables in following order: (`City` -> `Street`) -> `Country`. In this
+case the parentheses can be omitted:
+
+    ci JOIN st JOIN co                                             {.scala}
+
+### Joining Predicate    {#joins-predicate}
+
+By default Circumflex ORM will try to determine joining predicate (the `ON` subclause)
+by searching the [associations](/products/orm/ddl/part_2.html#association) between relations.
+
+Let's say we have two associated relations, `Country` and `City`.
+We can use implicit joins between `Country` and `City`:
+
+    Country AS "co" JOIN (City AS "ci")                            {.scala}
+    // country AS co LEFT JOIN city AS ci ON ci.country_code = co.code
+    City AS "ci" JOIN (Country AS "co")
+    // city AS ci LEFT JOIN country AS co ON ci.country_code = co.code
+
+However, if no explicit association exist between relations (or if they are ambiguous), you
+may need to specify the join predicate explicitly:
+
+    ci.JOIN(co).ON("ci.country_code = co.code")                    {.scala}
+
+### Join Types    {#joins-type}
+
+Like in SQL, joins can be of several types. Depending on the type of join, rows which do not
+match the joining predicate will be eliminated from one of the sides of join. Following join
+types are available:
+
+  * `INNER` joins eliminate unmatched rows from both sides;
+  * `LEFT` joins return all matched rows plus one copy for each row in the left side relation
+  for which there was no matching right-hand row (extended with `NULL`s on the right);
+  * `RIGHT` joins, conversely, return all matched rows plus one copy for each row in the right side
+  relation for which there was no matching right-hand row (extended with `NULL`s on the left);
+  * `FULL` joins return all the joined rows, plus one row for each unmatched left-hand row
+  (extended with `NULL`s on the right), plus one row for each unmatched right-hand row
+  (extended with `NULL`s on the left).;
+  * cross joins are achieved by passing multiple `RelationNode` arguments to `FROM`, they produce
+   the Cartesian product of records, no join conditions are applied to them.
+
+If no join type specified explicitly, `LEFT` join is assumed by default.
+
+You can specify the type of join by passing an argument to the `JOIN` method:
+
+    (Country AS "co").JOIN(City AS "ci", INNER)                    {.scala}
+
+Or you may call one of specific methods instead:
+
+    Country AS "co" INNER_JOIN (City AS "ci")                      {.scala}
+    Country AS "co" LEFT_JOIN (City AS "ci")
+    Country AS "co" RIGHT_JOIN (City AS "ci")
+    Country AS "co" FULL_JOIN (City AS "ci")
+
+[rel-algebra-wiki]:  http://en.wikipedia.org/wiki/Relational_algebra
+                        "Relational algebra definition on Wikipedia"
+[joins-wiki]:        http://en.wikipedia.org/wiki/Join_(SQL)
+                        "SQL Join definition on Wikipedia"
