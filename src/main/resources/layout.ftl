@@ -5,6 +5,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
   <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" href="/css/menu_navigation.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
   <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
@@ -17,6 +18,7 @@
   <script src="/js/jquery-1.4.2.min.js"></script>
   <script src="/js/jquery.colorbox-min.js"></script>
   <script src="/js/application.js"></script>
+  <script src="/js/menu.js"></script> 
   [#if ciripage?? && .template_name?ends_with('/page.ftl')]
     <link rel="alternate"
           id="edit-link"
@@ -41,9 +43,12 @@
     <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
   </div>
 </div>
+[#include "menu.ftl"] 
 ${content!}
 <div id="footer">
-  <span>Copyright 2009-${currentYear} <a href="http://circumflex.ru">circumflex.ru</a></span>
+  <p><span>Copyright 2009-${currentYear} <a href="http://circumflex.ru">circumflex.ru</a></span></p>
+  <p><a href="/license.html">Terms <span class="amp">&amp;</span> conditions</a> apply &bull;
+    <a href="/credits.html">credits</a></p>
 </div>
 [@stats/]
 </body>

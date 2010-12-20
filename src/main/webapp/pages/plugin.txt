@@ -3,8 +3,8 @@
 Circumflex comes shipped with handy Maven plugin which can help you with following tasks:
 
   * [configuring Circumflex application](#cfg) using `pom.xml` instead of `cx.properties`;
-  * [exporting database schema](#schema) of [Circumflex ORM](/orm.html) project on build;
-  * generating source code documentation with [Docco](/index.html#docco).
+  * [exporting database schema](#schema) of [Circumflex ORM](/orm/index.html) project on build;
+  * generating source code documentation with [Docco](/components.html#docco).
 
 # Configuring Circumflex Application    {#cfg}
 

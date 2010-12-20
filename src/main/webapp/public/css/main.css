@@ -48,6 +48,10 @@ ul, ol {
 #footer {
   text-align:center;
   padding: 24px;
+  font-size:.75em;
+}
+#footer p {
+  margin:0
 }
 ul > li > pre {
   margin-left: -57px;
@@ -121,7 +125,7 @@ a:hover {
   -webkit-box-shadow: 1px 1px 3px #777;
   background: #fff;
   background: -webkit-gradient(linear, 0% 0%, 2% 0%, from(#f7f7f7), to(#fff));
-  padding:24px;
+  padding:36px; /*24*/
   border-bottom-right-radius:8px;
   -webkit-border-bottom-right-radius:8px;
   -moz-border-radius-bottomright:8px;
@@ -219,11 +223,11 @@ pre .class .title, pre .tag {
 
 /* Markdown Live */
 
-#md-markup-help-contents {
+#me-markup-help-contents {
   background:#fff;
   padding:8px;
 }
-#md-source {
+#me-source {
   font-family: Monaco, monospace;
 }
 
@@ -262,4 +266,14 @@ pre .class .title, pre .tag {
 }
 #docco-page > table {
   border-bottom:1px solid #e5e5ee;
+}
+
+#components {
+  width: 100%;
+}
+
+#components td {
+  padding-left: 10px;
+  width: 33%;
+  vertical-align: top;
 }

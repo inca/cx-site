@@ -2,29 +2,29 @@
 [#assign content]
 <div id="content">
   <div id="page">
-    <h1>Circumflex Markdown Live <a href="/.md-cheatsheet" id="md-markup-help" class="right-float inplace">syntax help</a></h1>
-    <form action="/.mdwn" method="post" id="md-form">
+    <h1>Circumflex Markeven Live <a href="/products/me/me-cheatsheet" id="me-markup-help" class="right-float inplace">syntax help</a></h1>
+    <form action="/products/me" method="post" id="me-form">
       <fieldset>
-        <textarea rows="20" cols="30" style="width: 100%" name="md" id="md-source" placeholder="Type something here"></textarea>
+        <textarea rows="20" cols="30" style="width: 100%" name="me" id="me-source" placeholder="Type something here"></textarea>
       </fieldset>
     </form>
     <p>&nbsp;</p>
     <div id="results">
       <h3><a href="javascript:;" id="html-result-view" class="right-float inplace">show source</a></h3>
-      <div id="md-preview"></div>
+      <div id="me-preview"></div>
     </div>
   </div>
 </div>
 
 <script type="text/javascript">
-  $("#md-source").focus();
+  $("#me-source").focus();
   var timeout;
   var needs_update = '';
 
   function updatePreview(cont) {
-    $.post($("#md-form").attr("action"), $("#md-form").serialize(), function(data, status) {
+    $.post($("#me-form").attr("action"), $("#me-form").serialize(), function(data, status) {
       if(status == 'success') {
-        $("#md-preview").html(data);
+        $("#me-preview").html(data);
         $("#results").show();
       }
       cont();
@@ -32,31 +32,31 @@
   }
 
   function scheduleUpdate() {
-    if(needs_update == $("#md-source").val())
+    if(needs_update == $("#me-source").val())
       return;
-    needs_update = $("#md-source").val();
+    needs_update = $("#me-source").val();
     clearTimeout(timeout);
     timeout = setTimeout(function () {
       clearTimeout(timeout);
       updatePreview(function () {
-        if (needs_update != $("#md-source").val() && !timeout)
+        if (needs_update != $("#me-source").val() && !timeout)
           scheduleUpdate();
       });
     }, 500)
   }
 
-  $("#md-source").keyup(function(){
-    if ($("#md-source").val().trim() != "") scheduleUpdate();
+  $("#me-source").keyup(function(){
+    if ($("#me-source").val().trim() != "") scheduleUpdate();
     else $("#results").hide();
   });
 
   $("#html-result-view").click(function() {
-    $.fn.colorbox({html:'<pre><code>' + $('<div/>').text($("#md-preview").html()).html() + '</code></pre>'});
+    $.fn.colorbox({html:'<pre><code>' + $('<div/>').text($("#me-preview").html()).html() + '</code></pre>'});
   });
 
-  $("#md-markup-help").click(function() {
+  $("#me-markup-help").click(function() {
     $.get($(this).attr('href'), function(data) {
-      $.fn.colorbox({html: '<div id="md-markup-help-contents">' + data + "</div>"});
+      $.fn.colorbox({html: '<div id="me-markup-help-contents">' + data + "</div>"});
     });
     return false;
   });

@@ -27,6 +27,23 @@ class MainRouter extends RequestRouter {
     "/api/" + param("version") + "/" + param("project") + "/src/main/scala/" +
         param("file") + ".scala.html")
 
+  // Markeven live
+  get("/products/me/?") = ftl("/me.ftl")
+  post("/products/me/?") = toHtml(param("me"))
+
+  get("/products/me/me-cheatsheet") = if (request.body.xhr_?)
+    Page.findByUriOrEmpty("/products/me/me-cheatsheet").toHtml
+  else forward("/products/me/me-cheatsheet.html")
+
+  // Download parts or full circumflex.
+  get("/download/?") = {
+    val f = new File(servletContext.getRealPath("/public/files/" + param("file").trim + ".zip"))
+    if (f.exists && f.isFile){
+      sendFile(f, param("file").trim)
+    }
+    else redirect("/") 
+  }
+  
   new CiriDiri {    // let ciridiri handle the rest
     override def onFound(page: Page) = 'toc := new TOC(page.toHtml)
   }
