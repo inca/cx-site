@@ -1,6 +1,5 @@
 [#ftl]
 [#assign basePath][#list 1..depth as i]../[/#list][/#assign]
-[#assign content]
 <div id="docco-page">
   <h1 id="docco-back">
     <a href="${basePath}index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;${title}
@@ -19,6 +18,3 @@
       [/#list]
   </table>
 </div>
-[/#assign]
-
-[#include "/layout.ftl"/]

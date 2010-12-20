@@ -13,7 +13,6 @@
   <properties>
     <port>8888</port>
     <cx.version>2.0</cx.version>
-    <ciridiri.version>2.0</ciridiri.version>
     <cx.router>ru.circumflex.site.MainRouter</cx.router>
     <cx.sourceRoot>/opt/inca/circumflex</cx.sourceRoot>
     <ftl.configuration>ru.circumflex.site.FreeMarkerConf</ftl.configuration>
@@ -26,9 +25,19 @@
 
   <dependencies>
      <dependency>
-      <groupId>ru.ciridiri</groupId>
-      <artifactId>ciridiri</artifactId>
-      <version>${ciridiri.version}</version>
+      <groupId>ru.circumflex</groupId>
+      <artifactId>circumflex-web</artifactId>
+      <version>${cx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ru.circumflex</groupId>
+      <artifactId>circumflex-ftl</artifactId>
+      <version>${cx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ru.circumflex</groupId>
+      <artifactId>circumflex-markeven</artifactId>
+      <version>${cx.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>

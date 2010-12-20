@@ -1,6 +1,5 @@
 [#ftl]
 
-[#assign content]
 <div id="content">
   <div id="page">
     <div id="docco-index">
@@ -20,6 +19,3 @@
     </div>
   </div>
 </div>
-[/#assign]
-
-[#include "/layout.ftl"/]

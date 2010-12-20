@@ -3,7 +3,6 @@ package ru.circumflex.site
 import _root_.freemarker.cache._
 import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
 import ru.circumflex._, core._, web._, freemarker._, markeven._
-import ru.ciridiri.{Page, CiriDiri}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.io.File
@@ -20,32 +19,33 @@ class MainRouter extends RequestRouter {
     val version = param("version")
     val file = new File("src/main/webapp/api/" + version + "/" + uri(2) + ".html")
     if (file.isFile) {
-      readFileToString(file, "UTF-8")
+      'content := readFileToString(file, "UTF-8")
+      ftl("/layout.ftl")
     } else sendError(404)
   }
   get("/api/:version/:project/:file.scala") = redirect(
     "/api/" + param("version") + "/" + param("project") + "/src/main/scala/" +
         param("file") + ".scala.html")
 
-  // Markeven live
-  get("/products/me/?") = ftl("/me.ftl")
-  post("/products/me/?") = toHtml(param("me"))
+  get("/.me") = ftl("/me.ftl")
+  post("/.me") = toHtml(param("me"))
 
-  get("/products/me/me-cheatsheet") = if (request.body.xhr_?)
-    Page.findByUriOrEmpty("/products/me/me-cheatsheet").toHtml
-  else forward("/products/me/me-cheatsheet.html")
-
-  // Download parts or full circumflex.
-  get("/download/?") = {
-    val f = new File(servletContext.getRealPath("/public/files/" + param("file").trim + ".zip"))
-    if (f.exists && f.isFile){
-      sendFile(f, param("file").trim)
+  get("/") = forward("/index.html")
+  get("/*.html") = {
+    val path = servletContext.getRealPath("/pages/" + uri(1) + ".me")
+    val src = new File(path)
+    if (!src.isFile) error(404)
+    val cache = new File(path + ".html")
+    val content = if (cache.isFile && cache.lastModified > src.lastModified) {
+      readFileToString(cache, "UTF-8")
+    } else {
+      val html = toHtml(readFileToString(src, "UTF-8"))
+      writeStringToFile(cache, html, "UTF-8")
+      html
     }
-    else redirect("/") 
-  }
-  
-  new CiriDiri {    // let ciridiri handle the rest
-    override def onFound(page: Page) = 'toc := new TOC(page.toHtml)
+    'page := content
+    'toc := new TOC(content)
+    ftl("/page.ftl")
   }
 
   // None matched, let's try to guess a page

@@ -19,20 +19,7 @@
   <script src="/js/jquery.colorbox-min.js"></script>
   <script src="/js/application.js"></script>
   <script src="/js/menu.js"></script> 
-  [#if ciripage?? && .template_name?ends_with('/page.ftl')]
-    <link rel="alternate"
-          id="edit-link"
-          type="application/x-wiki"
-          title="Edit this page"
-          href="${ciripage.uri}.html.e" />
-  [/#if]
-  <title>
-    [#if ciripage?? && ciripage.title != '']
-    ${ciripage.title}
-      [#else]
-        Circumflex &mdash; exquisite taste of Scala development
-    [/#if]
-  </title>
+  <title>Circumflex &mdash; exquisite taste of Scala development</title>
 </head>
 <body>
 <div id="header">
@@ -43,7 +30,7 @@
     <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
   </div>
 </div>
-[#include "menu.ftl"] 
+[#include "menu.ftl"/]
 ${content!}
 <div id="footer">
   <p><span>Copyright 2009-${currentYear} <a href="http://circumflex.ru">circumflex.ru</a></span></p>

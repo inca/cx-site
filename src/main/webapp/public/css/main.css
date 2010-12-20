@@ -76,12 +76,13 @@ a:hover {
   color:#304035;
 }
 #header {
+  background: #eee;
   background: -moz-linear-gradient(-90deg, #fff, #ccc);
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
   border-bottom:1px solid #aaa;
   text-shadow:0 1px 1px #eee;
 }
-#header .wrap, #content, #footer {
+#header .wrap, #page, #footer {
   width:900px;
 }
 #header .wrap {
