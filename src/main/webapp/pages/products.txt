@@ -15,7 +15,7 @@
       </div>
     </td>
     <td>
-      <h2 id = "orm">Object-Relational Mapper</h2>
+      <h2 id = "orm">ORM</h2>
       <p>Is used for creating fast,
           concise and efficient data-centric applications with elegant DSL.</p>
       <div class = "links">
@@ -82,3 +82,20 @@
     </td>
   </tr>
 </table>
+
+# Why Circumflex? {#why}
+
+  * Circumflex projects require minimum initial configuration, while still allowing
+  developers to easily override defaults if necessary.
+  * Circumflex projects are written in Scala. They have all the benefits of Scala.
+  They run on the JVM. They are fast. They are concise.
+  * Circumflex does not try to solve all the problems a developer might ever face.
+  It maintains a minimal features set, allowing developers to choose the tools and libraries
+  which best suit their particular needs.
+  * Circumflex is designed to use the powers of the Apache Maven 2 software management
+  platform. Adding Circumflex components to your project is a matter of few more lines
+  in your `pom.xml`.
+  * All Circumflex components are designed to maximize the ease-of-use and clarity of your code.
+  The development process with Circumflex is intuitive and extremely productive.
+  * Circumflex is completely free, with a BSD-style [license](/license.html).
+

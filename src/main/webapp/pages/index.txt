@@ -1,33 +1,20 @@
 Circumflex unites several self-contained open source projects for quick and robust application
 development using [Scala][] programming language.
 
-  * [Circumflex Web Framework](/products.html#web)
-  * [Circumflex ORM](/products.html#orm)
-  * [Circumflex FreeMarker Helper](/products.html#ftl)
-  * [Circumflex Markeven](/products.html#me)
-  * [Circumflex Scalate](/products.html#scalate)
-  * [Circumflex Docco](/products.html#docco)
-  * [Circumflex Maven Plugin](/plugin.html)
+Cirumflex is ...
+
+  * [Web Framework](/products.html#web) -- a DSL for quick web application development.
+  * [ORM](/products.html#orm) -- Is used for creating fast, concise and efficient data-centric applications
+      with elegant DSL.
+  * [FreeMarker Helper](/products.html#ftl) -- helps to render most advanced Java templating language, FreeMarker.
+  * [Markeven](/products.html#me) -- the new text-to-html conversion tool for writers.
+  * [Scalate](/products.html#scalate) -- contains rendering methods and configuration objects for Scalate Templating Engine
+  * [Docco](/products.html#docco) -- produces HTML that displays your comments alongside your code.
+  * [Maven Plugin](/plugin.html)
 
 Each Circumflex project focuses on code quality, simplicity and consistency -- such
 forgotten merits in todays race for features and enterprise panacea-like solutions.
 We make every effort to keep [Circumflex codebase](/api) concise, elegant and balanced.
-
-# Why Circumflex? {#why}
-
-  * Circumflex projects require minimum initial configuration, while still allowing
-  developers to easily override defaults if necessary.
-  * Circumflex projects are written in Scala. They have all the benefits of Scala.
-  They run on the JVM. They are fast. They are concise.
-  * Circumflex does not try to solve all the problems a developer might ever face.
-  It maintains a minimal features set, allowing developers to choose the tools and libraries
-  which best suit their particular needs.
-  * Circumflex is designed to use the powers of the Apache Maven 2 software management
-  platform. Adding Circumflex components to your project is a matter of few more lines
-  in your `pom.xml`.
-  * All Circumflex components are designed to maximize the ease-of-use and clarity of your code.
-  The development process with Circumflex is intuitive and extremely productive. 
-  * Circumflex is completely free, with a BSD-style [license](/license.html).
 
 # Contribute  {#contribute}
 
@@ -39,7 +26,7 @@ to grow strong and mature. You can help the Circumflex project in following ways
   * fork [this site][gh-cx-site] and help us with documentation, FAQs, tutorials,
   examples and success stories;
   * blog about Circumflex and [let us know about it](/team.html);
-  * contact [The Circumflex Team](/team.html) personally;
+  * We present [the new Community page](http://groups.google.com/group/circumflex-scala/) on Google Groups;
   * just use Circumflex in your development and have fun :)
 
 We highly appreciate your help!
