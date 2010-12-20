@@ -228,7 +228,7 @@
       </ul>
     </li>
     <li>
-      <a href="/downloads?file=full">Download</a>
+      <a href="/download?file=full">Download</a>
       <ul>
         <li><a href="https://github.com/inca/circumflex">GitHub</a></li>
         <li><a href="/download?file=full">All components</a></li>
@@ -452,11 +452,19 @@ object Country extends Country with Table[String, Country] {
 
   protected[orm] def init(): Unit =
     if (!_initialized) this.synchronized {
-      if (!_initialized) {
+      if (!_initialized) try {
         findMembers(this.getClass)
         dialect.initializeRelation(this)
         _fields.foreach(dialect.initializeField(_))
         this._initialized = true
+      } catch {
+        case e: NullPointerException =&gt;
+          throw new ORMException(&quot;Failed to initialize &quot; + relationName + &quot;: &quot; +
+              &quot;possible cyclic dependency between relations. &quot; +
+              &quot;Make sure that at least one side uses weak reference to another &quot; +
+              &quot;(change `val` to `lazy val` for fields and to `def` for inverse associations).&quot;, e)
+        case e: Exception =&gt;
+          throw new ORMException(&quot;Failed to initialize &quot; + relationName + &quot;.&quot;, e)
       }
     }
 

@@ -1,0 +1,443 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;query.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.sql.{ResultSet, PreparedStatement}
+import ru.circumflex.core._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Querying</h1>
+<p>SQL and DML queries form the heart of Circumflex ORM DSL.</p>
+<p>Common features implemented in the <code>Query</code> trait are <em>named parameters</em> which allow query reuse and <em>ensuring alias uniqueness</em> which prevents implicit relation node aliases from colliding within a single query.</p>
+<p>The <code>SQLQuery</code> trait represents data-retrieval queries which usually employ the <code>executeQuery</code> method of JDBC <code>PreparedStatement</code> and process JDBC <code>ResultSet</code>.</p>
+<p>The <code>DMLQuery</code> trait represents data-manipulation queries which usually employ the <code>executeUpdate</code> method of JDBC <code>PreparedStatement</code> and return the number of affected rows.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Query extends SQLable with ParameterizedExpression with Cloneable {
+
+  // Keep track of last execution time
+  protected var _executionTime = 0l
+  def executionTime = _executionTime
+
+  protected var _aliasCounter = 0;
+
+  protected def nextAlias: String = {
+    _aliasCounter += 1
+    return &quot;this_&quot; + _aliasCounter
+  }
+
+  def setParams(st: PreparedStatement, index: Int): Int = {
+    var paramsCounter = index;
+    parameters.foreach(p =&gt; {
+      typeConverter.write(st, convertNamedParam(p), paramsCounter)
+      paramsCounter += 1
+    })
+    return paramsCounter
+  }
+
+  protected var _namedParams: Map[String, Any] = Map()
+
+  def renderParams: Seq[Any] = parameters.map(p =&gt; convertNamedParam(p))
+
+  def set(name: String, value: Any): this.type = {
+    _namedParams += name -&gt; value
+    return this
+  }
+
+  protected def convertNamedParam(param: Any): Any = param match {
+    case s: Symbol =&gt; lookupNamedParam(s.name)
+    case s: String if (s.startsWith(&quot;:&quot;)) =&gt; lookupNamedParam(s)
+    case _ =&gt; param
+  }
+
+  protected def lookupNamedParam(name: String): Any =
+    _namedParams.get(name.replaceAll(&quot;^:&quot;, &quot;&quot;)) match {
+      case Some(p) =&gt; p
+      case _ =&gt; name
+    }
+
+  override def clone(): this.type = super.clone.asInstanceOf[this.type]
+
+  override def toString = toSql
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p>The <code>SQLQuery</code> trait defines a contract for data-retrieval queries. It's only type parameter <code>T</code> designates the query result type (it is determined by specified <code>projections</code>).</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>abstract class SQLQuery[T](val projection: Projection[T]) extends Query {
+
+  def projections: Seq[Projection[_]] = List(projection)
+
+  protected def ensureProjectionAlias[T](projection: Projection[T]): Unit =
+    projection match {
+      case p: AtomicProjection[_] if (p.alias == &quot;this&quot;) =&gt; p.AS(nextAlias)
+      case p: CompositeProjection[_] =&gt;
+        p.subProjections.foreach(ensureProjectionAlias(_))
+      case _ =&gt;
+    }
+
+  ensureProjectionAlias(projection)
+
+  def resultSet[A](actions: ResultSet =&gt; A): A = {
+    val result = time {
+      tx.execute(toSql) { st =&gt;
+        setParams(st, 1)
+        val rs = st.executeQuery
+        try {
+          actions(rs)
+        } finally {
+          rs.close
+        }
+      } { throw _ }
+    }
+    _executionTime = result._1
+    Statistics.executeSql(this)
+    return result._2
+  }
+
+  def read(rs: ResultSet): Option[T] = projection.read(rs)
+
+  def list(): Seq[T] = resultSet { rs =&gt;
+    var result = List[T]()
+    while (rs.next) read(rs) match {
+      case Some(r) =&gt;
+        result ++= List(r)
+      case _ =&gt;
+    }
+    result
+  }
+
+  def unique(): Option[T] = resultSet(rs =&gt; {
+    if (!rs.next)
+      None
+    else if (rs.isLast)
+      read(rs)
+    else throw new ORMException(&quot;Unique result expected, but multiple rows found.&quot;)
+  })
+
+}
+
+class NativeSQLQuery[T](projection: Projection[T],
+                        expression: ParameterizedExpression)
+    extends SQLQuery[T](projection) {
+  def parameters = expression.parameters
+  def toSql = expression.toSql.replaceAll(&quot;\\{\\*\\}&quot;, projection.toSql)
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p><code>SearchQuery</code> represents a query with a <code>WHERE</code> clause.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SearchQuery extends Query {
+  protected var _where: Predicate = EmptyPredicate
+
+  def where: Predicate = this._where
+  def WHERE(predicate: Predicate): this.type = {
+    this._where = predicate
+    return this
+  }
+  def WHERE(expression: String, params: Pair[String,Any]*): this.type =
+    WHERE(prepareExpr(expression, params: _*))
+
+  def add(predicates: Predicate*): this.type = {
+    where match {
+      case EmptyPredicate =&gt;
+        this._where = AND(predicates: _*)
+      case p: AggregatePredicate if (p.operator == dialect.and) =&gt;
+        p.add(predicates: _*)
+      case p =&gt;
+        this._where = _where.AND(predicates: _*)
+    }
+    return this
+  }
+  def add(expression: String, params: Pair[String, Any]*): this.type =
+    add(prepareExpr(expression, params: _*))
+}
+
+class Select[T](projection: Projection[T]) extends SQLQuery[T](projection)
+    with SearchQuery {
+
+  // Commons
+  protected var _distinct: Boolean = false
+  protected var _auxProjections: Seq[Projection[_]] = Nil
+  protected var _relations: Seq[RelationNode[_, _]] = Nil
+
+  protected var _having: Predicate = EmptyPredicate
+  protected var _groupBy: Seq[Projection[_]] = Nil
+  protected var _setOps: Seq[Pair[SetOperation, SQLQuery[T]]] = Nil
+  protected var _orders: Seq[Order] = Nil
+  protected var _limit: Int = -1
+  protected var _offset: Int = 0
+
+  def parameters: Seq[Any] = where.parameters ++
+      _having.parameters ++
+      _setOps.flatMap(p =&gt; p._2.parameters) ++
+      _orders.flatMap(_.parameters)
+
+  def setOps = _setOps
+
+  // SELECT clause
+
+  override def projections = List(projection) ++ _auxProjections
+
+  def distinct_?(): Boolean = _distinct
+  def DISTINCT(): Select[T] = {
+    this._distinct = true
+    return this
+  }
+
+  // FROM clause
+
+  def from = _relations
+  def FROM(nodes: RelationNode[_, _]*): Select[T] = {
+    this._relations = nodes.toList
+    from.foreach(ensureNodeAlias(_))
+    return this
+  }
+
+  protected def ensureNodeAlias(node: RelationNode[_, _]): RelationNode[_, _] =
+    node match {
+      case j: JoinNode[_, _, _, _] =&gt;
+        ensureNodeAlias(j.left)
+        ensureNodeAlias(j.right)
+        j
+      case n: RelationNode[_, _] if (n.alias == &quot;this&quot;) =&gt; node.AS(nextAlias)
+      case n =&gt; n
+    }
+
+  // HAVING clause
+
+  def having: Predicate = this._having
+  def HAVING(predicate: Predicate): Select[T] = {
+    this._having = predicate
+    return this
+  }
+  def HAVING(expression: String, params: Pair[String,Any]*): Select[T] =
+    HAVING(prepareExpr(expression, params: _*))
+
+  // GROUP BY clause
+
+  def groupBy: Seq[Projection[_]] = _groupBy
+
+  def GROUP_BY(proj: Projection[_]*): Select[T] = {
+    proj.toList.foreach(p =&gt; addGroupByProjection(p))
+    return this
+  }
+
+  protected def addGroupByProjection(proj: Projection[_]): Unit =
+    findProjection(projection, p =&gt; p.equals(proj)) match {
+      case None =&gt;
+        ensureProjectionAlias(proj)
+        this._auxProjections ++= List(proj)
+        this._groupBy ++= List(proj)
+      case Some(p) =&gt; this._groupBy ++= List(p)
+    }
+
+  protected def findProjection(projection: Projection[_],
+                               predicate: Projection[_] =&gt; Boolean): Option[Projection[_]] =
+    if (predicate(projection)) return Some(projection)
+    else projection match {
+      case p: CompositeProjection[_] =&gt;
+        return p.subProjections.find(predicate)
+      case _ =&gt; return None
+    }
+
+  // Set Operations
+
+  protected def addSetOp(op: SetOperation, sql: SQLQuery[T]): Select[T] = {
+    val q = clone()
+    q._setOps ++= List(op -&gt; sql)
+    return q
+  }
+
+  def UNION(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_UNION, sql)
+  def UNION_ALL(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_UNION_ALL, sql)
+  def EXCEPT(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_EXCEPT, sql)
+  def EXCEPT_ALL(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_EXCEPT_ALL, sql)
+  def INTERSECT(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_INTERSECT, sql)
+  def INTERSECT_ALL(sql: SQLQuery[T]): Select[T] =
+    addSetOp(OP_INTERSECT_ALL, sql)
+
+  // ORDER BY clause
+
+  def orderBy = _orders
+  def ORDER_BY(order: Order*): Select[T] = {
+    this._orders ++= order.toList
+    return this
+  }
+
+  // LIMIT and OFFSET clauses
+
+  def limit = this._limit
+  def LIMIT(value: Int): Select[T] = {
+    _limit = value
+    return this
+  }
+
+  def offset = this._offset
+  def OFFSET(value: Int): Select[T] = {
+    _offset = value
+    return this
+  }
+
+  // Miscellaneous
+
+  def toSql = dialect.select(this)
+
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <p>The <code>DMLQuery</code> trait defines a contract for data-manipulation queries.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait DMLQuery extends Query {
+
+  def execute(): Int = {
+    val result = time {
+      tx.execute(toSql){ st =&gt;
+        setParams(st, 1)
+        st.executeUpdate
+      } { throw _ }
+    }
+    _executionTime = result._1
+    Statistics.executeDml(this)
+    return result._2
+  }
+}
+
+class NativeDMLQuery(expression: ParameterizedExpression) extends DMLQuery {
+  def parameters = expression.parameters
+  def toSql = expression.toSql
+}
+
+class Insert[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R],
+                                     val fields: Seq[Field[_, R]])
+    extends DMLQuery {
+  def parameters = fields.map(_.value)
+  def toSql: String = dialect.insert(this)
+}
+
+class InsertSelect[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R],
+                                           val query: SQLQuery[_])
+    extends DMLQuery {
+  if (relation.readOnly_?)
+    throw new ORMException(&quot;The relation &quot; + relation.qualifiedName + &quot; is read-only.&quot;)
+  def parameters = query.parameters
+  def toSql: String = dialect.insertSelect(this)
+}
+
+class InsertSelectHelper[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R]) {
+  def SELECT[T](projection: Projection[T]) = new InsertSelect(relation, new Select(projection))
+}
+
+class Delete[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
+    extends DMLQuery with SearchQuery {
+  val relation = node.relation
+  if (relation.readOnly_?)
+    throw new ORMException(&quot;The relation &quot; + relation.qualifiedName + &quot; is read-only.&quot;)
+
+  def parameters = where.parameters
+  def toSql: String = dialect.delete(this)
+}
+
+class Update[PK, R &lt;: Record[PK, R]](val node: RelationNode[PK, R])
+    extends DMLQuery with SearchQuery {
+  val relation = node.relation
+  if (relation.readOnly_?)
+    throw new ORMException(&quot;The relation &quot; + relation.qualifiedName + &quot; is read-only.&quot;)
+
+  private var _setClause: Seq[(Field[_, R], Option[Any])] = Nil
+  def setClause = _setClause
+  def SET[T](field: Field[T, R], value: T): Update[PK, R] = {
+    _setClause ++= List(field -&gt; Some(value))
+    return this
+  }
+  def SET[K, P &lt;: Record[K, P]](association: Association[K, R, P], value: P): Update[PK, R]=
+    SET(association.field.asInstanceOf[Field[Any, R]], value.PRIMARY_KEY.value)
+  def SET_NULL[T](field: Field[T, R]): Update[PK, R] = {
+    _setClause ++= List(field -&gt; None)
+    return this
+  }
+  def SET_NULL[K, P &lt;: Record[K, P]](association: Association[K, R, P]): Update[PK, R] =
+    SET_NULL(association.field)
+
+  def parameters = _setClause.map(_._2) ++ where.parameters
+  def toSql: String = dialect.update(this)
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

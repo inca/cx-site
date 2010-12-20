@@ -1,0 +1,129 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;config.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.freemarker
+
+import ru.circumflex.markeven
+import ru.circumflex.core._
+import ru.circumflex.web._
+import freemarker.template._
+import freemarker.core.Environment
+import freemarker.cache._
+import java.io.StringWriter</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Default FreeMarker Configuration</h1>
+<p>The default FreeMarker configuration implies following:</p>
+<ul>
+  <li>templates are loaded from <code>${webapp-root}/templates directory</code> or, if failed, from application classpath;</li>
+  <li>all template errors result in exception to be thrown to controller;</li>
+  <li>character encoding defaults to UTF-8;</li>
+  <li>the <code>ScalaObjectWrapper</code> is used for Scala core types.</li>
+</ul>
+<p>You can alter template loading dynamically using <code>addLoader</code> and <code>setLoaders</code> methods, but in general this is only acceptable in initialization code. In any case make sure you know what you are doing first.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class DefaultConfiguration extends Configuration {
+
+  // Loaders
+
+  protected var _loaders: Seq[TemplateLoader] = Nil
+  def loaders = _loaders
+  def addLoader(loader: TemplateLoader): this.type = {
+    _loaders ++= List(loader)
+    setTemplateLoader(new MultiTemplateLoader(loaders.toArray))
+    return this
+  }
+  def setLoaders(ldrs: TemplateLoader*): this.type = {
+    _loaders = ldrs.toList
+    setTemplateLoader(new MultiTemplateLoader(loaders.toArray))
+    return this
+  }
+
+  // Defaults
+
+  setObjectWrapper(new ScalaObjectWrapper())
+  setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER)
+  setDefaultEncoding(&quot;utf-8&quot;)
+  setSharedVariable(&quot;me&quot;, MarkevenDirective)
+
+  try {
+    addLoader(new WebappTemplateLoader(servletContext, &quot;/templates&quot;))
+  } catch {
+    case e =&gt;
+      CX_LOG.warn(&quot;Not running in webapp context.&quot;)
+  }
+  addLoader(new ClassTemplateLoader(getClass, &quot;/&quot;))
+
+}
+
+object MarkevenDirective extends TemplateDirectiveModel {
+  def execute(env: Environment,
+              params: java.util.Map[_, _],
+              loopVars: Array[TemplateModel],
+              body: TemplateDirectiveBody) = {
+    val nested = new StringWriter
+    body.render(nested)
+    env.getOut.write(markeven.toHtml(nested.toString))
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

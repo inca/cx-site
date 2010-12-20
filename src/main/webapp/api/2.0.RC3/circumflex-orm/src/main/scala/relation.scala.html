@@ -1,0 +1,463 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
+  <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
+  <link rel="stylesheet" media="print" href="/css/print.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+  <meta name="google-site-verification" content="8igpdSJ4tgF2EKKuvmA5GOWzRLKHozE5Aun82c5NQZY" />
+  <meta name='yandex-verification' content='443ed98406777aa4' />
+  <meta name='yandex-verification' content='59d4a20bb51bbfea' />
+  <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
+  </script>
+  <script src="/js/highlight.pack.js"></script>
+  <script src="/js/jquery-1.4.2.min.js"></script>
+  <script src="/js/jquery.colorbox-min.js"></script>
+  <script src="/js/application.js"></script>
+    <title>
+        Circumflex &mdash; exquisite taste of Scala development
+  </title>
+</head>
+<body>
+<div id="header">
+  <div class="wrap">
+    <h1>
+      <a href="/" title="Home">C&icirc;rcumflex</a>
+    </h1>
+    <span class="aside">exquisite taste of <a href="http://scala-lang.org">Scala</a> development</span>
+  </div>
+</div>
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;relation.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._
+import java.lang.reflect.Method</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Relations</h1>
+<p>Like records, relations are alpha and omega of relational theory and, therefore, of Circumflex ORM API.</p>
+<p>In relational model a relation is a data structure which consists of a heading and an unordered set of rows which share the same type. Classic relational databases often support two type of relations, <a href="#table">tables</a> and <a href="#view">views</a>.</p>
+<p>In Circumflex ORM the relation contains record metadata and various operational information. There should be only one relation instance per application, so by convention the relations should be the companion objects of corresponding records:</p>
+<pre><code>// record definition
+class Country extends Record[String, Country] {
+  val code = "code".VARCHAR(2).NOT_NULL
+  val name = "name".TEXT.NOT_NULL
+
+  def PRIMARY_KEY = code
+  def relation = Country
+}
+
+// corresponding relation definition
+object Country extends Country with Table[String, Country] {
+
+}</code></pre>
+<p>The relation should also inherit the structure of corresponding record so that it could be used to compose predicates and other expressions in a DSL-style.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Relation[PK, R &lt;: Record[PK, R]] extends Record[PK, R] with SchemaObject { this: R =&gt;
+
+  protected var _initialized = false</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Commons</h2>
+<p>If the relation follows default conventions of Circumflex ORM (about  companion objects), then record class is inferred automatically. Otherwise  you should override the <code>recordClass</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  val _recordClass: Class[R] = Class.forName(
+    this.getClass.getName.replaceAll(&quot;\\$(?=\\Z)&quot;, &quot;&quot;),
+    true,
+    Thread.currentThread.getContextClassLoader
+    ).asInstanceOf[Class[R]]
+  def recordClass: Class[R] = _recordClass</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p>By default the relation name is inferred from <code>recordClass</code> by replacing camelcase delimiters with underscores (for example, record with class <code>ShoppingCartItem</code> will have a relation with name <code>shopping_cart_item</code>). You can override <code>relationName</code> to use different name.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  val _relationName = camelCaseToUnderscore(recordClass.getSimpleName)
+  def relationName = _relationName
+  def qualifiedName = dialect.relationQualifiedName(this)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <p>Default schema name is configured via the <code>orm.defaultSchema</code> configuration property. You may provide different schema for different relations by overriding their <code>schema</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def schema: Schema = defaultSchema</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <p>The <code>readOnly_?()</code> method is used to indicate whether the DML operations are allowed with this relation. Tables usually allow them and views usually don't.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def readOnly_?(): Boolean</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <p>The <code>autorefresh_?()</code> method is used to indicate whether the record should be immediately refreshed after every successful <code>INSERT</code> or <code>UPDATE</code> operation. By default it returns <code>false</code> to maximize performance. However, if the relation contains columns with auto-generated values (e.g. <code>DEFAULT</code> clauses, auto-increments, triggers, etc.) then you should override this method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def autorefresh_?(): Boolean = false</code></pre>
+        </td>
+      </tr>
+      <tr id="section-7">
+        <td class="docs">
+          <p>Use the <code>AS</code> method to create a relation node from this relation with explicit alias.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def AS(alias: String): RelationNode[PK, R] = new RelationNode(this).AS(alias)
+
+  def findAssociation[T, F &lt;: Record[T, F]](relation: Relation[T, F]): Option[Association[T, R, F]] =
+    associations.find(_.parentRelation == relation)
+        .asInstanceOf[Option[Association[T, R, F]]]
+
+  protected val validation = new RecordValidator[PK, R]()</code></pre>
+        </td>
+      </tr>
+      <tr id="section-8">
+        <td class="docs">
+          <h2>Simple queries</h2>
+<p>Following methods will help you perform common querying tasks:</p>
+<ul>
+  <li><code>get</code> retrieves a record either from cache or from database by specified <code>id</code>;</li>
+  <li><code>all</code> retrieves all records.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def get(id: PK): Option[R] =
+    contextCache.cacheRecord(id, this,
+      (this.AS(&quot;root&quot;)).map(r =&gt; r.criteria.add(r.PRIMARY_KEY EQ id).unique))
+
+  def all: Seq[R] = this.AS(&quot;root&quot;).criteria.list</code></pre>
+        </td>
+      </tr>
+      <tr id="section-9">
+        <td class="docs">
+          <h2>Metadata</h2>
+<p>Relation metadata contains operational information about it's records by introspecting current instance upon initialization.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _methodsMap: Map[Field[_, R], Method] = Map()
+  def methodsMap: Map[Field[_, R], Method] = {
+    init()
+    _methodsMap
+  }
+
+  protected var _fields: List[Field[_, R]] = Nil
+  def fields: Seq[Field[_, R]] = {
+    init()
+    _fields
+  }
+
+  protected var _associations: List[Association[_, R, _]] = Nil
+  def associations: Seq[Association[_, R, _]] = {
+    init()
+    _associations
+  }
+
+  protected var _constraints: List[Constraint] = Nil
+  def constraints: Seq[Constraint] = {
+    init()
+    _constraints
+  }
+
+  protected var _indexes: List[Index] = Nil
+  def indexes: Seq[Index] = {
+    init()
+    _indexes
+  }
+
+  private def findMembers(cl: Class[_]): Unit = {
+    if (cl != classOf[Any]) findMembers(cl.getSuperclass)
+    cl.getDeclaredFields
+        .flatMap(f =&gt; try Some(cl.getMethod(f.getName)) catch { case _ =&gt; None })
+        .foreach(processMember(_))
+  }
+
+  private def processMember(m: Method): Unit = {
+    val cl = m.getReturnType
+    if (classOf[Field[_, R]].isAssignableFrom(cl)) {
+      val f = m.invoke(this).asInstanceOf[Field[_, R]]
+      this._fields ++= List(f)
+      if (f.unique_?) this.UNIQUE(f)
+      this._methodsMap += (f -&gt; m)
+    } else if (classOf[Association[_, R, _]].isAssignableFrom(cl)) {
+      val a = m.invoke(this).asInstanceOf[Association[_, R, _]]
+      this._associations ++= List[Association[_, R, _]](a)
+      this._fields ++= List(a.field)
+      this._methodsMap += (a.field -&gt; m)
+      this._constraints ++= List(associationFK(a))
+      if (a.unique_?) this.UNIQUE(a.field)
+    } else if (classOf[Constraint].isAssignableFrom(cl)) {
+      val c = m.invoke(this).asInstanceOf[Constraint]
+      this._constraints ++= List(c)
+    } else if (classOf[Index].isAssignableFrom(cl)) {
+      val i = m.invoke(this).asInstanceOf[Index]
+      this._indexes ++= List(i)
+    }
+  }
+
+  private def associationFK(a: Association[_, R, _]) =
+    CONSTRAINT(relationName + &quot;_&quot; + a.name + &quot;_fkey&quot;)
+        .FOREIGN_KEY(a.field)
+        .REFERENCES(a.parentRelation, a.parentRelation.PRIMARY_KEY)
+        .ON_DELETE(a.onDelete)
+        .ON_UPDATE(a.onUpdate)
+
+  protected[orm] def init(): Unit =
+    if (!_initialized) this.synchronized {
+      if (!_initialized) {
+        findMembers(this.getClass)
+        dialect.initializeRelation(this)
+        _fields.foreach(dialect.initializeField(_))
+        this._initialized = true
+      }
+    }
+
+  protected[orm] def copyFields(src: R, dst: R): Unit = fields.foreach { f =&gt;
+    val m = methodsMap(f)
+    val value = getField(src, f.asInstanceOf[Field[Any, R]]).value
+    getField(dst, f.asInstanceOf[Field[Any, R]]).set(value)
+  }
+
+  protected[orm] def getField[T](record: R, field: Field[T, R]): Field[T, R] =
+    methodsMap(field).invoke(record) match {
+      case a: Association[T, R, _] =&gt; a.field
+      case f: Field[T, R] =&gt; f
+      case _ =&gt; throw new ORMException(&quot;Could not retrieve a field.&quot;)
+    }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-10">
+        <td class="docs">
+          <p>You can declare explicitly that certain associations should always be prefetched whenever a relation participates in a <code>Criteria</code> query. To do so simply call the <code>prefetch</code> method inside relation initialization code. Note that the order of association prefetching is important; for more information refer to <code>Criteria</code> documentation.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _prefetchSeq: Seq[Association[_, _, _]] = Nil
+  def prefetchSeq = _prefetchSeq
+  def prefetch[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      association: Association[K, C, P]): this.type = {
+    this._prefetchSeq ++= List(association)
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-11">
+        <td class="docs">
+          <h2>Constraints &amp; Indexes Definition</h2>
+<p>Circumflex ORM allows you to define constraints and indexes inside the relation body using DSL style.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected def CONSTRAINT(name: String) = new ConstraintHelper(name, this)
+  protected def UNIQUE(fields: Field[_, R]*) =
+    CONSTRAINT(relationName + &quot;_&quot; + fields.map(_.name).mkString(&quot;_&quot;) + &quot;_key&quot;)
+        .UNIQUE(fields: _*)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-12">
+        <td class="docs">
+          <h2>Auxiliary Objects</h2>
+<p>Auxiliary database objects like triggers, sequences and stored procedures can be attached to relation using <code>addPreAux</code> and <code>addPostAux</code> methods: the former one indicates that the auxiliary object will be created before the creating of all the tables, the latter indicates that the auxiliary object creation will be delayed until all tables are created.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected[orm] var _preAux: List[SchemaObject] = Nil
+  def preAux: Seq[SchemaObject] = _preAux
+  def addPreAux(objects: SchemaObject*): this.type = {
+    objects.foreach(o =&gt; if (!_preAux.contains(o)) _preAux ++= List(o))
+    return this
+  }
+
+  protected[orm] var _postAux: List[SchemaObject] = Nil
+  def postAux: Seq[SchemaObject] = _postAux
+  def addPostAux(objects: SchemaObject*): this.type = {
+    objects.foreach(o =&gt; if (!_postAux.contains(o)) _postAux ++= List(o))
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-13">
+        <td class="docs">
+          <h2>Events</h2>
+<p>Relation allows you to attach listeners to certain lifecycle events of its records. Following events are available:</p>
+<ul>
+  <li><code>beforeInsert</code></li>
+  <li><code>afterInsert</code></li>
+  <li><code>beforeUpdate</code></li>
+  <li><code>afterUpdate</code></li>
+  <li><code>beforeDelete</code></li>
+  <li><code>afterDelete</code></li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _beforeInsert: Seq[R =&gt; Unit] = Nil
+  def beforeInsert = _beforeInsert
+  def beforeInsert(callback: R =&gt; Unit): this.type = {
+    this._beforeInsert ++= List(callback)
+    return this
+  }
+  protected var _afterInsert: Seq[R =&gt; Unit] = Nil
+  def afterInsert = _afterInsert
+  def afterInsert(callback: R =&gt; Unit): this.type = {
+    this._afterInsert ++= List(callback)
+    return this
+  }
+  protected var _beforeUpdate: Seq[R =&gt; Unit] = Nil
+  def beforeUpdate = _beforeUpdate
+  def beforeUpdate(callback: R =&gt; Unit): this.type = {
+    this._beforeUpdate ++= List(callback)
+    return this
+  }
+  protected var _afterUpdate: Seq[R =&gt; Unit] = Nil
+  def afterUpdate = _afterUpdate
+  def afterUpdate(callback: R =&gt; Unit): this.type = {
+    this._afterUpdate ++= List(callback)
+    return this
+  }
+  protected var _beforeDelete: Seq[R =&gt; Unit] = Nil
+  def beforeDelete = _beforeDelete
+  def beforeDelete(callback: R =&gt; Unit): this.type = {
+    this._beforeDelete ++= List(callback)
+    return this
+  }
+  protected var _afterDelete: Seq[R =&gt; Unit] = Nil
+  def afterDelete = _afterDelete
+  def afterDelete(callback: R =&gt; Unit): this.type = {
+    this._afterDelete ++= List(callback)
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-14">
+        <td class="docs">
+          <h2>Equality &amp; Others</h2>
+<p>Two relations are considered equal if they share the record class and the same name.</p>
+<p>The <code>hashCode</code> method delegates to record class.</p>
+<p>The <code>canEqual</code> method indicates that two relations share the same record class.</p>
+<p>Record-specific methods derived from <code>Record</code> throw an exception when invoked against relation.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  override def equals(that: Any) = that match {
+    case that: Relation[_, _] =&gt;
+      this.recordClass == that.recordClass &amp;&amp;
+          this.relationName == that.relationName
+    case _ =&gt; false
+  }
+
+  override def hashCode = this.recordClass.hashCode
+
+  override def canEqual(that: Any): Boolean = that match {
+    case that: Relation[_, _] =&gt;
+      this.recordClass == that.recordClass
+    case that: Record[_, _] =&gt;
+      this.recordClass == that.getClass
+    case _ =&gt; false
+  }
+
+
+  override def refresh(): Nothing =
+    throw new ORMException(&quot;This method cannot be invoked on relation instance.&quot;)
+  override def validate(): Nothing =
+    throw new ORMException(&quot;This method cannot be invoked on relation instance.&quot;)
+  override def INSERT_!(fields: Field[_, R]*): Nothing =
+    throw new ORMException(&quot;This method cannot be invoked on relation instance.&quot;)
+  override def UPDATE_!(fields: Field[_, R]*): Nothing =
+    throw new ORMException(&quot;This method cannot be invoked on relation instance.&quot;)
+  override def DELETE_!(): Nothing =
+    throw new ORMException(&quot;This method cannot be invoked on relation instance.&quot;)
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-15">
+        <td class="docs">
+          <h1 id="table">Table</h1>
+<p>The <code>Table</code> class represents plain-old database table which will be created to store records.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Table[PK, R &lt;: Record[PK, R]] extends Relation[PK, R] { this: R =&gt;
+  def readOnly_?(): Boolean = false
+  def objectName: String = &quot;TABLE &quot; + qualifiedName
+  def sqlCreate: String = {
+    init()
+    dialect.createTable(this)
+  }
+  def sqlDrop: String = {
+    init()
+    dialect.dropTable(this)
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-16">
+        <td class="docs">
+          <h1 id="view">View</h1>
+<p>The <code>View</code> class represents a database view, whose definition is designated by the <code>query</code> method. By default we assume that views are not updateable, so DML operations are not allowed on view records. If you implement updateable views on backend somehow (with triggers in Oracle or rules in PostgreSQL), override the <code>readOnly_?</code> method accordingly.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait View[PK, R &lt;: Record[PK, R]] extends Relation[PK, R] { this: R =&gt;
+  def readOnly_?(): Boolean = true
+  def objectName: String = &quot;VIEW &quot; + qualifiedName
+  def sqlDrop: String = {
+    init()
+    dialect.dropView(this)
+  }
+  def sqlCreate: String = {
+    init()
+    dialect.createView(this)
+  }
+  def query: Select[_]
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
+
+<div id="footer">
+  <span>Copyright 2009-2010 <a href="http://circumflex.ru">circumflex.ru</a></span>
+</div>
+<script type="text/javascript">
+  try {
+    var pageTracker = _gat._getTracker("UA-12034468-1");
+    pageTracker._setDomainName(".circumflex.ru");
+    pageTracker._trackPageview();
+  } catch(err) {}</script>
+</body>
+</html>
+

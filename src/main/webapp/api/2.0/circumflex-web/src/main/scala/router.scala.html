@@ -228,7 +228,7 @@
       </ul>
     </li>
     <li>
-      <a href="/downloads?file=full">Download</a>
+      <a href="/download?file=full">Download</a>
       <ul>
         <li><a href="https://github.com/inca/circumflex">GitHub</a></li>
         <li><a href="/download?file=full">All components</a></li>
@@ -315,36 +315,40 @@ import xml.Node</code></pre>
 
 }
 
-class Route(matchingMethods: String*) {
-
-  protected def dispatch(matcher: Matcher, response: =&gt; RouteResponse): Unit =
-    matchingMethods.find(request.method.equals(_)) match {
-      case Some(_) =&gt;
-        matcher.apply() match {
-          case None =&gt; return
-          case Some(matches: Seq[MatchResult]) =&gt;
-            matches.foreach(m =&gt; ctx.update(m.name, m))
-            val r = response.body
-            send(text = r)
-        }
-      case _ =&gt;
-    }
-
-  // DSL-like syntax (`get(&quot;/&quot;) = { ... }`)
-  def update(matcher: Matcher, response: =&gt; RouteResponse) =
-    dispatch(matcher, response)
-
+trait RoutingContext[-T] {
+  def matches: Boolean
+  protected def dispatch(block: =&gt; T): Unit
+  def and: RoutingContext[T] = if (matches) this else NopRoute
+  def apply(matcher: Matcher): RoutingContext[T] = matcher.apply() match {
+    case Some(matchResults) if matches =&gt;
+      matchResults.foreach(m =&gt; ctx.update(m.name, m))
+      return this
+    case _ =&gt; return NopRoute
+  }
+  def apply(condition: =&gt; Boolean): RoutingContext[T] =
+    if (matches &amp;&amp; condition) this else NopRoute
+  def update(matcher: Matcher, block: =&gt; T): Unit =
+    apply(matcher).dispatch(block)
+  def update(condition: =&gt; Boolean, block: =&gt; T): Unit =
+    apply(condition).dispatch(block)
 }
 
-class FilterRoute {
-  protected def dispatch(matcher: Matcher, block: =&gt; Unit): Unit =
-    matcher.apply() map { matches =&gt;
-      matches.foreach(m =&gt; ctx.update(m.name, m))
-      block
-    }
+class Route(matchingMethods: String*) extends RoutingContext[RouteResponse] {
+  val matches = matchingMethods.contains(request.method)
+  protected def dispatch(block: =&gt; RouteResponse): Unit = {
+    val response = block.body
+    send(response)
+  }
+}
 
-  def update(matcher: Matcher, block: =&gt; Unit) =
-    dispatch(matcher, block)
+class FilterRoute extends RoutingContext[Unit] {
+  def matches = true
+  protected def dispatch(block: =&gt; Unit) = block
+}
+
+object NopRoute extends RoutingContext[Any] {
+  protected def dispatch(block: =&gt; Any): Unit = {}
+  def matches = false
 }
 
 case class RouteResponse(val body: String)</code></pre>

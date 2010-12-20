@@ -228,7 +228,7 @@
       </ul>
     </li>
     <li>
-      <a href="/downloads?file=full">Download</a>
+      <a href="/download?file=full">Download</a>
       <ul>
         <li><a href="https://github.com/inca/circumflex">GitHub</a></li>
         <li><a href="/download?file=full">All components</a></li>
@@ -276,7 +276,26 @@
   override def timestampType = &quot;TIMESTAMPTZ&quot;
 }
 
-class MySQLDialect extends Dialect
+class MySQLDialect extends Dialect {
+  override def initializeField[R &lt;: Record[_, R]](field: Field[_, R]): Unit = {
+    // do nothing -- for MySQL you don't need to create manually a sequence for auto-incrementable fields
+  }
+
+  override def defaultExpression[R &lt;: Record[_, R]](field: Field[_, R]): String =
+    field match {
+      case a: AutoIncrementable[_, _] if (a.autoIncrement_?) =&gt;&quot; AUTO_INCREMENT&quot;
+      case _ =&gt; field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
+    }
+
+  override def identityLastIdPredicate[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): Predicate =
+    new SimpleExpression(node.alias + &quot;.&quot; + node.relation.PRIMARY_KEY.name + &quot; = LAST_INSERT_ID()&quot;, Nil)
+
+  override def identityLastIdQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new Select(expr[PK](&quot;LAST_INSERT_ID()&quot;))
+
+  override def sequenceNextValQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    throw new UnsupportedOperationException(&quot;This operation is unsupported in the MySQL dialect.&quot;)
+}
 
 class OracleDialect extends Dialect
 
