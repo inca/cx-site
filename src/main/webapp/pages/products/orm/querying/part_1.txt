@@ -1,0 +1,99 @@
+# ORM: Querying
+
+## Relation Nodes   {#node}
+
+`RelationNode` wraps a [`Relation`](/products/orm/ddl/part_1.html#relation) with an `alias` so that it can
+be a part of `FROM` clause of database query.
+
+Relation nodes are represented by the `RelationNode` class, they are created by calling the
+`AS` method of [`Relation`](/products/orm/ddl/part_1.html#relation):
+
+    val co = Country AS "co"                                       {.scala}
+    // fetch all countries
+    SELECT (co.*) FROM (co) list
+
+A handy `map` method can be used to make code a bit clearer:
+
+    // fetch all countries                                         {.scala}
+    SELECT (co.*) FROM (co) list
+
+Relation nodes can be organized into _query trees_ using [joins](/products/orm/querying/part_3.html#join).
+
+## Projections   {#projection}
+
+_Projection_ reflects the type of data returned by query. Generally, it consists of expression
+which can be understood in the `SELECT` clause of database and a logic to translate the
+corresponding part of result set into specific type.
+
+Projections are represented by the `Projection[T]` trait, where `T` denotes to the type of objects
+which should be read from result set. Projections which only read from single database column
+are refered to as _atomic projections_, they are subclassed from the `AtomicProjection` trait.
+Projections which span across multiple database columns are refered to as _composite projections_,
+they are subclassed from the `CompositeProjection` trait and consist of one or more
+`subProjections`.
+
+The most popular projection is `RecordProjection`, it is designed to retrieve
+[records](/products/orm/ddl/part_1.html#record).
+The `*` method of [`RelationNode`](#node) returns a corresponding `RecordProjection` for relation.
+
+You can also query single fields, `Field` is converted to `FieldProjection` implicitly when called
+against `RelationNode`:
+
+    val ci = City AS "ci"                                          {.scala}
+    (SELECT (ci.id) FROM ci).list      // returns Seq[Long]
+    (SELECT (ci.name) FROM ci).list    // returns Seq[String]
+
+You can also query a pair of two projections with following syntax:
+
+    val co = Country AS "co"                                       {.scala}
+    val ci = City AS "ci"
+    SELECT (ci.* -> co.*) FROM (co JOIN ci) list    // returns Seq[(Option[City], Option[Country])]
+
+Another useful projection is `AliasMapProjection`:
+
+    val co = Country AS "co"                                       {.scala}
+    val ci = City AS "ci"
+    SELECT(ci.* AS "city", co.* AS "country").FROM(co JOIN ci).list    // returns Seq[Map[String, Any]]
+
+In this example the query returns a set of maps. Each map contains a `City` record under
+`city` key and a `Country` record under the `country` key. The `SELECT` clause accepts
+arbitrary quantity of projections.
+
+You can even use arbitrary expression which your database understands as long as you specify
+the expected type:
+
+    SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]  {.scala}
+
+There are also some predefined projection helpers for your convenience:
+
+  * `COUNT`;
+  * `COUNT_DISTINCT`;
+  * `MAX`;
+  * `MIN`;
+  * `SUM`;
+  * `AVG`.
+
+For example, following snippet will return the count of records in the `City` table:
+
+    (City AS "ci").map(ci => SELECT(COUNT(ci.id)).FROM(ci).unique) {.scala}
+
+You can easily implement your own projection helper. For example, if you use SQL `substring` function
+frequently, you can &laquo;teach&raquo; Circumflex ORM to select substrings.
+
+Here's the code you should place somewhere in your library (or utility singleton):
+
+    object MyOrmUtils {                                            {.scala}
+      def SUBSTR(f: TextField, from: Int = 0, length: Int = 0) = {
+        var sql = "substring(" + f.name
+        if (from > 0) sql += " from " + from
+        if (length > 0) sql += " for " + length
+        sql += ")"
+        new ExpressionProjection[String](sql)
+      }
+    }
+
+And here's the code to use it:
+
+    import MyOrmUtils._                                            {.scala}
+    (Country AS "co")
+        .map(co => SELECT(SUBSTR(co.code, 1, 1)).FROM(co).list)   // returns Seq[String]

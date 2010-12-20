@@ -1,0 +1,146 @@
+# ORM: Data Definition
+
+## Generating Identifiers {#idgen}
+
+Circumflex ORM allows you to use database-generated identifiers as primary keys.
+Let's take a look at following data definition snippet:
+
+    class City extends Record[Long, City] with IdentityGenerator[Long, City] {    {.scala}
+      val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+      val name = "name".TEXT.NOT_NULL
+      def PRIMARY_KEY = id
+      def relation = City
+    }
+
+    object City extends City with Table[Long, City]
+
+This snippet shows a surrogate primary key example. The value of `id` is generated when a
+record is inserted. Then additional SQL select is issued to read this generated value.
+
+For more information refer to [Circumflex ORM API Documentation](/api/2.0/circumflex-orm/record.scala).
+
+## Associations   {#association}
+
+An _association_ provides a way to link one relation with another.
+
+    class City extends Record[Long, City] {                        {.scala}
+      val country = "country_code".TEXT.REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(NO_ACTION)
+    }
+
+As the example above shows, associations are created from fields using the `REFERENCES` method.
+The type of the field must match the type of primary key of referenced relation.
+
+Associations also implicitly add foreign key constraint to table's definition. The cascading
+actions can be specified by invoking `ON_DELETE` and `ON_UPDATE` with one of the following arguments:
+
+  * `NO_ACTION` (default),
+  * `CASCADE`,
+  * `RESTRICT`,
+  * `SET_NULL`,
+  * `SET_DEFAULT`.
+
+Associations are directed: the relation that owns an association is often refered to as a
+_child relation_, while the relation to which an associations references is often refered to
+as a _parent relation_.
+
+Like with regular field, you can set an retrieve the association's value:
+
+    // accessing                                                   {.scala}
+    country.value                       // Option[Country]
+    country.get                         // Option[Country]
+    country()                           // Country
+    country.getOrElse(default: Country) // Country
+    country.null_?                      // Boolean
+    // setting
+    country := switzerland
+    country.set(switzerland)
+    country.set(Some(switzerland))
+    country.set(None)
+    country.setNull
+
+Associations do not store objects themselves. Instead they store the primary key of an object
+in their internal field. You can access and set this value directly using the `field` method:
+
+    country.field   // Field[String, R]                            {.scala}
+    country.field := "ch"
+
+When you access association using its `get`, `apply`, `value` or `getOrElse` methods, the
+actual record is returned from cache of current transaction. However, if record does not
+exist in cache yet, a transparent SQL select will be issued to fetch this record. This technique
+is usually refered to as _lazy initialization_ or _lazy fetching_:
+
+    val c = new City                                               {.scala}
+    c.id := 16
+    c.country()   // a SELECT query is executed to retrieve a Country
+                  // for the City with id = 16
+    c.country()   // further selects are not issued
+
+The other side of association can optionally define an _inverse association_ using following syntax:
+
+    class Country extends Record[String, Country] {                {.scala}
+      def cities = inverseMany(City.country)
+    }
+
+Inverse associations are not represented by field in their relation, they are initialized by
+issuing the `SELECT` statement against child relation:
+
+    val c = new Country                                            {.scala}
+    c.code := 'ch'
+    c.cities()   // a SELECT query is executed to retrieve a set of City objects
+                 // which have country_code = 'ch'
+    c.cities()   // further selects are not issued
+
+Here we have the so-called &laquo;one-to-many&raquo; relationship. The &laquo;one-to-one&raquo;
+relationship is simulated by placing a unique constraint on association (in child table) and
+using `inverseOne` in parent table.
+
+You can also perform _association prefetching_ for both straight and inverse associations using
+the [Criteria API](/products/orm/querying/part_6.html#criteria).
+
+## Validation   {#validation}
+
+A record can be optionally validated before it is saved into database.
+
+The validation is performed using one or more _validators_, functions which take a `Record`
+and return `Option[Msg]`: `None` if validation succeeds or `Some[Msg]` otherwise. In case of
+failed validation the `Msg` object is used to describe the exact problem.
+Refer to [Circumflex Messages API Documentation](/api/2.0/circumflex-core/messages.scala) to
+find out how to work with messages.
+
+Validators are added to the `validation` object inside [relation](/products/orm/ddl/part_1.html#relation):
+
+    object Country extends Table[String, Country] {                {.scala}
+      validation.add(r => ...)
+          .add(r => ...)
+    }
+
+There are several predefined validators available for your convenience:
+
+    object Country extends Table[String, Country] {                {.scala}
+      validation.notNull(_.code)
+          .notEmpty(_.code)
+          .pattern(_.code, "(?i:[a-z]{2})")
+    }
+
+A record is validated when either `validate` or `validate_!` is invoked.
+The first one returns `Option[MsgGroup]`:
+
+    rec.validate match {                                           {.scala}
+      case None => ...            // validation succeeded
+      case Some(errors) => ...    // validation failed
+    }
+
+The second one does not return anything, but throws `ValidationException` if validation fails.
+
+The `validate_!` method is also called when a record is being saved into database, read
+more in [Insert, Update & Delete](/products/orm/dml.html#iud) section.
+
+It is also fairly easy to implement custom validators. Following example shows a validator
+for checking unique email addresses:
+
+    object Account extends Table[Long, Account] {                  {.scala}
+      validation.add(r => criteria
+          .add(r.email EQ r.email())
+          .unique
+          .map(a => new Msg(r.email.uuid + ".unique")))
+    }

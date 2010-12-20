@@ -1,0 +1,119 @@
+/* Menu */
+
+.slidemenu{
+  font: bold 12px Verdana;
+  position: absolute;
+  left: 358px; /*900 - full size of page*/
+}
+
+.slidemenu ul{
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/*Top level list items*/
+.slidemenu ul li{
+  position: relative;
+  display: inline;
+  float: left;
+}
+
+/*Top level menu link items style*/
+.slidemenu ul li a{
+  display: block;
+  background: #d7d7d7; /*background of tabs (default state)*/
+  color: #ccc;
+  padding: 8px 10px;
+  border-right: 1px solid #777;
+  border-bottom: 1px solid #777;
+  text-decoration: none;
+
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius:8px;
+
+  background: -moz-linear-gradient(-90deg, #ccc, #fff);
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ccc), to(#fff));
+}
+
+* html .slidemenu ul li a{ /*IE6 hack to get sub menu links to behave correctly*/
+  display: inline-block;
+}
+
+/* Top level menu links color*/
+.slidemenu ul li a:link, .slidemenu ul li a:visited{
+  color: black;
+}
+
+.slidemenu ul li a:hover{
+  background: -moz-linear-gradient(-90deg, #ccc, #fff);
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ccc), to(#fff));
+  color: #a00;
+}
+
+/*1st sub level menu*/
+.slidemenu ul li ul{
+  position: absolute;
+  left: 0;
+  display: block;
+  visibility: hidden;
+}
+
+/*Sub level menu list items (undo style from Top level List Items)*/
+.slidemenu ul li ul li{
+  display: list-item;
+  float: none;
+}
+
+/*All subsequent sub menu levels vertical offset after 1st level sub menu */
+.slidemenu ul li ul li ul{
+  top: 0;
+}
+
+/* Sub level menu links style */
+.slidemenu ul li ul li a{
+  font: normal 13px Verdana;
+  width: 160px; /*width of sub menus*/
+  padding: 5px;
+  margin: 0;
+  border-top-width: 0;
+  border-bottom: 1px solid gray;
+  
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 8px;
+  -webkit-border-radius-bottomrigth:8px;
+  -moz-border-radius-bottomright:8px;
+  background: #eee;
+}
+
+.slidemenu ul li ul li a:hover{ /*sub menus hover style*/
+  color: #a00;
+  background: -moz-linear-gradient(-90deg, #fff, #ccc);
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
+}
+
+.slidemenu .separator a{
+  background: #faeaa8;
+  display:block;
+}
+
+.slidemenu .separator a:hover{
+  background: #f7de7b;
+  display:block;
+}
+
+
+
+/* ######### CSS classes applied to down and right arrow images  ######### */
+
+.downarrowclass{
+  position: absolute;
+  top: 12px;
+  right: 7px;
+}
+
+.rightarrowclass{
+  position: absolute;
+  top: 6px;
+  right: 5px;
+}

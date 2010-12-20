@@ -1,0 +1,45 @@
+# Web: Installation & Configuration   {#install}
+
+## Use With Existing Projects  {#existing-projects}
+
+Circumflex web applications run in standard Servlet 2.5 containers. There's a couple of things
+you should do in order to start using Circumflex Web Framework.
+
+First, make sure that `circumflex-core-<version>.jar` and `circumflex-web-<version>.jar` are in
+the classpath (add `<dependency>` with `circumflex-core` and `circumflex-web` as described in
+[quick start guide](/index.html#start)).
+
+Second, configure `CircumflexFilter` in `/WEB-INF/web.xml`:
+
+    <web-app version="2.5">                                                 {.xml}
+      <filter>
+        <filter-name>Circumflex Filter</filter-name>
+        <filter-class>ru.circumflex.web.CircumflexFilter</filter-class>
+      </filter>
+      <filter-mapping>
+        <filter-name>Circumflex Filter</filter-name>
+        <url-pattern>*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
+      </filter-mapping>
+    </web-app>
+
+Third, configure the [main request router](/products/web/basic_concepts.html#main) of your application by setting `cx.router`
+configuration parameter:
+
+  * via `src/main/resource/cx.properties` file:
+
+        cx.router=com.myapp.web.MainRouter
+
+  * or via `pom.xml` [using Circumflex Maven Plugin](/plugin.html#cfg).
+
+Please refer to [Circumflex Configuration API](/core.html#cfg) for more information on how
+to configure your application.
+
+## Imports   {#import}
+
+All code examples assume that you have following `import` statement in code where necessary:
+
+    import ru.circumflex._, core._, web._                                 {.scala}

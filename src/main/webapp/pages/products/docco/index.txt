@@ -1,0 +1,9 @@
+# Docco  {#docco}
+
+Docco is a quick-and-dirty, hundred-line-long, literate-programming-style documentation generator.
+It produces HTML that displays your comments alongside your code.
+
+Circumflex Docco is a port of [Docco Project](http://jashkenas.github.com/docco) for Scala.
+The ideas of documenting open-source Scala programs in Docco style are under evaluation for now,
+but you still might want to try it and let us know, what you think about it.
+
