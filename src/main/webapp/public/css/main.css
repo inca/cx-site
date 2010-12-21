@@ -76,7 +76,7 @@ a:hover {
   color:#304035;
 }
 #header {
-  background: #eee;
+  background: #ccc;
   background: -moz-linear-gradient(-90deg, #fff, #ccc);
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
   border-bottom:1px solid #aaa;
@@ -86,12 +86,13 @@ a:hover {
   width:900px;
 }
 #header .wrap {
-  background: url(/img/scala-line-54.png) 24px 0 repeat-y;
+  background: url(/img/scala-line-54.png) 32px 0 repeat-y;
   height: 88px;
+  padding-left: 56px;
 }
 #header h1 {
   margin:0;
-  padding:4px 0 0 88px;
+  padding:4px 0 0 56px;
   border:0;
   float:left;
 }
@@ -105,44 +106,83 @@ a:hover {
 #header a {
   text-decoration:none;
 }
-#header .aside {
+#topnav {
   display:block;
   float:right;
+  margin-top:24px;
+  overflow:hidden;
+  padding: 0 8px;
+}
+#topnav > p {
   font-variant:small-caps;
   font-size:24px;
   line-height:24px;
+  margin: 0 0 8px;
   color:#444;
-  margin-top:56px;
 }
-#header .aside a {
-  color:#990000;
+#topnav > p a { color:#990000 }
+#topnav > p a:hover { color:#770000; }
+#topnav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none outside;
 }
-#header .aside a:hover {
-  color:#770000;
+#topnav ul p, #topnav ul a {
+  display:block;
+  margin: 0;
+  padding: 0;
+  color:#444;
 }
+#topnav > ul {
+  height: 32px;
+  float: right;
+  background: #ddd;
+  background: -moz-linear-gradient(-90deg, #ccc, #aaa);
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ccc), to(#aaa));
+  box-shadow: 0 0 2px #555;
+  -moz-box-shadow: 0 0 2px #555;
+  -webkit-box-shadow: 0 0 2px #555;
+  border-top-left-radius:4px;
+  border-top-right-radius:4px;
+  -webkit-border-top-left-radius:4px;
+  -webkit-border-top-right-radius:4px;
+  -moz-border-radius-topleft:4px;
+  -moz-border-radius-topright:4px;
+}
+#topnav > ul > li {
+  float:left;
+  padding:8px 16px;
+}
+#topnav > ul > li > ul {
+  display: none;
+  position: absolute;
+}
+#topnav > ul > li:hover > ul {
+  display:block;
+}
+
 #page {
   box-shadow: 1px 1px 3px #777;
   -moz-box-shadow: 1px 1px 3px #777;
   -webkit-box-shadow: 1px 1px 3px #777;
   background: #fff;
   background: -webkit-gradient(linear, 0% 0%, 2% 0%, from(#f7f7f7), to(#fff));
-  padding:36px; /*24*/
+  padding: 24px 16px 16px 32px;
   border-bottom-right-radius:8px;
   -webkit-border-bottom-right-radius:8px;
   -moz-border-radius-bottomright:8px;
 }
-
-#content table {
+#page table {
   border-collapse:collapse;
 }
-#content table th {
+#page table th {
   font: 18px/1.5 Lucida Grande, Lucida Sans Unicode, Lucida Sans, Verdana, Tahoma, sans-serif;
   background:#fafafa;
 }
-#content table tr {
+#page table tr {
   border-bottom:1px solid #eee;
 }
-#content table code {
+#page table code {
   border:0;
 }
 

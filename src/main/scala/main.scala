@@ -2,16 +2,31 @@ package ru.circumflex.site
 
 import _root_.freemarker.cache._
 import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
-import ru.circumflex._, core._, web._, freemarker._, markeven._
+import ru.circumflex._, core._, web._, freemarker._
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.io.File
 import org.apache.commons.io.FileUtils._
 import java.lang.{String, StringBuilder}
 
+class Page(val path: String) {
+  val fullpath = servletContext.getRealPath("/pages/" + path + ".me")
+  val src = new File(fullpath)
+  val cache = new File(fullpath + ".html")
+  def exists = src.isFile
+  protected lazy val content = if (cache.isFile && cache.lastModified > src.lastModified) {
+    readFileToString(cache, "UTF-8")
+  } else {
+    val html = markeven.toHtml(readFileToString(src, "UTF-8"))
+    writeStringToFile(cache, html, "UTF-8")
+    html
+  }
+  def toHtml = content
+}
+
 class MainRouter extends RequestRouter {
 
-  // API documentation
+  'sitemap := new Page("sitemap")
 
   get("/api/?") = redirect("/api/" + cx("cx.version") +  "/index.html")
   get("/api/:version/?") = redirect("/api/" + param("version") + "/index.html")
@@ -28,23 +43,14 @@ class MainRouter extends RequestRouter {
         param("file") + ".scala.html")
 
   get("/.me") = ftl("/me.ftl")
-  post("/.me") = toHtml(param("me"))
+  post("/.me") = markeven.toHtml(param("me"))
 
   get("/") = forward("/index.html")
   get("/*.html") = {
-    val path = servletContext.getRealPath("/pages/" + uri(1) + ".me")
-    val src = new File(path)
-    if (!src.isFile) error(404)
-    val cache = new File(path + ".html")
-    val content = if (cache.isFile && cache.lastModified > src.lastModified) {
-      readFileToString(cache, "UTF-8")
-    } else {
-      val html = toHtml(readFileToString(src, "UTF-8"))
-      writeStringToFile(cache, html, "UTF-8")
-      html
-    }
-    'page := content
-    'toc := new TOC(content)
+    val page = new Page(uri(1))
+    if (!page.exists) error(404)
+    'page := page.toHtml
+    'toc := new TOC(page.toHtml)
     ftl("/page.ftl")
   }
 
