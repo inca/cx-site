@@ -29,7 +29,9 @@
     </h1>
     <div id="topnav">
       <p>exquisite taste of <a href="http://scala-lang.org">Scala</a> development</p>
-    ${sitemap.toHtml}
+      <div id="slidemenu">
+      ${sitemap.toHtml}
+      </div>
     </div>
   </div>
 </div>

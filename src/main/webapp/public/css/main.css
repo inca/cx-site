@@ -122,21 +122,25 @@ a:hover {
 }
 #topnav > p a { color:#990000 }
 #topnav > p a:hover { color:#770000; }
-#topnav ul {
+
+#slidemenu ul {
   margin: 0;
   padding: 0;
   list-style: none outside;
 }
-#topnav ul p, #topnav ul a {
+#slidemenu ul p, #slidemenu ul a {
   display:block;
   margin: 0;
   padding: 0;
   color:#444;
 }
-#topnav > ul {
+#slidemenu a:hover {
+  color:#222;
+}
+#slidemenu > ul {
+  position:absolute;
   height: 32px;
-  float: right;
-  background: #ddd;
+  background: #ccc;
   background: -moz-linear-gradient(-90deg, #ccc, #aaa);
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ccc), to(#aaa));
   box-shadow: 0 0 2px #555;
@@ -149,16 +153,32 @@ a:hover {
   -moz-border-radius-topleft:4px;
   -moz-border-radius-topright:4px;
 }
-#topnav > ul > li {
+#slidemenu > ul > li {
   float:left;
-  padding:8px 16px;
 }
-#topnav > ul > li > ul {
-  display: none;
-  position: absolute;
+#slidemenu > ul > li ul {
+  background: #ddd;
+  border:1px solid #aaa;
+  border-width:0 1px 1px;
 }
-#topnav > ul > li:hover > ul {
+#slidemenu li a {
   display:block;
+  padding:6px 16px 0;
+}
+#slidemenu > ul > li li a {
+  border-top:1px solid #bbb;
+  padding:8px 8px 0;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#eee), to(#ccc));
+  line-height:24px;
+}
+#slidemenu > ul > li > ul li:first-child a {
+  border-top:1px solid #aaa;
+}
+#slidemenu > ul > li > ul li {
+  position:relative;
+}
+#slidemenu > ul > li > ul li ul {
+  position:absolute;
 }
 
 #page {
