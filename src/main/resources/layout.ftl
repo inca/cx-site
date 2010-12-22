@@ -5,7 +5,6 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" media="screen, projection" href="/css/main.css" />
   <link rel="stylesheet" media="screen, projection" href="/css/colorbox.css" />
-  <link rel="stylesheet" href="/css/menu_navigation.css" />
   <link rel="stylesheet" media="print" href="/css/print.css" />
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
   <link rel="icon" href="/favicon.ico" type="image/x-icon"/>

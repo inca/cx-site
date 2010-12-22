@@ -5,6 +5,7 @@ import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
 import ru.circumflex._, core._, web._, freemarker._
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.regex.Pattern
 import java.io.File
 import org.apache.commons.io.FileUtils._
 import java.lang.{String, StringBuilder}
@@ -61,6 +62,7 @@ class MainRouter extends RequestRouter {
 }
 
 object TOC {
+  val rNoToc = Pattern.compile("^<!--#notoc-->$", Pattern.MULTILINE)
   val rHeadings = "<h(\\d)\\s*(id\\s*=\\s*(\"|')(.*?)\\3)?\\s*>(.*?)</h\\1>".r
 }
 
@@ -71,11 +73,12 @@ class TOC(val html: String) {
       else "<a href=\"#" + id + "\">" + body + "</a>"
     override def toString = toHtml
   }
+  val disabled = TOC.rNoToc.matcher(html).find()
   val headings: Seq[Heading] = TOC.rHeadings.findAllIn(html)
       .matchData
       .map(m => new Heading(m.group(1).toInt, m.group(4), m.group(5)))
       .toList
-  val toHtml: String = if (headings.size == 0) "" else {
+  val toHtml: String = if (headings.size == 0 || disabled) "" else {
     val sb = new StringBuilder
     def startList(l: Int) = sb.append("  " * l + "<li><ul>\n")
     def endList(l: Int) = sb.append("  " * (l - 1) + "</ul></li>\n")
