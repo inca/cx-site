@@ -1,7 +1,7 @@
 
 var jqueryslidemenu = {
 
-  animateduration: {over: 200, out: 100}, //duration of slide in/ out animation, in milliseconds
+  animateduration: {over: 200, out: 100},
 
   buildmenu:function(menuid, arrowsvar){
     jQuery(document).ready(function($){
@@ -29,7 +29,7 @@ var jqueryslidemenu = {
               menuleft = (this._offsets.left + menuleft + this._dimensions.subulw > $(window).width()) ?
                   (this.istopheader ? - this._dimensions.subulw + this._dimensions.w : - this._dimensions.w)
                   : menuleft;
-              if ($targetul.queue().length<=1) //if 1 or less queued animations
+              if ($targetul.queue().length <= 1) //if 1 or less queued animations
                 $targetul.css({
                   left:menuleft+"px",
                   width:this._dimensions.subulw+'px'

@@ -139,7 +139,6 @@ a:hover {
 }
 #slidemenu > ul {
   position:absolute;
-  height: 32px;
   background: #ccc;
   background: -moz-linear-gradient(-90deg, #ccc, #aaa);
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ccc), to(#aaa));
@@ -155,7 +154,10 @@ a:hover {
 }
 #slidemenu > ul > li {
   float:left;
+  height: 32px;
+  border-right:1px solid #bbb;
 }
+#slidemenu > ul > li:last-child {border:0}
 #slidemenu > ul > li ul {
   background: #ddd;
   border:1px solid #aaa;
@@ -168,8 +170,13 @@ a:hover {
 #slidemenu > ul > li li a {
   border-top:1px solid #bbb;
   padding:8px 8px 0;
+  background:#ccc;
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#eee), to(#ccc));
   line-height:24px;
+}
+#slidemenu > ul > li li a:hover {
+  background:#ddd;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ccc));
 }
 #slidemenu > ul > li > ul li:first-child a {
   border-top:1px solid #aaa;
@@ -226,7 +233,7 @@ pre {
   background: -webkit-gradient(linear, 0% 0%, 2% 0%, from(#e5eee3), to(#f3f8f3));
   border-top: 1px solid #e0e8e0;
   border-bottom: 1px solid #e0e8e0;
-  margin: 0 -24px 16px;
+  margin: 0 -16px 16px -32px;
   padding: 8px 16px;
   overflow-x:auto;
 }
@@ -357,15 +364,16 @@ pre .class .title, pre .tag {
   margin: 0;
   padding: 0;
 }
-#projects-slider ul { list-style:none }
+#projects-slider-tabs, #projects-slider-frames { list-style:none }
 
 #projects-slider-tabs {
   width: 320px;
   float: left;
 }
-#projects-slider-tabs li {
+#projects-slider-tabs > li {
   background:#fafafa;
   height:96px;
+  cursor:pointer;
 }
 #projects-slider-tabs img {
   float: left;
@@ -381,14 +389,14 @@ pre .class .title, pre .tag {
   font-size:16px;
   padding-top:4px;
 }
-#projects-slider-tabs li.current {
+#projects-slider-tabs > li.current {
   background: #eee;
   position:relative;
 }
-#projects-slider-tabs li.current h3 {
+#projects-slider-tabs > li.current h3 {
   border-bottom: 1px solid #ddd;
 }
-#projects-slider-tabs li.current:after {
+#projects-slider-tabs > li.current:after {
   content:"";
   display:block;
   position:absolute;
@@ -405,7 +413,7 @@ pre .class .title, pre .tag {
 #projects-slider-frames h1, #projects-slider-frames p {
   margin:0 0 6px;
 }
-#projects-slider-frames li {
+#projects-slider-frames > li {
   padding-left:24px;
   display:none;
 }
@@ -413,4 +421,7 @@ pre .class .title, pre .tag {
   float:right;
   margin: 8px;
   border: 1px solid #ccc;
+}
+#projects-slider-frames > ul > li ul {
+  list-style:disc inside;
 }

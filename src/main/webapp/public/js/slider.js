@@ -48,8 +48,8 @@
     }
   };
   $(function() {
-    $("#projects-slider-tabs li").slider({
-      output: "#projects-slider-frames li",
+    $("#projects-slider-tabs > li").slider({
+      output: "#projects-slider-frames > li",
       pause_on_hover: true,
       transition_interval: 60000
     });
