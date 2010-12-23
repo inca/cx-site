@@ -1,0 +1,15 @@
+# Circumflex Web Framework   {#web}
+
+Circumflex Web Framework is a DSL for quick and robust web application development.
+
+Here's the sample web application:
+
+    class Main extends RequestRouter {                                    {.scala}
+      get("/") = "Hello world!"
+      get("/posts/:id") = "Post #" + uri("id")
+      post("/form") = {
+        // do some work
+        // render FreeMarker template:
+        ftl("/done.ftl")
+      }
+    }

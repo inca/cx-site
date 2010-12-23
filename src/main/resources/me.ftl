@@ -2,8 +2,8 @@
 [#assign content]
 <div id="content">
   <div id="page">
-    <h1>Circumflex Markeven Live <a href="/products/me/me-cheatsheet" id="me-markup-help" class="right-float inplace">syntax help</a></h1>
-    <form action="/products/me" method="post" id="me-form">
+    <h1>Circumflex Markeven Live <a href="/projects/me/me-cheatsheet" id="me-markup-help" class="right-float inplace">syntax help</a></h1>
+    <form action="/.me" method="post" id="me-form">
       <fieldset>
         <textarea rows="20" cols="30" style="width: 100%" name="me" id="me-source" placeholder="Type something here"></textarea>
       </fieldset>
