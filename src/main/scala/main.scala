@@ -2,7 +2,7 @@ package ru.circumflex.site
 
 import _root_.freemarker.cache._
 import _root_.freemarker.template.{TemplateExceptionHandler, Configuration}
-import ru.circumflex._, core._, web._, freemarker._
+import ru.circumflex._, core._, web._, freemarker._, markeven.MarkevenProcessor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.regex.Pattern
@@ -45,6 +45,10 @@ class MainRouter extends RequestRouter {
 
   get("/.me") = ftl("/me.ftl")
   post("/.me") = markeven.toHtml(param("me"))
+
+  filter("/projects/:project/*") = {
+    'project := param("project")
+  }
 
   get("/") = forward("/index.html")
   get("/*.html") = {
@@ -112,4 +116,8 @@ class FreeMarkerConf extends Configuration {
   setDefaultEncoding("utf-8")
   setTemplateLoader(new FileTemplateLoader(new File("src/main/resources"), false))
   setSharedVariable("currentYear", new SimpleDateFormat("yyyy").format(new Date))
+}
+
+class MarkevenProc extends MarkevenProcessor {
+  addMacro("ctx", cnt => ctx.get(cnt.toString).map(_.toString).getOrElse(""))
 }
