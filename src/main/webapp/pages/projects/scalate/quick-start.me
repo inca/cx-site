@@ -1,17 +1,19 @@
-## Use With Existing Projects  {#existing-projects}
+# Circumflex Scalate Helper: Quick Start
 
-If you already have a project and wish to use one of the Circumflex Scalate component, just
-add the corresponding dependency to your project's `pom.xml`:
+Make sure that `circumflex-scalate.jar` of desired version is in classpath of your
+application. If you use Maven, add following lines to the `pom.xml` of your project:
 
     <properties>                                                           {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <!-- Circumflex Scalate -->
-    <dependency>
-      <groupId>ru.circumflex</groupId>
-      <artifactId>circumflex-scalate</artifactId>
-      <version>{cx.version}</version>
-    </dependency>
+    <dependencies>
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-scalate</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+    </dependencies>
 
 You should import this package if you intend to use Scalate in your web application:
 

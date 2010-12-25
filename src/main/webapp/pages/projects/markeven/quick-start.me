@@ -1,8 +1,6 @@
-# Markeven: Quick start  {#start}
+# Quick Start
 
-## Use With Existing Projects  {#existing-projects}
-
-If you already have a project and wish to use one of the Circumflex Markeven component, just
+If you already have a project and wish to use Circumflex Markeven, just
 add the corresponding dependency to your project's `pom.xml`:
 
     <properties>                                                           {.xml}
@@ -32,11 +30,4 @@ The usage is pretty simple:
     """
     val html = toHtml(text)
 
-You can also use handy `renderToFile` method, which renders the contents of specified `src`
-file into specified `dst` file:
-
-    val src = new File("/path/to/my/text/file.txt")               {.scala}
-    val dst = new File("/path/to/my/text/file.txt.html")
-    markeven.renderToFile(src, dst)
-
-For more information see [Markeven syntax](/products/me/syntax.html) cheatsheets.
+See [Markeven syntax guide](/products/me/syntax.html) for further information.

@@ -10,5 +10,7 @@ nohup.out
 *.md.html
 *.me.html
 *.txt.html
+*.xml.html
+*.assembly.html
 
 

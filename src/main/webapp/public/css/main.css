@@ -420,6 +420,7 @@ pre .class .title, pre .tag {
 #projects-slider-frames img {
   float:right;
   margin: 8px;
+  margin-right: 8px;
   border: 1px solid #ccc;
 }
 #projects-slider-frames > ul > li ul {

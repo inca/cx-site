@@ -1,0 +1,39 @@
+# Quick Start
+
+If you already have a project and wish to use Circumflex Docco, just add the corresponding
+dependency to your project's `pom.xml`:
+
+    <properties>                                                           {.xml}
+      <cx.version><!-- desired version --></cx.version>
+    </properties>
+    <dependencies>
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-docco</artifactId>
+        <version>{cx.version}</version>
+      </dependency>
+    </dependencies>
+
+The usage is trivial:
+
+    Docco("my.scala").toHtml("my.scala.html")
+    // or equivalent:
+    Docco("my.scala").toHtml
+
+Docco uses [FreeMarker][] to process pages, so you can provide your own FreeMarker
+`Configuration` and templates. Two templates are used in Docco generation, both of them can
+be found in `circumflex-docco.jar` and can be overriden by setting corresponding configuration
+parameters:
+
+  * [`docco-single-page.html.ftl`](https://github.com/inca/circumflex/blob/master/circumflex-docco/src/main/resources/docco-single-page.html.ftl)
+    controls how each source file documentation will look like; by default documentation and
+    source code chunks are shown side-by-side.
+
+    You can use your own template: just set `docco.pageTemplate` configuration parameter.
+
+  * [`docco-index.html.ftl`](https://github.com/inca/circumflex/blob/master/circumflex-docco/src/main/resources/docco-index.html.ftl)
+    controls how the index page (table of contents) is assembled.
+
+    You can use your own template: just set `docco.indexTemplate` configuration parameter.
+
+  [FreeMarker]: http://freemarker.org "FreeMarker Templating Engine"
