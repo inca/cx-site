@@ -1,17 +1,16 @@
 # Quick Start
 
-If you already have a project and wish to use Circumflex Markeven, just
-add the corresponding dependency to your project's `pom.xml`:
+Make sure that `circumflex-markeven.jar` of desired version is in classpath of your
+application. If you use Maven, add following lines to the `pom.xml` of your project:
 
     <properties>                                                           {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
-      <!-- Circumflex Markeven -->
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-markeven</artifactId>
-        <version>{cx.version}</version>
+        <version>${cx.version}</version>
       </dependency>
     </dependencies>
 
@@ -30,4 +29,4 @@ The usage is pretty simple:
     """
     val html = toHtml(text)
 
-See [Markeven syntax guide](/products/me/syntax.html) for further information.
+See [Markeven syntax guide](/products/markeven/syntax.html) for further information.

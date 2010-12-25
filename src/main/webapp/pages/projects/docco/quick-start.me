@@ -1,7 +1,7 @@
 # Quick Start
 
-If you already have a project and wish to use Circumflex Docco, just add the corresponding
-dependency to your project's `pom.xml`:
+Make sure that `circumflex-docco.jar` of desired version is in classpath of your
+application. If you use Maven, add following lines to the `pom.xml` of your project:
 
     <properties>                                                           {.xml}
       <cx.version><!-- desired version --></cx.version>
@@ -10,11 +10,13 @@ dependency to your project's `pom.xml`:
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-docco</artifactId>
-        <version>{cx.version}</version>
+        <version>${cx.version}</version>
       </dependency>
     </dependencies>
 
 The usage is trivial:
+
+    import ru.circumflex.docco._
 
     Docco("my.scala").toHtml("my.scala.html")
     // or equivalent:
@@ -37,3 +39,10 @@ parameters:
     You can use your own template: just set `docco.indexTemplate` configuration parameter.
 
   [FreeMarker]: http://freemarker.org "FreeMarker Templating Engine"
+
+
+# Generating Documentation With Maven
+
+You can use [Circumflex Maven Plugin](/projects/maven-plugin/index.html) for generating source code
+documentation of your Maven project. Refer to the [plugin documentation](/projects/maven-plugin/index.html#docco)
+for further information.

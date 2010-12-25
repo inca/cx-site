@@ -63,7 +63,7 @@ ul > li > pre {
   font-family:Baskerville, "Goudy Old Style", "Palatino", "Book Antiqua", serif !important;
   font-style:italic !important;
   font-weight:normal !important;
-  line-height:inherit !important;
+  line-height:.8em !important;
 }
 body {
   color:#333;
@@ -425,4 +425,18 @@ pre .class .title, pre .tag {
 }
 #projects-slider-frames > ul > li ul {
   list-style:disc inside;
+}
+
+/* Tiles */
+.tiles > ul {
+  padding:0;
+  margin: 8px -16px 8px -32px;
+  list-style:none outside;
+  overflow:hidden;
+}
+.tiles > ul > li {
+  display:inline-block;
+  vertical-align:top;
+  width:280px;
+  margin:0 12px;
 }

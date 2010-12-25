@@ -1,17 +1,16 @@
 # Quick Start
 
-If you already have a project and wish to use one of the Circumflex FreeMarker component, just
-add the corresponding dependency to your project's `pom.xml`:
+Make sure that `circumflex-ftl.jar` of desired version is in classpath of your
+application. If you use Maven, add following lines to the `pom.xml` of your project:
 
     <properties>                                                           {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
-      <!-- Circumflex Freemarker Views -->
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-ftl</artifactId>
-        <version>{cx.version}</version>
+        <version>${cx.version}</version>
       </dependency>
     </dependencies>
 
@@ -19,7 +18,7 @@ You should import this package to use Circumflex FreeMarker Helper in your appli
 
     import ru.circumflex.freemarker._                                       {.scala}
 
-FreeMarker helper can be used in several ways:
+FreeMarker Helper can be used in several ways:
 
   * you can render a response for web application (current instance of `CircumflexContext`
     is passed as data model if none second argument given):
@@ -43,6 +42,6 @@ FreeMarker helper can be used in several ways:
 
         MyConfig.getTemplate("index.ftl").process( ... )
 
-   * you can also use your own configuration with rendering methods from `ru.circumflex.freemarker`
-     package: just set `freemarker.configuration` configuration parameter to fully-qualified class
-     name of your configuration implementation (`com.myapp.MyConfig$` in our previous example).
+  * you can also use your own configuration with rendering methods from `ru.circumflex.freemarker`
+    package: just set `freemarker.configuration` configuration parameter to fully-qualified class
+    name of your configuration implementation (`com.myapp.MyConfig$` in our previous example).
