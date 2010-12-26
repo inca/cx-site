@@ -449,21 +449,21 @@ pre .class .title, pre .tag {
   margin-bottom:8px;
 }
 
-/* GitHub activity */
-#gh-commits {
+/* GitHub commits */
+#gh-commits-list {
   list-style:none outside;
   padding:0;
 }
-#gh-commits li {
+#gh-commits-list li {
   overflow:hidden;
   margin-bottom:8px;
 }
-#gh-commits p {
+#gh-commits-list p {
   margin:0;
   padding-left: 48px;
   line-height:1em;
 }
-#gh-commits img {
+#gh-commits-list img {
   margin: 4px;
   float:left;
   display:block;
@@ -471,15 +471,15 @@ pre .class .title, pre .tag {
   -webkit-border-radius:4px;
   -moz-border-radius:4px;
 }
-#gh-commits .commit-author { font-size:1.2em }
-#gh-commits .commit-date {
+#gh-commits-list .commit-author { font-size:1.2em }
+#gh-commits-list .commit-date {
   font-size:.8em;
   color:#777;
 }
-#gh-commits .commit-date:before { content:"at " }
-#gh-commits .commit-message {
+#gh-commits-list .commit-date:before { content:"at " }
+#gh-commits-list .commit-message {
   font-size:.75em;
   text-decoration:none;
   color:#333;
 }
-#gh-commits .commit-message:hover { text-decoration:underline }
+#gh-commits-list .commit-message:hover { text-decoration:underline }

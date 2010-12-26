@@ -23,9 +23,7 @@
   </script>
   <script src="/js/jquery.colorbox-min.js">
   </script>
-  <script src="/js/menu.js">
-  </script>
-  <script type="text/javascript" src="/js/gh-activity.js">
+  <script type="text/javascript" src="/js/application.js">
   </script>
   <title>Circumflex &mdash; exquisite taste of Scala development</title>
 </head>
@@ -73,13 +71,31 @@ ${content!}
     <p>
       <a class="commit-author"
          target="_blank"
-         href="http://github.com/${commit.author.login}">${commit.author.name}</a>
+         href="http://github.com/${commit.author.login}">${commit.author.login}</a>
       <span class="commit-date">${commitDate}</span>
     </p>
     <p><a class="commit-message"
           target="_blank"
           href="http://github.com/inca/circumflex/commit/${commit.id}">${commit.message}</a>
     </p>
+  </li>
+[/#noparse]
+</script>
+<script id="gh-downloads-tmpl" type="text/x-jquery-tmpl">
+[#noparse]
+  <li>
+    Release ${release.version}:
+    <a class="gh-download-zip" href="http://github.com/inca/circumflex/zipball/${release.tag}">zip</a>,
+    <a class="gh-download-tar" href="http://github.com/inca/circumflex/tarball/${release.tag}">tar</a>
+  </li>
+[/#noparse]
+</script>
+<script id="mvn-downloads-tmpl" type="text/x-jquery-tmpl">
+[#noparse]
+  <li>
+    Release ${release.version}:
+    <a class="mvn-download-binary" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${release.version}/${module}-${release.version}.jar">binaries</a>,
+    <a class="mvn-download-source" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${release.version}/${module}-${release.version}-sources.jar">sources</a>
   </li>
 [/#noparse]
 </script>
