@@ -430,7 +430,7 @@ pre .class .title, pre .tag {
 /* Tiles */
 .tiles > ul {
   padding:0;
-  margin: 8px -16px 8px -32px;
+  margin: 8px -16px 8px;
   list-style:none outside;
   overflow:hidden;
 }
@@ -438,5 +438,48 @@ pre .class .title, pre .tag {
   display:inline-block;
   vertical-align:top;
   width:280px;
-  margin:0 12px;
+  margin-left:8px;
+  padding:0 4px;
+  border:1px solid #f7f7f7;
+  border-radius:8px;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
 }
+.tiles h2 {
+  margin-bottom:8px;
+}
+
+/* GitHub activity */
+#gh-commits {
+  list-style:none outside;
+  padding:0;
+}
+#gh-commits li {
+  overflow:hidden;
+  margin-bottom:8px;
+}
+#gh-commits p {
+  margin:0;
+  padding-left: 48px;
+  line-height:1em;
+}
+#gh-commits img {
+  margin: 4px;
+  float:left;
+  display:block;
+  border-radius:4px;
+  -webkit-border-radius:4px;
+  -moz-border-radius:4px;
+}
+#gh-commits .commit-author { font-size:1.2em }
+#gh-commits .commit-date {
+  font-size:.8em;
+  color:#777;
+}
+#gh-commits .commit-date:before { content:"at " }
+#gh-commits .commit-message {
+  font-size:.75em;
+  text-decoration:none;
+  color:#333;
+}
+#gh-commits .commit-message:hover { text-decoration:underline }

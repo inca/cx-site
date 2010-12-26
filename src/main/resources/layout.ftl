@@ -13,11 +13,20 @@
   <meta name='yandex-verification' content='59d4a20bb51bbfea' />
   <script type="text/javascript" src="http://www.google-analytics.com/ga.js">
   </script>
-  <script src="/js/highlight.pack.js"></script>
-  <script src="/js/jquery-1.4.2.min.js"></script>
-  <script src="/js/jquery.colorbox-min.js"></script>
-  <script src="/js/application.js"></script>
-  <script src="/js/menu.js"></script>
+  <script src="/js/highlight.pack.js">
+  </script>
+  <script src="/js/jquery-1.4.2.min.js">
+  </script>
+  <script src="/js/jquery.tmpl.min.js">
+  </script>
+  <script src="/js/jquery.md5.js">
+  </script>
+  <script src="/js/jquery.colorbox-min.js">
+  </script>
+  <script src="/js/menu.js">
+  </script>
+  <script type="text/javascript" src="/js/gh-activity.js">
+  </script>
   <title>Circumflex &mdash; exquisite taste of Scala development</title>
 </head>
 <body>
@@ -50,15 +59,30 @@ ${content!}
     <a href="http://circumflex.ru">circumflex.ru</a>
   </p>
 </div>
-[@stats/]
-</body>
-</html>
-
-[#macro stats]
 <script type="text/javascript">
   try {
     var pageTracker = _gat._getTracker("UA-12034468-1");
     pageTracker._setDomainName(".circumflex.ru");
     pageTracker._trackPageview();
-  } catch(err) {}</script>
-[/#macro]
+  } catch(err) {}
+</script>
+<script id="gh-commit-tmpl" type="text/x-jquery-tmpl">
+[#noparse]
+  <li>
+    <img src="http://gravatar.com/avatar/${emailHash}?s=32&d=retro" alt=""/>
+    <p>
+      <a class="commit-author"
+         target="_blank"
+         href="http://github.com/${commit.author.login}">${commit.author.name}</a>
+      <span class="commit-date">${commitDate}</span>
+    </p>
+    <p><a class="commit-message"
+          target="_blank"
+          href="http://github.com/inca/circumflex/commit/${commit.id}">${commit.message}</a>
+    </p>
+  </li>
+[/#noparse]
+</script>
+</body>
+</html>
+
