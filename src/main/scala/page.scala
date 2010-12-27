@@ -61,7 +61,7 @@ class Page(val path: String, val title: String = "") extends Cacheable {
         // lookup page
         val path = m.group(1)
         val page = Cache.get[Page]("page:" + path, new Page(path))
-        if (page.exists) page.anchor
+        if (page.exists) "#" + page.anchor
         else "#"
       }
     } else "#"

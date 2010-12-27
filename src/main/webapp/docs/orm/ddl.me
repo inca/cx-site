@@ -360,7 +360,7 @@ The first one returns `Option[MsgGroup]`:
 The second one does not return anything, but throws `ValidationException` if validation fails.
 
 The `validate_!` method is also called when a record is being saved into database, read
-more in [Insert, Update & Delete]([[link:orm:data manipulation#iud]]) section.
+more in [Insert, Update & Delete][iud] section.
 
 It is also fairly easy to implement custom validators. Following example shows a validator
 for checking unique email addresses:
@@ -372,6 +372,7 @@ for checking unique email addresses:
           .map(a => new Msg(r.email.uuid + ".unique")))
     }
 
-  [manipulating]:  [[link:orm:Data Manipulation]]
-  [querying]:      [[link:orm:Querying]]
-  [Criteria API]:  [[link:orm:Querying#criteria]]
+  [iud]:           [[link:/docs/orm/dml.html#iud]]
+  [manipulating]:  [[link:/docs/orm/dml.html]]
+  [querying]:      [[link:/docs/orm/querying.html]]
+  [Criteria API]:  [[link:/docs/orm/querying.html#criteria]]
