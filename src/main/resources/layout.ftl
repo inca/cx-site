@@ -46,9 +46,7 @@ ${content!}
   <p>
     <a href="/license.html">Terms <span class="amp">&amp;</span> conditions</a>
     <span>&middot;</span>
-    <a href="/support.html">Support</a>
-    <span>&middot;</span>
-    <a href="/contacts.html">Contacts</a>
+    <a href="/support.html">Support <span class="amp">&amp;</span> Contacts</a>
     <span>&middot;</span>
     <a href="/credits.html">Credits</a>
   </p>

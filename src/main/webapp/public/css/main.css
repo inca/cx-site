@@ -189,6 +189,7 @@ a:hover {
 }
 
 #page {
+  overflow:hidden;
   box-shadow: 1px 1px 3px #777;
   -moz-box-shadow: 1px 1px 3px #777;
   -webkit-box-shadow: 1px 1px 3px #777;
@@ -499,3 +500,9 @@ pre .class .title, pre .tag {
 .docs-nav-prev { text-align: left }
 .docs-nav-up { text-align: center; }
 .docs-nav-next { text-align: right }
+
+/* Misc */
+.section img {
+  float:right;
+  margin:8px;
+}
