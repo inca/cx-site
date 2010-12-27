@@ -23,11 +23,33 @@ class MainRouter extends RequestRouter {
     "/api/" + param("version") + "/" + param("project") + "/src/main/scala/" +
         param("file") + ".scala.html")
 
-  protected def fetchDocs = Cache.get[Docs]("docs:" + param("id"), new Docs(param("id")))
+  protected def fetchDocs: Docs = try {
+    Cache.get[Docs]("docs:" + param("id"), new Docs(param("id")))
+  } catch {
+    case _ =>
+      sendError(404)
+  }
 
-  get("/docs/:id/index.html") = fetchDocs.renderIndex
-  get("/docs/:id/assembly.html") = fetchDocs.renderAssembly
-  get("/docs/:id/:page.html") = fetchDocs.renderPage(param("page"))
+  get("/docs/:id/index.html") = {
+    'docs := fetchDocs
+    ftl("/docs-index.ftl")
+  }
+  get("/docs/:id/assembly.html") = {
+    'docs := fetchDocs
+    ftl("/docs-assembly.ftl")
+  }
+  get("/docs/:id/:page.html") = {
+    val docs = fetchDocs
+    docs.getPage(param("page")) match {
+      case Some(page) =>
+        'docs := docs
+        'page := page
+        'prevPage := docs.getPreviousPage(page)
+        'nextPage := docs.getNextPage(page)
+        ftl("/docs-page.ftl")
+      case _ => sendError(404)
+    }
+  }
 
   post("/.me") = {
     var text = param("text")

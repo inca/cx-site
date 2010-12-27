@@ -15,7 +15,3 @@ class FreeMarkerConf extends Configuration {
   setTemplateLoader(new FileTemplateLoader(new File("src/main/resources"), false))
   setSharedVariable("currentYear", new SimpleDateFormat("yyyy").format(new Date))
 }
-
-class MarkevenProc extends MarkevenProcessor {
-  addMacro("ctx", cnt => ctx.get(cnt.toString).map(_.toString).getOrElse(""))
-}

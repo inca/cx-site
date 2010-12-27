@@ -4,7 +4,7 @@
   <pages>
     <page title="Overview"
           name="overview"/>
-    <page title="Installation <span class='amp'>&amp;</span> Configuration"
+    <page title="Installation &amp; Configuration"
           name="install"/>
     <page title="Basic Concepts"
           name="basic"/>

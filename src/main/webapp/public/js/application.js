@@ -190,4 +190,29 @@
     }
   });
 
+  // Other stuff
+  $(function() {
+    // smooth scrolling
+    $('a[href^=#]').click(function() {
+      var $target = $(this.hash);
+      $target = $target.length && $target || $('[name=' + this.hash.slice(1) +']');
+      if ($target.length) {
+        var $elem = this.hash.slice(1);
+        var $loc = document.location.href.replace(/#.*$/, "") + "#" + $elem;
+        var targetOffset = $target.offset().top;
+        $('html,body').animate({scrollTop: targetOffset}, 750,
+            function() {document.location.href = $loc;});
+        return false;
+      }
+    });
+    // show/hide TOC
+    $('#toc-show').click(function() {
+      $('#toc-show').fadeOut(200, function(){$('#toc').fadeIn(400);});
+    });
+    $('#toc-hide').click(function() {
+      $('#toc').fadeOut(400, function(){$('#toc-show').fadeIn(200);});
+    });
+  });
+
+
 })(jQuery);

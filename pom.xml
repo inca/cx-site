@@ -16,7 +16,6 @@
     <cx.router>ru.circumflex.site.MainRouter</cx.router>
     <cx.sourceRoot>/opt/inca/circumflex</cx.sourceRoot>
     <ftl.configuration>ru.circumflex.site.FreeMarkerConf</ftl.configuration>
-    <markeven.processor>ru.circumflex.site.MarkevenProc</markeven.processor>
     <docco.basePath>${cx.sourceRoot}</docco.basePath>
     <docco.outputPath>src/main/webapp/api/${cx.version}</docco.outputPath>
     <docco.pageTemplate>/docco-page.ftl</docco.pageTemplate>

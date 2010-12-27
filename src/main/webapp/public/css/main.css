@@ -483,3 +483,20 @@ pre .class .title, pre .tag {
   color:#333;
 }
 #gh-commits-list .commit-message:hover { text-decoration:underline }
+
+/* Docs */
+.docs-nav {
+  text-align:center;
+  width:100%
+}
+.docs-nav a {
+  text-decoration:none;
+  font-size:.85em;
+  color:#777;
+}
+.docs-nav a:hover {
+  color:#555;
+  text-decoration:underline;
+}
+.docs-nav-prev { float: left }
+.docs-nav-next { float: right }
