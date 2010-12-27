@@ -1,73 +1,67 @@
 package ru.circumflex
 package site
 
-import java.util.regex.Pattern
-import java.io.File
 import org.apache.commons.io.FileUtils._
-import java.lang.StringBuilder
-import xml._, web._, freemarker._
+import net.sf.ehcache._
+import xml._, web._, freemarker._, core._
+import java.io.{Serializable, File}
 
-object Page {
-  def fromXML(e: Elem) = new Page((e \ "@path").text, e.text)
+object Cache {
+  protected val _cacheManager = new CacheManager()
+  protected val _cache = _cacheManager.addCacheIfAbsent("cx-site")
+
+  def get[T <: Cacheable](key: String, default: => T): T = {
+    val elem = _cache.get(key)
+    if (elem == null) {
+      val d = default
+      store(key, d)
+      return d
+    } else {
+      var v = elem.getValue.asInstanceOf[T]
+      if (v.expired) {
+        v = default
+        store(key, v)
+      }
+      return v
+    }
+  }
+
+  def store(key: String, value: AnyRef): Element = {
+    val e = new Element(key, value)
+    _cache.put(e)
+    return e
+  }
 }
 
-class Page(val path: String, val title: String = "") {
+trait Cacheable extends Serializable {
+  val createdAt = System.currentTimeMillis
+  def expired: Boolean
+}
+
+class Page(val path: String, val title: String = "") extends Cacheable {
   val fullpath = servletContext.getRealPath(path + ".me")
   val src = new File(fullpath)
-  val cache = new File(fullpath + ".html")
+  lazy val sourceContent = readFileToString(src, "UTF-8")
+  lazy val toHtml = markeven.toHtml(sourceContent)
   def exists = src.isFile
-  protected lazy val content = if (cache.isFile && cache.lastModified > src.lastModified) {
-    readFileToString(cache, "UTF-8")
-  } else {
-    val html = markeven.toHtml(readFileToString(src, "UTF-8"))
-    writeStringToFile(cache, html, "UTF-8")
-    html
-  }
-  def toHtml = content
-  lazy val toc = new TOC(content)
+  def expired = src.lastModified > createdAt
 }
 
-object TOC {
-  val rNoToc = Pattern.compile("^<!--#notoc-->$", Pattern.MULTILINE)
-  val rHeadings = "<h(\\d)\\s*(id\\s*=\\s*(\"|')(.*?)\\3)?\\s*>(.*?)</h\\1>".r
-}
+class Docs(val id: String) extends Cacheable {
+  val basePath = "/docs/" + id
+  val descriptorFile = new File(basePath + "/index.xml")
+  val descriptor = XML.loadFile(descriptorFile)
+  val title = (descriptor \ "title").text
+  val pages: Seq[Page] = (descriptor \ "pages" \ "page").flatMap {
+    case e: Elem =>
+      val name = (e \ "@name").text
+      val title = (e \ "@title").text
+      Some(new Page(basePath + "/" + name, title))
+    case _ => None
+  }
+  def expired = descriptorFile.lastModified > createdAt || pages.exists(_.expired)
 
-class TOC(val html: String) {
-  case class Heading(level: Int, id: String, body: String) {
-    def toHtml: String =
-      if (id == null) "<span>" + body + "</span>"
-      else "<a href=\"#" + id + "\">" + body + "</a>"
-    override def toString = toHtml
-  }
-  val disabled = TOC.rNoToc.matcher(html).find()
-  val headings: Seq[Heading] = TOC.rHeadings.findAllIn(html)
-      .matchData
-      .map(m => new Heading(m.group(1).toInt, m.group(4), m.group(5)))
-      .toList
-  val toHtml: String = if (headings.size == 0 || disabled) "" else {
-    val sb = new StringBuilder
-    def startList(l: Int) = sb.append("  " * l + "<li><ul>\n")
-    def endList(l: Int) = sb.append("  " * (l - 1) + "</ul></li>\n")
-    def add(l: Int, h: Heading) = sb.append("  " * l + "<li>" + h.toString + "</li>\n")
-    def formList(level: Int, index: Int): Unit = if (index < 0 || index >= headings.size) {
-      if (level > 1) {
-        endList(level)
-        formList(level - 1, index)
-      }
-    } else {
-      val h = headings(index)
-      if (level < h.level) {
-        startList(level)
-        formList(level + 1, index)
-      } else if (level > h.level) {
-        endList(level)
-        formList(level - 1, index)
-      } else {
-        add(level, h)
-        formList(level, index + 1)
-      }
-    }
-    formList(1, 0)
-    "<ul>\n" + sb.toString + "</ul>"
-  }
+  lazy val renderIndex: String = "INDEX OF " + id
+  lazy val renderAssembly: String = "ASSEMBLY OF " + id
+  def renderPage(page: String): String = "PAGE " + page
 }

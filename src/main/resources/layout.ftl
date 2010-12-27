@@ -93,9 +93,9 @@ ${content!}
 <script id="mvn-downloads-tmpl" type="text/x-jquery-tmpl">
 [#noparse]
   <li>
-    Release ${release.version}:
-    <a class="mvn-download-binary" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${release.version}/${module}-${release.version}.jar">binaries</a>,
-    <a class="mvn-download-source" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${release.version}/${module}-${release.version}-sources.jar">sources</a>
+    Release ${version}:
+    <a class="mvn-download-binary" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${version}/${module}-${version}.jar">binaries</a>,
+    <a class="mvn-download-source" href="http://repo1.maven.org/maven2/ru/circumflex/${module}/${version}/${module}-${version}-sources.jar">sources</a>
   </li>
 [/#noparse]
 </script>

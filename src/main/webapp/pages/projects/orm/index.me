@@ -1,7 +1,7 @@
 Circumflex ORM   {#orm}
 ==============
 
-Circumflex ORM is an [Object-Relational Mapping (ORM)][orm-wiki] framework for creating fast,
+Circumflex ORM is an [Object-Relational Mapping (ORM)][orm-wiki] framework for creating
 concise and efficient data-centric applications with elegant DSL.
 
 The term &laquo;Object-Relational Mapping&raquo; refers to the technique of mapping
@@ -15,3 +15,69 @@ allowing transparent navigation between object associations and much more.
                         "ORM definition on Wikipedia"
   [crud-wiki]:         http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
                         "CRUD definition on Wikipedia"
+
+The data definition DSL and querying API of Circumflex ORM closely resemble SQL --
+native language of modern databases.
+
+Feature list includes:
+
+  * lazy and eager fetching strategies for associations,
+  * complex queries, including subqueries of all kinds, data manipulation statements
+    and set operations;
+  * transaction-scoped and application-scoped caching;
+  * schema generation and data import from XML;
+  * and other cute stuff.
+
+Here's a simple example of fictional domain model:
+
+    class Country extends Record[String, Country] {                                     {.scala}
+      val code = "code".VARCHAR(2).NOT_NULL.DEFAULT("'ch'")
+      val name = "name".TEXT.NOT_NULL
+
+      def cities = inverseMany(City.country)
+      def relation = Country
+      def PRIMARY_KEY = code
+    }
+
+    object Country extends Country with Table[String, Country]
+
+    class City extends Record[Long, City] with SequenceGenerator[Long, City] {
+      val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+      val name = "name".TEXT
+      val country = "country_code".TEXT.NOT_NULL
+              .REFERENCES(Country)
+              .ON_DELETE(CASCADE)
+              .ON_UPDATE(CASCADE)
+
+      def relation = City
+      def PRIMARY_KEY = id
+    }
+
+    object City extends City with Table[Long, City]
+
+And here's a snippet which shows various querying options:
+
+    // Prepare the relations that will participate in queries:                              {.scala}
+    val ci = City as "ci"
+    val co = Country as "co"
+    // Select all cities of Switzerland, return Seq[City]:
+    SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ch") ORDER_BY (ci.name ASC) list
+    // Select countries and count their cities, return Seq[(Option[Country], Option[Long])]:
+    SELECT (co.* -> COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) list
+    // Select countries with corresponding cities, return a sequence of alias maps:
+    SELECT (co.* AS "country", ci.* AS "city") FROM (co JOIN ci) list
+
+| * ## Downloads                                                      {.tiles}
+|
+|   [circumflex-orm](http://repo1.maven.org/maven2/ru/circumflex/circumflex-orm) at Maven Central:  {#mvn-downloads}
+|
+| * ## Latest Activity
+|
+|   [master/circumflex-orm](http://github.com/inca/circumflex/commits/master/circumflex-orm) at GitHub:  {#gh-commits}
+|
+| * ## Documentation
+|
+|   * [Multi-page HTML](/docs/orm/index.html)
+|   * [Single-page HTML](/docs/orm/assembly.html)
+|   * [API Documentation](/api)
+|

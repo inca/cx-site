@@ -1,5 +1,3 @@
-# Web: Basic Concepts        {#basics}
-
 ## Request Routers {#routers}
 
 Each Circumflex web application is composed of one or more _request routers_.
@@ -17,10 +15,11 @@ directly within its body:
       }
     }
 
-Request routers are essentially the controllers of the application.       {#main}
-Since [Circumflex Web Framework](/products/web/index.html#web) employs the Front Controller pattern, each web
-application should have a single _main router_ -- a special `RequestRouter` which gets
-executed on every request. It dispatches all requests of web application.
+Request routers are essentially the controllers of the application. Since         {#main}
+[Circumflex Web Framework][]
+employs the Front Controller pattern, each web application should have a single
+_main router_ -- a special `RequestRouter` which gets executed on every request.
+It dispatches all requests of web application.
 
 Request routers can also be easily nested:
 
@@ -39,8 +38,8 @@ modular, more organized and easier to maintain.
 
 ## Routes   {#routes}
 
-[Circumflex Web Framework](/products/web/index.html#web) is designed around the _route concept_. A route is an HTTP method
-with matching mechanism and attached block.
+[Circumflex Web Framework][] is designed around the _route concept_. A route is
+an HTTP method with matching mechanism and attached block.
 
 Routes are defined using one of the following members of `RequestRouter`:
 
@@ -224,3 +223,5 @@ Flashes provide a way to pass temporary objects between requests:
 
 Anything you place in `flash` helper will be exposed until the first lookup and then cleared out.
 This is a great way of dealing with notices and alerts which only need to be shown once.
+
+  [Circumflex Web Framework]: [[link:web:Overview]]

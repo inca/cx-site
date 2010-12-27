@@ -1,5 +1,8 @@
 (function() {
 
+  // Code highlighting
+  hljs.initHighlightingOnLoad();
+
   // Menu
   var jqueryslidemenu = {
     animateduration: {over: 200, out: 100},
@@ -171,13 +174,18 @@
       downloadsSection.after(placeholder);
       $.get("/json/meta.json", function(data) {
         var i = 0;
-        var downloadsList = $('<ul id="mvn-downloads-list"/>');
-        for(i = 0; i < data.releases.length; i++) {
-          var release = data.releases[i];
-          var listItem = downloadsTemplate.tmpl({"release": release, "module": module});
-          downloadsList.append(listItem);
+        for(i = 0; i < data.modules.length; i++) {
+          var m = data.modules[i];
+          if (m.name == module) {
+            var downloadsList = $('<ul id="mvn-downloads-list"/>');
+            var j = 0;
+            for (j = 0; j < m.versions.length; j++) {
+              var listItem = downloadsTemplate.tmpl({"module": module, "version": m.versions[j]});
+              downloadsList.append(listItem);
+            }
+            placeholder.replaceWith(downloadsList);
+          }
         }
-        placeholder.replaceWith(downloadsList);
       }, "json");
     }
   });

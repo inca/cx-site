@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<docs>
+  <title>Circumflex ORM Documentation</title>
+  <pages>
+    <page title="Overview"
+          name="overview"/>
+    <page title="Installation <span class='amp'>&amp;</span> Configuration"
+          name="install"/>
+    <page title="Central Abstractions"
+          name="abstractions"/>
+    <page title="Data Definition"
+          name="ddl"/>
+    <page title="Querying"
+          name="querying"/>
+    <page title="Data Manipulation"
+          name="dml"/>
+    <page title="Exporting Database Schema"
+          name="schema"/>
+  </pages>
+</docs>

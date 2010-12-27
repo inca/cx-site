@@ -1,15 +1,10 @@
-# Installation & Configuration   {#install}
-
-There's a couple of things you need to do in order to get started with Circumflex ORM.
-
-First, make sure that `circumflex-orm-[version].jar` is in the classpath. The easiest way
+Make sure that `circumflex-orm.jar` of desired version is in the classpath. The easiest way
 to do so is to add corresponding `dependency` to your `pom.xml`:
 
     <properties>                                                  {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
-      <!-- Circumflex ORM -->
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-orm</artifactId>
@@ -17,7 +12,7 @@ to do so is to add corresponding `dependency` to your `pom.xml`:
       </dependency>
     </dependencies>
 
-Second, configure database access by specifying following configuration parameters:
+Configure database access by specifying following configuration parameters:
 
   * `orm.connection.driver` -- fully-qualified class name of JDBC Driver of your database vendor;
   * `orm.connection.url` -- URL for database communication (read the documentation of

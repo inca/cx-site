@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils._
 
 class MainRouter extends RequestRouter {
 
-  'sitemap := new Page("/pages/sitemap")
+  'sitemap := Cache.get[Page]("page:/pages/sitemap", new Page("/pages/sitemap"))
 
   get("/api/?") = redirect("/api/" + cx("cx.version") +  "/index.html")
   get("/api/:version/?") = redirect("/api/" + param("version") + "/index.html")
@@ -23,12 +23,23 @@ class MainRouter extends RequestRouter {
     "/api/" + param("version") + "/" + param("project") + "/src/main/scala/" +
         param("file") + ".scala.html")
 
-  get("/.me") = ftl("/me.ftl")
-  post("/.me") = markeven.toHtml(param("me"))
+  protected def fetchDocs = Cache.get[Docs]("docs:" + param("id"), new Docs(param("id")))
+
+  get("/docs/:id/index.html") = fetchDocs.renderIndex
+  get("/docs/:id/assembly.html") = fetchDocs.renderAssembly
+  get("/docs/:id/:page.html") = fetchDocs.renderPage(param("page"))
+
+  post("/.me") = {
+    var text = param("text")
+    if (text.length > 2048)
+      text = text.substring(0, 2048)
+    markeven.toHtml(text)
+  }
 
   get("/") = forward("/index.html")
   get("/*.html") = {
-    val page = new Page("/pages/" + uri(1))
+    val path = "/pages/" + uri(1)
+    val page = Cache.get("page:" + path, new Page(path))
     if (!page.exists) error(404)
     'page := page.toHtml
     ftl("/page.ftl")
