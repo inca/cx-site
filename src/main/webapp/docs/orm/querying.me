@@ -61,7 +61,7 @@ Relation nodes are represented by the `RelationNode` class, they are created by 
 A handy `map` method can be used to make code a bit clearer:
 
     // fetch all countries                                         {.scala}
-    SELECT (co.*) FROM (co) list
+    (Country AS "CO").map(co => SELECT (co.*) FROM (co) list)
 
 Relation nodes can be organized into _query trees_ using [joins](#join).
 
@@ -526,9 +526,9 @@ The `Criteria[R]` object has following methods for execution:
   * `list()` executes a query and returns `Seq[R]`;
   * `unique()` executes a query and returns `Option[R]`, an exception is thrown if more than one
   row is returned from database;
-  * `mkSelect` transforms a `Criteria` into the [`Select` query](#select);
-  * `mkUpdate` transforms a `Criteria` into the [`Update` query](#update-delete);
-  * `mkSelect` transforms a `Criteria` into the [`Delete` query](#update-delete);
+  * `mkSelect` transforms a `Criteria` into the [Select query](#select);
+  * `mkUpdate` transforms a `Criteria` into the [Update query](#update-delete);
+  * `mkDelete` transforms a `Criteria` into the [Delete query](#update-delete);
   * `toString` shows query tree for debugging.
 
 You can use [predicates](#predicate) to narrow the result set. Unlike [`Select` queries](#select),
