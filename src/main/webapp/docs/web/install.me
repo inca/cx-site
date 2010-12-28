@@ -1,11 +1,21 @@
 Circumflex web applications run in standard Servlet 2.5 containers. There's a couple of things
 you should do in order to start using Circumflex Web Framework.
 
-First, make sure that `circumflex-core-[version].jar` and `circumflex-web-[version].jar` are in
-the classpath (add `<dependency>` with `circumflex-core` and `circumflex-web` as described in
-[quick start guide](/quick-start.html#start)).
+Make sure that `circumflex-web.jar` of desired version is in classpath of your
+application. If you use Maven, add following lines to the `pom.xml` of your project:
 
-Second, configure `CircumflexFilter` in `/WEB-INF/web.xml`:
+    <properties>                                                           {.xml}
+      <cx.version><!-- desired version --></cx.version>
+    </properties>
+    <dependencies>
+      <dependency>
+        <groupId>ru.circumflex</groupId>
+        <artifactId>circumflex-web</artifactId>
+        <version>${cx.version}</version>
+      </dependency>
+    </dependencies>
+
+Configure `CircumflexFilter` in `/WEB-INF/web.xml`:
 
     <web-app version="2.5">                                                 {.xml}
       <filter>
@@ -22,7 +32,7 @@ Second, configure `CircumflexFilter` in `/WEB-INF/web.xml`:
       </filter-mapping>
     </web-app>
 
-Third, configure the [main request router][main] of your application by setting
+Configure the [main request router][main] of your application by setting
 `cx.router` configuration parameter:
 
   * via `src/main/resource/cx.properties` file:
