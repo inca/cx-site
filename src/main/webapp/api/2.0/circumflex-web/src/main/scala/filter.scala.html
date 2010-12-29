@@ -61,11 +61,13 @@ import ru.circumflex.core._</code></pre>
                   chain: FilterChain): Boolean = {
     if (req.getMethod.equalsIgnoreCase(&quot;get&quot;) || req.getMethod.equalsIgnoreCase(&quot;head&quot;)) {
       val publicUri = cx.getOrElse(&quot;cx.public&quot;, &quot;/public&quot;).toString
-      if (req.getRequestURI.startsWith(publicUri)) {
+      val contextPath = servletContext.getContextPath
+      if (req.getRequestURI.startsWith(contextPath + publicUri)) {
         chain.doFilter(req, res)
         return true
       }
-      val uri = URLDecoder.decode(publicUri + req.getRequestURI, &quot;UTF-8&quot;)
+      val relativeUri = req.getRequestURI.substring(contextPath.length)
+      val uri = URLDecoder.decode(publicUri + relativeUri, &quot;UTF-8&quot;)
       val resource = new File(filterConfig.getServletContext.getRealPath(uri))
       if (resource.isFile) {
         req.getRequestDispatcher(uri).forward(req, res)

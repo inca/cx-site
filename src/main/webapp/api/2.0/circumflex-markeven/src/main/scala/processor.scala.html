@@ -14,8 +14,7 @@ package markeven
 
 import java.util.regex._
 import java.io._
-import collection.mutable.{HashMap, ListBuffer}
-import org.apache.commons.io.FileUtils</code></pre>
+import collection.mutable.{HashMap, ListBuffer}</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -288,7 +287,7 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
   <li>text surrounded with backtick <code>`</code> characters is transformed into <code>code</code> span;</li>
   <li>text surrounded with underscores <code>_</code> becomes <code>em</code> (emphasized);</li>
   <li>text surrounded with asterisks <code>*</code> becomes <code>strong</code> (strongly emphasized);</li>
-  <li>text surrounded with asterisks <code>~</code> becomes <code>del</code> (deleted);</li>
+  <li>text surrounded with tildas <code>~</code> becomes <code>del</code> (deleted);</li>
   <li>
     <p>various typographic improvements are applied to text:</p>
     <ul>
@@ -301,13 +300,21 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
   </li>
 </ul>
 <p>You can also use backslash escaping to prevent misinterpreting special characters. Following characters can be escaped: <code>\`_*{}[]()#+-~.!</code></p>
-<h2>Links</h2>
+<h2>Links &amp; Images</h2>
 <p>Two style of links are supported: inline and reference.</p>
 <p>Inline links look like this: <code>[my text](http://my_url)</code> or <code>[some text](http://some_url "some title")</code> and are rendered into HTML <code>a</code> element: <code>&lt;a href="http://my_url"&gt;my text&lt;/a&gt;</code> and <code>&lt;a href="http://some_url" title="some title"&gt;some text&lt;/a&gt;</code>.</p>
 <p>Reference-style links are split into link definition and link usage. Using previous examples, here's how link definitions could look like:</p>
-<pre><code>[id1]: http://my_url
+<pre class="no-highlight"><code>[id1]: http://my_url
 [id2]: http://some_url "some title"</code></pre>
-<p>Link usages would then look like this: <code>[my text][id1]</code> and <code>[some text][id2]</code>. The generated markup equals to the previous one.</p>
+<p>Link usages would then look like this: <code>[my text][id1]</code> and <code>[some text][id2]</code>. The generated markup is equal to the previous one.</p>
+<p>The syntax for images is similar to the one for links: the exclamation <code>!</code> sign immediately before opening bracket tells markeven to interpret the link as an image. Link text becomes the value of <code>alt</code> attribute:</p>
+<pre class="no-highlight"><code>Inline image: ![some image](/img/hello.png "Hello")
+
+Or reference-style image: ![some image][img]
+
+  [img]: /img/hello.png "Hello"</code></pre>
+<p>Both cases generate following markup for image:</p>
+<pre><code>&lt;img src="/img/hello.png" title="Hello" alt="some image"/&gt;</code></pre>
 
         </td>
         <td class="code">
@@ -337,7 +344,7 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
 
   def stripLinkDefinitions(s: StringEx): StringEx = s.replaceAll(regexes.linkDefinition, m =&gt; {
     val id = m.group(1).trim.toLowerCase
-    val url = new StringEx(m.group(2))
+    val url = processUrl(m.group(2))
     var t = m.group(4)
     val title = new StringEx(if (t == null) &quot;&quot; else t)
     encodeChars(title)
@@ -524,6 +531,8 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
     encodeChars(s)
     doCodeSpans(s)
     encodeBackslashEscapes(s)
+    doInlineImages(s)
+    doRefImages(s)
     doInlineLinks(s)
     doRefLinks(s)
     doSpanEnhancements(s)
@@ -538,15 +547,21 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
         .replaceAll(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)
         .replaceAll(&quot;&gt;&quot;, &quot;&amp;gt;&quot;)
 
-  def doMacros(s: StringEx): StringEx = s.replaceAll(regexes.macro, m =&gt; {
+  protected def processSingleMacro(m: Matcher): CharSequence = {
     var name = m.group(1)
     if (name == null) name = &quot;&quot;
     if (name.length &gt; 0)
       name = name.substring(0, name.length - 1)
     val contents = new StringEx(m.group(2))
-    val replacement = macros.get(name).map(f =&gt; f(contents)).getOrElse(m.group(0))
-    protector.addToken(replacement)
-  })
+    val r = macros.get(name).map(f =&gt; f(contents)).getOrElse(m.group(0))
+    r
+  }
+
+  def doMacros(s: StringEx): StringEx = s.replaceAll(regexes.macro, m =&gt;
+    protector.addToken(processSingleMacro(m)))
+
+  def doMacrosPlain(s: StringEx): StringEx = s.replaceAll(regexes.macro, m =&gt;
+    processSingleMacro(m))
 
   def doCodeSpans(s: StringEx): Unit = s.replaceAll(regexes.codeSpan, m =&gt; {
     val s = new StringEx(m.group(2)).trim
@@ -571,24 +586,47 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
     // there can be protected content inside linktexts, so decode them first
     unprotect(linkContent)
     doSpanEnhancements(linkContent)
-    val replacement = links.get(id)
+    val result = links.get(id)
         .map(ld =&gt; ld.toLink(linkContent))
-        .getOrElse(m.group(0))
-    protector.addToken(replacement)
+        .getOrElse(new StringEx(m.group(0)))
+    doMacrosPlain(result)
+    protector.addToken(result)
+  })
+
+  def doRefImages(s: StringEx): StringEx = s.replaceAll(regexes.refImages, m =&gt; {
+    val altText = m.group(1)
+    var id = m.group(2)
+    if (id == &quot;&quot;) id = altText
+    id = id.trim.toLowerCase
+    val result = links.get(id)
+        .map(ld =&gt; ld.toImageLink(altText))
+        .getOrElse(new StringEx(m.group(0)))
+    doMacrosPlain(result)
+    protector.addToken(result)
   })
 
   def doInlineLinks(s: StringEx): StringEx = s.replaceAll(regexes.inlineLinks, m =&gt; {
     val linkText = m.group(1)
-    val url = m.group(2)
+    val url = processUrl(m.group(2))
     var title = m.group(4)
     if (title == null) title = &quot;&quot;
     val linkContent = new StringEx(linkText)
     // there can be protected content inside linktexts, so decode them first
     unprotect(linkContent)
     doSpanEnhancements(linkContent)
-    val replacement = new LinkDefinition(new StringEx(url), new StringEx(title))
-        .toLink(doSpanEnhancements(new StringEx(linkContent)))
-    protector.addToken(replacement)
+    val result = new LinkDefinition(url, new StringEx(title)).toLink(linkContent)
+    doMacrosPlain(result)
+    protector.addToken(result)
+  })
+
+  def doInlineImages(s: StringEx): StringEx = s.replaceAll(regexes.inlineImages, m =&gt; {
+    val altText = m.group(1)
+    val url = processUrl(m.group(2))
+    var title = m.group(4)
+    if (title == null) title = &quot;&quot;
+    val result = new LinkDefinition(url, new StringEx(title)).toImageLink(altText)
+    doMacrosPlain(result)
+    protector.addToken(result)
   })
 
   def doSpanEnhancements(s: StringEx): StringEx = {
@@ -596,6 +634,8 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
     recurseSpanEnhancements(s)
     s
   }
+
+  protected def processUrl(url: CharSequence): StringEx = new StringEx(url)
 
   protected def recurseSpanEnhancements(s: StringEx): StringEx =
     s.replaceAll(regexes.spanEnhancements, m =&gt; {
@@ -650,20 +690,6 @@ Look! I can reference [another paragraph](#mypara).</code></pre>
     val out = new StringWriter(cs.length)
     process(cs, out)
     return out.toString
-  }
-
-  def renderToFile(src: File, dst: File, force: Boolean = false): Unit = {
-    if (!src.isFile)
-      throw new FileNotFoundException(&quot;File &quot; + src.toString + &quot; not found.&quot;)
-    if (!force &amp;&amp; dst.isFile &amp;&amp; src.lastModified &lt; dst.lastModified) return
-    else {
-      val sourceText = FileUtils.readFileToString(src, &quot;UTF-8&quot;)
-      val out = new FileWriter(dst)
-      try {
-      } finally {
-        out.close
-      }
-    }
   }
 
 }</code></pre>

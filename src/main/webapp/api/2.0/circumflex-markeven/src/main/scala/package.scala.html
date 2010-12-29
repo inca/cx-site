@@ -11,7 +11,6 @@
         <td class="code">
           <pre class="scala"><code>package ru.circumflex
 
-import java.io._
 import java.util.Random
 import java.util.regex.Pattern
 import collection.mutable.HashMap
@@ -25,7 +24,7 @@ import markeven._</code></pre>
 <p>Package <code>markeven</code> contains a rendering method for Markeven Processor as well as utility methods and constants used under the hood.</p>
 <p>You should import this package to use Circumflex Markeven in your application:</p>
 <pre><code>import ru.circumflex.markeven._</code></pre>
-<h1>Rendering methods</h1>
+<h1>Rendering HTML</h1>
 <p>The <code>toHtml</code> method is used to perform text-to-html conversion using default <code>MarkevenProcessor</code>. The usage is pretty simple:</p>
 <pre class="scala"><code>val text = """
 Hello world!              {#hi.greeting.example}
@@ -37,12 +36,6 @@ val html = toHtml(text)</code></pre>
 <p>The example above yields following HTML:</p>
 <pre class="html"><code>&lt;h1 id="hi" class="greeting example"&gt;Hello world!&lt;/h1&gt;
 &lt;p&gt;This is a test.&lt;/p&gt;</code></pre>
-<p>You can also use handy <code>renderToFile</code> method, which renders the contents of specified <code>src</code> file into specified <code>dst</code> file:</p>
-<pre><code>val src = new File("/path/to/my/text/file.txt")
-val dst = new File("/path/to/my/text/file.txt.html")
-markeven.renderToFile(src, dst)</code></pre>
-<p>It also performs last modified timestamps checking to avoid unnecessary transformation, allowing effective caching of static content. If you do not need this caching behavior, set the <code>force</code> parameter to <code>true</code>:</p>
-<pre><code>markeven.renderToFile(src, dst, true)</code></pre>
 <p>You can use your custom <code>MarkevenProcessor</code> implementation with rendering methods: just set the <code>markeven.processor</code> configuration parameter to fully-qualified name of your processor implementation.</p>
 
         </td>
@@ -53,11 +46,7 @@ markeven.renderToFile(src, dst)</code></pre>
 
   def processor = cx.instantiate[MarkevenProcessor](&quot;markeven.processor&quot;, new MarkevenProcessor)
 
-  def toHtml(source: CharSequence): String =
-    processor.toHtml(source)
-
-  def renderToFile(src: File, dst: File, force: Boolean = false): Unit =
-    processor.renderToFile(src, dst, force)
+  def toHtml(source: CharSequence): String = processor.toHtml(source)
 
   // Utilities
 
@@ -95,16 +84,18 @@ markeven.renderToFile(src, dst)</code></pre>
       Pattern.MULTILINE | Pattern.CASE_INSENSITIVE)
     val linkDefinition = Pattern.compile(&quot;^ {0,3}\\[(.+?)\\]: *(\\S.*?)&quot; +
         &quot;(\\n? *\&quot;(.+?)\&quot;)?(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
-    val blockSelector = Pattern.compile(&quot; *+\\{(\\#[a-z0-9_-]+)?((?:\\.[a-z0-9_-]+)+)?\\}$&quot;,
-      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
+    val blockSelector = Pattern.compile(&quot;(?&lt;=\\A[^\\n]*?) *?\\{(\\#[a-zA-Z0-9_-]+)?((?:\\.[a-zA-Z0-9_-]+)+)?\\}$&quot;,
+      Pattern.MULTILINE)
     val tableCellSplit = Pattern.compile(&quot;\\|&quot;)
     val tableSeparatorLine = Pattern.compile(&quot;^[- :|]+$&quot;)
     val macro = Pattern.compile(&quot;\\[\\[((?&gt;[a-zA-Z0-9_-]+:))?(.*?)\\]\\]&quot;, Pattern.DOTALL)
     val codeSpan = Pattern.compile(&quot;(`++)(.+?)\\1&quot;)
     val protectKey = Pattern.compile(&quot;!\\}[0-9a-zA-Z]{&quot; + keySize + &quot;}&quot;)
     val backslashChar = Pattern.compile(&quot;\\\\(\\S)&quot;)
-    val refLinks = Pattern.compile(&quot;\\[([^\\[\\]]++)\\]\\[([^\\[\\]]*+)\\]&quot;)
-    val inlineLinks = Pattern.compile(&quot;\\[([^\\[\\]]++)\\]\\((.*?)( +\&quot;(.*?)\&quot;)?\\)&quot;)
+    val refLinks = Pattern.compile(&quot;\\[([^\\[\\]]*+)\\]\\[([^\\[\\]]*+)\\]&quot;)
+    val refImages = Pattern.compile(&quot;!\\[([^\\[\\]]*+)\\]\\[([^\\[\\]]*+)\\]&quot;)
+    val inlineLinks = Pattern.compile(&quot;\\[([^\\[\\]]*+)\\]\\((.*?)( +\&quot;(.*?)\&quot;)?\\)&quot;)
+    val inlineImages = Pattern.compile(&quot;!\\[([^\\[\\]]*+)\\]\\((.*?)( +\&quot;(.*?)\&quot;)?\\)&quot;)
     val htmlComment = Pattern.compile(&quot;^ {0,3}&lt;!--.*?--&gt;\\s*?(?=\\n+|\\Z)&quot;, Pattern.MULTILINE | Pattern.DOTALL)
     val spanEnhancements = Pattern.compile(&quot;([*_~])(?=\\S)(.+?)(?&lt;=\\S)\\1&quot;)
 

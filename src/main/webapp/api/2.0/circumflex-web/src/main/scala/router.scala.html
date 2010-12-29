@@ -37,9 +37,10 @@ import xml.Node</code></pre>
     sendError(404)
 
   implicit def string2uriMatcher(str: String): RegexMatcher =
-    new RegexMatcher(&quot;uri&quot;, request.uri, prefix + str)
+    new RegexMatcher(&quot;uri&quot;, request.uri, servletContext.getContextPath + prefix + str)
   implicit def regex2uriMatcher(regex: Regex): RegexMatcher =
-    new RegexMatcher(&quot;uri&quot;, request.uri, new Regex(prefix + regex.toString))
+    new RegexMatcher(&quot;uri&quot;, request.uri,
+      new Regex(servletContext.getContextPath + prefix + regex.toString))
 
   // Routes
   val get = new Route(&quot;get&quot;)

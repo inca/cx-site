@@ -386,7 +386,7 @@ Inside block level elements following text enhancements occur:
 You can also use backslash escaping to prevent misinterpreting special characters.
 Following characters can be escaped: ```\`_*{}[]()#+-~.!```
 
-## Links
+## Links & Images
 
 Two style of links are supported: inline and reference.
 
@@ -397,8 +397,23 @@ and are rendered into HTML `a` element: `<a href="http://my_url">my text</a>` an
 Reference-style links are split into link definition and link usage. Using previous examples, here's
 how link definitions could look like:
 
-    [id1]: http://my_url
+    [id1]: http://my_url                                                   {.no-highlight}
     [id2]: http://some_url "some title"
 
 Link usages would then look like this: `[my text][id1]` and `[some text][id2]`. The generated markup
-equals to the previous one.
+is equal to the previous one.
+
+The syntax for images is similar to the one for links: the exclamation `!` sign immediately before
+opening bracket tells markeven to interpret the link as an image. Link text becomes the value of
+`alt` attribute:
+
+    Inline image: ![some image](/img/hello.png "Hello")                             {.no-highlight}
+    
+    Or reference-style image: ![some image][img]
+    
+      [img]: /img/hello.png "Hello"
+      
+Both cases generate following markup for image:
+
+    <img src="/img/hello.png" title="Hello" alt="some image"/>
+
