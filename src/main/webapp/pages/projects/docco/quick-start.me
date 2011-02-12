@@ -23,8 +23,7 @@ where `cxVersion` points to desired Circumflex version. Here's the sample projec
 
     import sbt._                                                          {.scala}
 
-      class MyProject(info: ProjectInfo) extends DefaultProject(info) {
-
+    class MyProject(info: ProjectInfo) extends DefaultProject(info) {
       val cxVersion = "2.0"
 
       override def libraryDependencies = Set(
@@ -36,7 +35,7 @@ where `cxVersion` points to desired Circumflex version. Here's the sample projec
 You can follow [SBT Setup Guide](http://code.google.com/p/simple-build-tool/wiki/Setup)
 to create a new project.
 
-Note that first-time builds usually require a substantial amount of downloaded dependencies.
+Note that first-time builds usually require a substantial amount of dependencies downloads.    {.warning}
 
 The usage is trivial:
 

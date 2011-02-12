@@ -214,6 +214,15 @@ a:hover {
   border:0;
 }
 
+.warning {
+  border-radius:8px;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
+  padding: 16px 16px 16px 64px;
+  border:1px solid #aaaa00;
+  background:#ffffcc url("/icons/warning.png") 4px 4px no-repeat;
+}
+
 /* Code highlighting */
 
 pre, code {
