@@ -1,36 +1,43 @@
 Circumflex web applications run in standard Servlet 2.5 containers. There's a couple of things
 you should do in order to start using Circumflex Web Framework.
 
-Make sure that `circumflex-web.jar` of desired version is in classpath of your
-application. If you use Maven, add following lines to the `pom.xml` of your project:
+If you use [Maven](http://maven.apache.org) for building your project, add following lines
+to `pom.xml` (or merge XML sections accordingly):
 
-    <properties>                                                           {.xml}
+    <properties>                                                  {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-web</artifactId>
-        <version>${cx.version}</version>
+        <version>{cx.version}</version>
       </dependency>
     </dependencies>
 
-Configure `CircumflexFilter` in `/WEB-INF/web.xml`:
+If you prefer [SBT](http://code.google.com/p/simple-build-tool), make sure that `libraryDependencies`
+of your project contains following artifact:
 
-    <web-app version="2.5">                                                 {.xml}
-      <filter>
-        <filter-name>Circumflex Filter</filter-name>
-        <filter-class>ru.circumflex.web.CircumflexFilter</filter-class>
-      </filter>
-      <filter-mapping>
-        <filter-name>Circumflex Filter</filter-name>
-        <url-pattern>*</url-pattern>
-        <dispatcher>REQUEST</dispatcher>
-        <dispatcher>FORWARD</dispatcher>
-        <dispatcher>INCLUDE</dispatcher>
-        <dispatcher>ERROR</dispatcher>
-      </filter-mapping>
-    </web-app>
+    "ru.circumflex" % "circumflex-web" % cxVersion % "compile->default"
+
+where `cxVersion` points to desired Circumflex version. Here's the sample project configuration:
+
+    import sbt._                                                             {.scala}
+
+      class MyProject(info: ProjectInfo) extends DefaultWebProject(info) {
+
+      val cxVersion = "2.0"
+
+      override def libraryDependencies = Set(
+          "ru.circumflex" % "circumflex-web" % cxVersion % "compile->default"
+      ) ++ super.libraryDependencies
+
+    }
+
+You can follow [SBT Setup Guide](http://code.google.com/p/simple-build-tool/wiki/Setup)
+to create a new project.
+
+Note that first-time builds usually require a substantial amount of downloaded dependencies.
 
 Configure the [main request router][main] of your application by setting
 `cx.router` configuration parameter:

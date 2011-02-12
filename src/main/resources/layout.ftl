@@ -25,7 +25,7 @@
   </script>
   <script type="text/javascript" src="/js/application.js">
   </script>
-  <title>Circumflex &mdash; exquisite taste of Scala development</title>
+  <title>Circumflex &mdash; exquisite flavor of Scala development</title>
 </head>
 <body>
 <div id="header">
@@ -34,7 +34,7 @@
       <a href="/" title="Home">C&icirc;rcumflex</a>
     </h1>
     <div id="topnav">
-      <p>exquisite taste of <a href="http://scala-lang.org">Scala</a> development</p>
+      <p>exquisite flavor of <a href="http://scala-lang.org">Scala</a> development</p>
       <div id="slidemenu">
       ${sitemap.toHtml}
       </div>

@@ -1,18 +1,42 @@
 # Circumflex Scalate Helper: Quick Start
 
-Make sure that `circumflex-scalate.jar` of desired version is in classpath of your
-application. If you use Maven, add following lines to the `pom.xml` of your project:
+If you use [Maven](http://maven.apache.org) for building your project, add following lines
+to `pom.xml` (or merge XML sections accordingly):
 
-    <properties>                                                           {.xml}
+    <properties>                                                  {.xml}
       <cx.version><!-- desired version --></cx.version>
     </properties>
     <dependencies>
       <dependency>
         <groupId>ru.circumflex</groupId>
         <artifactId>circumflex-scalate</artifactId>
-        <version>${cx.version}</version>
+        <version>{cx.version}</version>
       </dependency>
     </dependencies>
+
+If you prefer [SBT](http://code.google.com/p/simple-build-tool), make sure that `libraryDependencies`
+of your project contains following artifact:
+
+    "ru.circumflex" % "circumflex-scalate" % cxVersion % "compile->default"
+
+where `cxVersion` points to desired Circumflex version. Here's the sample project configuration:
+
+    import sbt._                                                          {.scala}
+
+      class MyProject(info: ProjectInfo) extends DefaultProject(info) {
+
+      val cxVersion = "2.0"
+
+      override def libraryDependencies = Set(
+          "ru.circumflex" % "circumflex-scalate" % cxVersion % "compile->default"
+      ) ++ super.libraryDependencies
+
+    }
+
+You can follow [SBT Setup Guide](http://code.google.com/p/simple-build-tool/wiki/Setup)
+to create a new project.
+
+Note that first-time builds usually require a substantial amount of downloaded dependencies.
 
 You should import this package if you intend to use Scalate in your web application:
 
