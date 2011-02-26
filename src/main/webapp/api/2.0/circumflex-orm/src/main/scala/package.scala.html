@@ -15,7 +15,7 @@ import ru.circumflex.core._
 import orm._
 import java.util.regex.Pattern
 import net.sf.ehcache.CacheManager
-import java.sql.ResultSet</code></pre>
+import collection.mutable.Stack</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -64,36 +64,51 @@ import java.sql.ResultSet</code></pre>
 
   def tx: Transaction = transactionManager.get
   def COMMIT() = tx.commit()
-  def ROLLBACK() = tx.rollback()
+  def ROLLBACK() = tx.rollback()</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Alias Stack</h2>
+<p>Circumflex ORM offers nice DSL to reference fields of aliased tables:</p>
+<pre><code>val co = Country AS "co"
+val predicate = co.name EQ "Switzerland"</code></pre>
+<p>In this example <code>RelationNode[Country]</code> with alias <code>"co"</code> is implicitly converted into <code>Country</code>, its underlying <code>Relation</code>, because only that relation owns field <code>name</code>. However, the information about the alias is lost during this conversion. We use <code>aliasStack</code> to remember it during conversion so it can be accessed later.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  object aliasStack {
+    protected def _stack: Stack[String] = ctx.get(&quot;orm.aliasStack&quot;) match {
+      case Some(s: Stack[String]) =&gt; s
+      case _ =&gt;
+        val s = Stack[String]()
+        ctx += &quot;orm.aliasStack&quot; -&gt; s
+        s
+    }
+    def pop: Option[String] = if (_stack.size == 0) None else Some(_stack.pop)
+    def push(alias: String): Unit = _stack.push(alias)
+  }
 
   // Implicits
 
-  // for nodes, fields and records
+  // for nodes
 
-  implicit def association2field[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
-      association: Association[K, C, P]): Field[K, C] = association.field
   implicit def relation2node[PK, R &lt;: Record[PK, R]](relation: Relation[PK, R]): RelationNode[PK, R] =
     new RelationNode[PK, R](relation)
   implicit def node2relation[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): R = {
-    ctx(&quot;orm.lastAlias&quot;) = node.alias
+    aliasStack.push(node.alias)
     node.relation.asInstanceOf[R]
   }
-  implicit def field2str(field: Field[_, _]): String = ctx.get(&quot;orm.lastAlias&quot;) match {
-    case Some(alias: String) =&gt;
-      ctx.remove(&quot;orm.lastAlias&quot;)
-      alias + &quot;.&quot; + field.name
-    case _ =&gt; field.name
-  }
+  implicit def vh2colExpr[T, R &lt;: Record[_, R]](vh: ValueHolder[T, R]): ColumnExpression[T, R] =
+    new ColumnExpression(vh)
 
   // for predicates
 
   implicit def string2helper(expression: String): SimpleExpressionHelper =
     new SimpleExpressionHelper(expression)
-  implicit def field2helper(field: Field[_, _]): SimpleExpressionHelper =
-    new SimpleExpressionHelper(field2str(field))
   implicit def string2predicate(expression: String): Predicate =
     new SimpleExpression(expression, Nil)
-  implicit def paramExpr2predicate(expression: ParameterizedExpression): Predicate =
+  implicit def expr2predicate(expression: Expression): Predicate =
     new SimpleExpression(expression.toSql, expression.parameters)
   implicit def predicate2aggregateHelper(predicate: Predicate) =
     new AggregatePredicateHelper(predicate)
@@ -103,18 +118,18 @@ import java.sql.ResultSet</code></pre>
 
   implicit def string2order(expression: String): Order =
     new Order(expression, Nil)
-  implicit def field2order(field: Field[_, _]): Order =
-    new Order(field2str(field), Nil)
+  implicit def vh2order(vh: ValueHolder[_, _]): Order =
+    new Order(vh.aliasedName, Nil)
 
   // for projections
 
   implicit def string2projection(expression: String): Projection[Any] =
     new ExpressionProjection[Any](expression)
-  implicit def field2projection[T](field: Field[T, _]): Projection[T] =
-    new ExpressionProjection[T](field2str(field))
+  implicit def vh2projection[T](vh: ValueHolder[T, _]): Projection[T] =
+    new ExpressionProjection[T](vh.aliasedName)
 
-  implicit def pair2proj[T1, T2](
-      t: (Projection[T1], Projection[T2])) = new PairProjection(t._1, t._2)
+  implicit def pair2proj[T1, T2](t: (Projection[T1], Projection[T2])) =
+    new PairProjection(t._1, t._2)
 
   // Constants
 
@@ -129,12 +144,12 @@ import java.sql.ResultSet</code></pre>
   val RIGHT = JoinType(dialect.rightJoin)
   val FULL = JoinType(dialect.fullJoin)
 
-  val OP_UNION = SetOperation(dialect.union)
-  val OP_UNION_ALL = SetOperation(dialect.unionAll)
-  val OP_EXCEPT = SetOperation(dialect.except)
-  val OP_EXCEPT_ALL = SetOperation(dialect.exceptAll)
-  val OP_INTERSECT = SetOperation(dialect.intersect)
-  val OP_INTERSECT_ALL = SetOperation(dialect.intersectAll)
+  val OP_UNION = SetOperation(dialect.UNION)
+  val OP_UNION_ALL = SetOperation(dialect.UNION_ALL)
+  val OP_EXCEPT = SetOperation(dialect.EXCEPT)
+  val OP_EXCEPT_ALL = SetOperation(dialect.EXCEPT_ALL)
+  val OP_INTERSECT = SetOperation(dialect.INTERSECT)
+  val OP_INTERSECT_ALL = SetOperation(dialect.INTERSECT_ALL)
 
   // Predicates DSL
 
@@ -163,26 +178,25 @@ import java.sql.ResultSet</code></pre>
   // Simple subqueries DSL
 
   def EXISTS(subquery: SQLQuery[_]) =
-    new SubqueryExpression(dialect.exists, subquery)
+    new SubqueryExpression(dialect.EXISTS, subquery)
 
   def NOT_EXISTS(subquery: SQLQuery[_]) =
-    new SubqueryExpression(dialect.notExists, subquery)
+    new SubqueryExpression(dialect.NOT_EXISTS, subquery)
 
   // Simple projections
 
-  def COUNT(expr: String) =
-    new ExpressionProjection[Long](dialect.count + &quot;(&quot; + expr + &quot;)&quot;)
-  def COUNT_DISTINCT(expr: String) =
-    new ExpressionProjection[Long](
-      dialect.count + &quot;(&quot; + dialect.distinct + &quot; &quot; + expr + &quot;)&quot;)
-  def MAX(expr: String) =
-    new ExpressionProjection[Any](dialect.max + &quot;(&quot; + expr + &quot;)&quot;)
-  def MIN(expr: String) =
-    new ExpressionProjection[Any](dialect.min + &quot;(&quot; + expr + &quot;)&quot;)
-  def SUM(expr: String) =
-    new ExpressionProjection[Any](dialect.sum + &quot;(&quot; + expr + &quot;)&quot;)
-  def AVG(expr: String) =
-    new ExpressionProjection[Any](dialect.avg + &quot;(&quot; + expr + &quot;)&quot;)
+  def COUNT(expr: Expression): Projection[Long] =
+    new ExpressionProjection[Long](dialect.COUNT(expr.toSql))
+  def COUNT_DISTINCT(expr: Expression): Projection[Long] =
+    new ExpressionProjection[Long](dialect.COUNT_DISTINCT(expr.toSql))
+  def MAX(expr: Expression): Projection[Any] =
+    new ExpressionProjection[Any](dialect.MAX(expr.toSql))
+  def MIN(expr: Expression) =
+    new ExpressionProjection[Any](dialect.MIN(expr.toSql))
+  def SUM(expr: Expression) =
+    new ExpressionProjection[Any](dialect.SUM(expr.toSql))
+  def AVG(expr: Expression) =
+    new ExpressionProjection[Any](dialect.AVG(expr.toSql))
 
   // Queries DSL
 

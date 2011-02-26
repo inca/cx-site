@@ -11,9 +11,9 @@
         <td class="code">
           <pre class="scala"><code>package ru.circumflex.orm
 
-import ru.circumflex.core._
 import xml._
-import java.io.File</code></pre>
+import java.io.File
+import ru.circumflex.core._</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -140,7 +140,7 @@ import java.io.File</code></pre>
       val k = a.key
       val field = r.relation.getClass.getMethod(k).invoke(r).asInstanceOf[Field[Any, R]]
       val v = convertValue(field, a.value.toString)
-      ctx(&quot;orm.lastAlias&quot;) = &quot;root&quot;
+      aliasStack.push(&quot;root&quot;)
       crit.add(field EQ v)
     })
     return crit

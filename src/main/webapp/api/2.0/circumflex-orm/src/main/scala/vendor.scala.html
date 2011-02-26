@@ -26,10 +26,13 @@
         </td>
         <td class="code">
           <pre class="scala"><code>class PostgreSQLDialect extends Dialect {
+  override def driverClass = &quot;org.postgresql.Driver&quot;
   override def timestampType = &quot;TIMESTAMPTZ&quot;
 }
 
 class MySQLDialect extends Dialect {
+  override def driverClass = &quot;com.mysql.jdbc.Driver&quot;
+
   override def initializeField[R &lt;: Record[_, R]](field: Field[_, R]): Unit = {
     // do nothing -- for MySQL you don't need to create manually a sequence for auto-incrementable fields
   }
@@ -50,14 +53,17 @@ class MySQLDialect extends Dialect {
     throw new UnsupportedOperationException(&quot;This operation is unsupported in the MySQL dialect.&quot;)
 }
 
-class OracleDialect extends Dialect
+class OracleDialect extends Dialect {
+  override def driverClass = &quot;oracle.jdbc.driver.OracleDriver&quot;
+}
 
 class H2Dialect extends Dialect {
+  override def driverClass = &quot;org.h2.Driver&quot;
   override def textType = &quot;VARCHAR&quot;
   override def createIndex(idx: Index): String = {
     var result = &quot;CREATE &quot;
     if (idx.unique_?) result += &quot;UNIQUE &quot;
-    result += &quot;INDEX &quot; + quoteIdentifier(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
+    result += &quot;INDEX &quot; + idx.name + &quot; ON &quot; + idx.relation.qualifiedName +
         &quot; (&quot; + idx.expression + &quot;)&quot;
     if (idx.where != EmptyPredicate)
       result += &quot; WHERE &quot; + idx.where.toInlineSql

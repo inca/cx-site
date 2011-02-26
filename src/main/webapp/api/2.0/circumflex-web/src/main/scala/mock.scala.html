@@ -34,13 +34,10 @@ import org.mortbay.jetty.testing.{HttpTester, ServletTester}</code></pre>
 
   def initTester() = {
     _tester = new ServletTester()
-    _tester.setContextPath(&quot;/&quot;)
-    _tester.setResourceBase(Circumflex.get(&quot;cx.root&quot;) match {
-      case Some(s: String) =&gt; s
-      case _ =&gt; &quot;src/main/webapp&quot;
-    })
+    _tester.setContextPath(contextPath)
+    _tester.setResourceBase(webappRoot)
     _tester.addServlet(classOf[DefaultServlet], &quot;/*&quot;)
-    filters.foreach(f =&gt; _tester.addFilter(f, &quot;/*&quot;, Handler.ALL))
+    _tester.addFilter(classOf[CircumflexFilter], &quot;/*&quot;, Handler.ALL)
   }
 
   override def start = {

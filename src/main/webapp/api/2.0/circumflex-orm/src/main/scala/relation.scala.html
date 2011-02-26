@@ -175,18 +175,9 @@ object Country extends Country with Table[String, Country] {
 
   private def processMember(m: Method): Unit = {
     val cl = m.getReturnType
-    if (classOf[Field[_, R]].isAssignableFrom(cl)) {
-      val f = m.invoke(this).asInstanceOf[Field[_, R]]
-      this._fields ++= List(f)
-      if (f.unique_?) this.UNIQUE(f)
-      this._methodsMap += (f -&gt; m)
-    } else if (classOf[Association[_, R, _]].isAssignableFrom(cl)) {
-      val a = m.invoke(this).asInstanceOf[Association[_, R, _]]
-      this._associations ++= List[Association[_, R, _]](a)
-      this._fields ++= List(a.field)
-      this._methodsMap += (a.field -&gt; m)
-      this._constraints ++= List(associationFK(a))
-      if (a.unique_?) this.UNIQUE(a.field)
+    if (classOf[ValueHolder[_, R]].isAssignableFrom(cl)) {
+      val vh = m.invoke(this).asInstanceOf[ValueHolder[_, R]]
+      processHolder(vh, m)
     } else if (classOf[Constraint].isAssignableFrom(cl)) {
       val c = m.invoke(this).asInstanceOf[Constraint]
       this._constraints ++= List(c)
@@ -194,6 +185,18 @@ object Country extends Country with Table[String, Country] {
       val i = m.invoke(this).asInstanceOf[Index]
       this._indexes ++= List(i)
     }
+  }
+
+  private def processHolder(vh: ValueHolder[_, R], m: Method): Unit = vh match {
+    case f: Field[_, R] =&gt;
+      this._fields ++= List(f)
+      if (f.unique_?) this.UNIQUE(f)
+      this._methodsMap += (f -&gt; m)
+    case a: Association[_, R, _] =&gt;
+      this._associations ++= List[Association[_, R, _]](a)
+      this._constraints ++= List(associationFK(a))
+      processHolder(a.field, m)
+    case _ =&gt;
   }
 
   private def associationFK(a: Association[_, R, _]) =
@@ -258,9 +261,9 @@ object Country extends Country with Table[String, Country] {
         </td>
         <td class="code">
           <pre class="scala"><code>  protected def CONSTRAINT(name: String) = new ConstraintHelper(name, this)
-  protected def UNIQUE(fields: Field[_, R]*) =
-    CONSTRAINT(relationName + &quot;_&quot; + fields.map(_.name).mkString(&quot;_&quot;) + &quot;_key&quot;)
-        .UNIQUE(fields: _*)</code></pre>
+  protected def UNIQUE(columns: ValueHolder[_, R]*) =
+    CONSTRAINT(relationName + &quot;_&quot; + columns.map(_.name).mkString(&quot;_&quot;) + &quot;_key&quot;)
+        .UNIQUE(columns: _*)</code></pre>
         </td>
       </tr>
       <tr id="section-12">

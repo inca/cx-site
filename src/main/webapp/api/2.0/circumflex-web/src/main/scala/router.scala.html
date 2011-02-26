@@ -31,8 +31,11 @@ import xml.Node</code></pre>
 
   implicit def string2response(str: String): RouteResponse =
     new RouteResponse(str)
-  implicit def xml2response(xml: Node): RouteResponse =
+  implicit def xml2response(xml: Node): RouteResponse = {
+    response.contentType(&quot;application/xml&quot;)
     new RouteResponse(&quot;&lt;?xml version=\&quot;1.0\&quot;?&gt;\n&quot; + xml.toString)
+  }
+
   implicit def router2response(router: RequestRouter): RouteResponse =
     sendError(404)
 

@@ -9,9 +9,7 @@
           
         </td>
         <td class="code">
-          <pre class="scala"><code>package ru.circumflex.orm
-
-import java.util.Date</code></pre>
+          <pre class="scala"><code>package ru.circumflex.orm</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -23,7 +21,10 @@ import java.util.Date</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>class Dialect {</code></pre>
+          <pre class="scala"><code>class Dialect {
+
+  def driverClass: String =
+    throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.driver'.&quot;)</code></pre>
         </td>
       </tr>
       <tr id="section-2">
@@ -43,7 +44,7 @@ import java.util.Date</code></pre>
   def dateType = &quot;DATE&quot;
   def timeType = &quot;TIME&quot;
   def timestampType = &quot;TIMESTAMP&quot;
-  def xmlType = &quot;TEXT&quot;</code></pre>
+  def xmlType = &quot;XML&quot;</code></pre>
         </td>
       </tr>
       <tr id="section-3">
@@ -77,33 +78,34 @@ import java.util.Date</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>  def EQ = &quot;= ?&quot;
-  def NE = &quot;&lt;&gt; ?&quot;
-  def GT = &quot;&gt; ?&quot;
-  def GE = &quot;&gt;= ?&quot;
-  def LT = &quot;&lt; ?&quot;
-  def LE = &quot;&lt;= ?&quot;
+          <pre class="scala"><code>  def EQ(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; = &quot; + ex2
+  def NE(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; &lt;&gt; &quot; + ex2
+  def GT(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; &gt; &quot; + ex2
+  def GE(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; &gt;= &quot; + ex2
+  def LT(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; &lt; &quot; + ex2
+  def LE(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; &lt;= &quot; + ex2
 
   def emptyPredicate = &quot;1 = 1&quot;
-  def isNull = &quot;IS NULL&quot;
-  def isNotNull = &quot;IS NOT NULL&quot;
-  def like = &quot;LIKE ?&quot;
-  def ilike = &quot;ILIKE ?&quot;
-  def between = &quot;BETWEEN ? AND ?&quot;
-  def in = &quot;IN&quot;
-  def notIn = &quot;NOT IN&quot;
-  def parameterizedIn(params: Seq[_]) =
-    &quot;IN (&quot; + params.map(p =&gt; &quot;?&quot;).mkString(&quot;, &quot;) + &quot;)&quot;
+  def IS_NULL(ex: String) = ex + &quot; IS NULL&quot;
+  def IS_NOT_NULL(ex: String) = ex + &quot; IS NOT NULL&quot;
+  def LIKE(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; LIKE &quot; + ex2
+  def ILIKE(ex1: String, ex2: String = &quot;?&quot;) = ex1 + &quot; ILIKE &quot; + ex2
+  def BETWEEN(ex: String, v1: String = &quot;?&quot;, v2: String= &quot;?&quot;) =
+    ex + &quot; BETWEEN &quot; + v1 + &quot; AND &quot; + v2
+  def IN(ex: String) = ex + &quot; IN&quot;
+  def NOT_IN(ex: String) = ex + &quot; NOT IN&quot;
+  def parameterizedIn(ex: String, params: Iterable[String]) =
+    ex + &quot; IN (&quot; + params.mkString(&quot;, &quot;) + &quot;)&quot;
 
-  def and = &quot;AND&quot;
-  def or = &quot;OR&quot;
-  def not = &quot;NOT&quot;
+  def AND = &quot;AND&quot;
+  def OR = &quot;OR&quot;
+  def NOT = &quot;NOT&quot;
 
-  def all = &quot;ALL&quot;
-  def some = &quot;SOME&quot;
+  def ALL = &quot;ALL&quot;
+  def SOME = &quot;SOME&quot;
 
-  def exists = &quot;EXISTS&quot;
-  def notExists = &quot;NOT EXISTS&quot;</code></pre>
+  def EXISTS = &quot;EXISTS&quot;
+  def NOT_EXISTS = &quot;NOT EXISTS&quot;</code></pre>
         </td>
       </tr>
       <tr id="section-6">
@@ -113,12 +115,13 @@ import java.util.Date</code></pre>
         </td>
         <td class="code">
           <pre class="scala"><code>  def NULL = &quot;NULL&quot;
-  def distinct = &quot;DISTINCT&quot;
-  def count = &quot;COUNT&quot;
-  def max = &quot;MAX&quot;
-  def min = &quot;MIN&quot;
-  def sum = &quot;SUM&quot;
-  def avg = &quot;AVG&quot;</code></pre>
+  def DISTINCT = &quot;DISTINCT&quot;
+  def COUNT(ex: String) = &quot;COUNT(&quot; + ex + &quot;)&quot;
+  def COUNT_DISTINCT(ex: String) = &quot;COUNT(DISTINCT &quot; + ex + &quot;)&quot;
+  def MAX(ex: String) = &quot;MAX(&quot; + ex + &quot;)&quot;
+  def MIN(ex: String) = &quot;MIN(&quot; + ex + &quot;)&quot;
+  def SUM(ex: String) = &quot;SUM(&quot; + ex + &quot;)&quot;
+  def AVG(ex: String) = &quot;AVG(&quot; + ex + &quot;)&quot;</code></pre>
         </td>
       </tr>
       <tr id="section-7">
@@ -127,12 +130,12 @@ import java.util.Date</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>  def union = &quot;UNION&quot;
-  def unionAll = &quot;UNION ALL&quot;
-  def except = &quot;EXCEPT&quot;
-  def exceptAll = &quot;EXCEPT ALL&quot;
-  def intersect = &quot;INTERSECT&quot;
-  def intersectAll = &quot;INTERSECT ALL&quot;</code></pre>
+          <pre class="scala"><code>  def UNION = &quot;UNION&quot;
+  def UNION_ALL = &quot;UNION ALL&quot;
+  def EXCEPT = &quot;EXCEPT&quot;
+  def EXCEPT_ALL = &quot;EXCEPT ALL&quot;
+  def INTERSECT = &quot;INTERSECT&quot;
+  def INTERSECT_ALL = &quot;INTERSECT ALL&quot;</code></pre>
         </td>
       </tr>
       <tr id="section-8">
@@ -147,6 +150,16 @@ import java.util.Date</code></pre>
       </tr>
       <tr id="section-9">
         <td class="docs">
+          <h2>Param placeholders</h2>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def placeholder = &quot;?&quot;
+  def xmlPlaceholder = &quot;XMLPARSE(DOCUMENT ?)&quot;</code></pre>
+        </td>
+      </tr>
+      <tr id="section-10">
+        <td class="docs">
           <h2>Features Compliance</h2>
 
         </td>
@@ -155,15 +168,13 @@ import java.util.Date</code></pre>
   def supportsDropConstraints_?(): Boolean = true</code></pre>
         </td>
       </tr>
-      <tr id="section-10">
+      <tr id="section-11">
         <td class="docs">
           <h2>Commons</h2>
 
         </td>
         <td class="code">
           <pre class="scala"><code>  def quoteLiteral(expr: String) = &quot;'&quot; + expr.replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;
-
-  def quoteIdentifier(identifier: String) = identifier
 
   def escapeParameter(value: Any): String = value match {
     case Some(v) =&gt; escapeParameter(v)
@@ -172,15 +183,15 @@ import java.util.Date</code></pre>
   }
 
   def relationQualifiedName(relation: Relation[_, _]) =
-    quoteIdentifier(relation.schema.name) + &quot;.&quot; + quoteIdentifier(relation.relationName)
+    relation.schema.name + &quot;.&quot; + relation.relationName
 
   def alias(expression: String, alias: String) =
-    expression + &quot; AS &quot; + quoteIdentifier(alias)
+    expression + &quot; AS &quot; + alias
 
-  def qualifyColumn(field: Field[_, _], tableAlias: String) =
-    tableAlias + &quot;.&quot; + quoteIdentifier(field.name)
+  def qualifyColumn(vh: ValueHolder[_, _], tableAlias: String) =
+    tableAlias + &quot;.&quot; + vh.name
 
-  def on(expression: String) = &quot;ON (&quot; + expression + &quot;)&quot;
+  def ON(expression: Expression) = &quot;ON (&quot; + expression.toInlineSql + &quot;)&quot;
 
   def not(expression: String) = &quot;NOT (&quot; + expression + &quot;)&quot;
 
@@ -188,14 +199,14 @@ import java.util.Date</code></pre>
     expression + &quot; ( &quot; + subquery.toSql + &quot; )&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-11">
+      <tr id="section-12">
         <td class="docs">
           <h2>Data Definition Language</h2>
 
         </td>
         <td class="code">
           <pre class="scala"><code>  def constraintDefinition(constraint: Constraint) =
-    &quot;CONSTRAINT &quot; + quoteIdentifier(constraint.constraintName) + &quot; &quot; + constraint.sqlDefinition
+    &quot;CONSTRAINT &quot; + constraint.constraintName + &quot; &quot; + constraint.sqlDefinition
 
   def alterTable(rel: Relation[_, _], action: String) =
     &quot;ALTER TABLE &quot; + rel.qualifiedName + &quot; &quot; + action
@@ -204,32 +215,32 @@ import java.util.Date</code></pre>
     alterTable(constraint.relation, &quot;ADD &quot; + constraintDefinition(constraint));
 
   def alterTableDropConstraint(constraint: Constraint) =
-    alterTable(constraint.relation, &quot;DROP CONSTRAINT &quot; + quoteIdentifier(constraint.constraintName));
+    alterTable(constraint.relation, &quot;DROP CONSTRAINT &quot; + constraint.constraintName);
 
-  def createSchema(schema: Schema) = &quot;CREATE SCHEMA &quot; + quoteIdentifier(schema.name)
+  def createSchema(schema: Schema) = &quot;CREATE SCHEMA &quot; + schema.name
 
-  def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + quoteIdentifier(schema.name) + &quot; CASCADE&quot;
+  def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + schema.name + &quot; CASCADE&quot;
 
   def createTable[PK, R &lt;: Record[PK, R]](table: Table[PK, R]) =
     &quot;CREATE TABLE &quot; + table.qualifiedName + &quot; (&quot; +
         table.fields.map(_.toSql).mkString(&quot;, &quot;) +
-        &quot;, PRIMARY KEY (&quot; + quoteIdentifier(table.PRIMARY_KEY.name) + &quot;))&quot;
+        &quot;, PRIMARY KEY (&quot; + table.PRIMARY_KEY.name + &quot;))&quot;
 
   def dropTable[PK, R &lt;: Record[PK, R]](table: Table[PK, R]) =
     &quot;DROP TABLE &quot; + table.qualifiedName
 
   def createView[PK, R &lt;: Record[PK, R]](view: View[PK, R]) =
     &quot;CREATE VIEW &quot; + view.qualifiedName + &quot; (&quot; +
-        view.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) + &quot;) AS &quot; +
+        view.fields.map(_.name).mkString(&quot;, &quot;) + &quot;) AS &quot; +
         view.query.toInlineSql
 
   def dropView[PK, R &lt;: Record[PK, R]](view: View[PK, R]) =
-    &quot;DROP VIEW &quot; + quoteIdentifier(view.qualifiedName)
+    &quot;DROP VIEW &quot; + view.qualifiedName
 
   def createIndex(idx: Index): String = {
     var result = &quot;CREATE &quot;
     if (idx.unique_?) result += &quot;UNIQUE &quot;
-    result += &quot;INDEX &quot; + quoteIdentifier(idx.name) + &quot; ON &quot; + idx.relation.qualifiedName +
+    result += &quot;INDEX &quot; + idx.name + &quot; ON &quot; + idx.relation.qualifiedName +
         &quot; USING &quot; + idx.using + &quot; (&quot; + idx.expression + &quot;)&quot;
     if (idx.where != EmptyPredicate)
       result += &quot; WHERE &quot; + idx.where.toInlineSql
@@ -237,7 +248,7 @@ import java.util.Date</code></pre>
   }
 
   def dropIndex(idx: Index) =
-    &quot;DROP INDEX &quot; + quoteIdentifier(idx.relation.schema.name) + &quot;.&quot; + quoteIdentifier(idx.name)
+    &quot;DROP INDEX &quot; + idx.relation.schema.name + &quot;.&quot; + idx.name
 
   def columnDefinition[R &lt;: Record[_, R]](field: Field[_, R]): String = {
     var result = field.name + &quot; &quot; + field.sqlType
@@ -245,6 +256,8 @@ import java.util.Date</code></pre>
     result += defaultExpression(field)
     return result
   }
+
+  def compositeFieldName(names: String*): String = names.mkString(&quot;, &quot;)
 
   def initializeRelation[R &lt;: Record[_, R]](relation: Relation[_, R]): Unit = {}
 
@@ -270,17 +283,17 @@ import java.util.Date</code></pre>
         field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
     }
 
-  def sequenceName[R &lt;: Record[_, R]](f: Field[_, R]) =
-    quoteIdentifier(f.record.relation.schema.name) + &quot;.&quot; +
-        quoteIdentifier(f.record.relation.relationName + &quot;_&quot; + f.name + &quot;_seq&quot;)
+  def sequenceName[R &lt;: Record[_, R]](vh: ValueHolder[_, R]) =
+    vh.record.relation.schema.name + &quot;.&quot; +
+        vh.record.relation.relationName + &quot;_&quot; + vh.name + &quot;_seq&quot;
 
   def uniqueKeyDefinition(uniq: UniqueKey) =
-    &quot;UNIQUE (&quot; + uniq.fields.map(_.name).mkString(&quot;, &quot;) + &quot;)&quot;
+    &quot;UNIQUE (&quot; + uniq.columns.map(_.name).mkString(&quot;, &quot;) + &quot;)&quot;
 
   def foreignKeyDefinition(fk: ForeignKey) =
-    &quot;FOREIGN KEY (&quot; + fk.childFields.map(_.name).mkString(&quot;, &quot;) +
+    &quot;FOREIGN KEY (&quot; + fk.childColumns.map(_.name).mkString(&quot;, &quot;) +
         &quot;) REFERENCES &quot; + fk.parentRelation.qualifiedName + &quot; (&quot; +
-        fk.parentFields.map(_.name).mkString(&quot;, &quot;) + &quot;) &quot; +
+        fk.parentColumns.map(_.name).mkString(&quot;, &quot;) + &quot;) &quot; +
         &quot;ON DELETE &quot; + fk.onDelete.toSql + &quot; &quot; +
         &quot;ON UPDATE &quot; + fk.onUpdate.toSql
 
@@ -288,7 +301,7 @@ import java.util.Date</code></pre>
     &quot;CHECK (&quot; + check.expression + &quot;)&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-12">
+      <tr id="section-13">
         <td class="docs">
           <h2>Structured Query Language</h2>
 
@@ -347,7 +360,7 @@ import java.util.Date</code></pre>
     new Select(expr[PK](&quot;NEXTVAL('&quot; + sequenceName(node.relation.PRIMARY_KEY) + &quot;')&quot;))</code></pre>
         </td>
       </tr>
-      <tr id="section-13">
+      <tr id="section-14">
         <td class="docs">
           <h2>Data Manipulation Language</h2>
 
@@ -355,16 +368,16 @@ import java.util.Date</code></pre>
         <td class="code">
           <pre class="scala"><code>  def insert[PK, R &lt;: Record[PK, R]](dml: Insert[PK, R]): String =
     &quot;INSERT INTO &quot; + dml.relation.qualifiedName +
-        &quot; (&quot; + dml.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) +
-        &quot;) VALUES (&quot; + dml.fields.map(f =&gt; &quot;?&quot;).mkString(&quot;, &quot;) + &quot;)&quot;
+        &quot; (&quot; + dml.fields.map(_.name).mkString(&quot;, &quot;) +
+        &quot;) VALUES (&quot; + dml.fields.map(_.placeholder).mkString(&quot;, &quot;) + &quot;)&quot;
 
   def insertSelect[PK, R &lt;: Record[PK, R]](dml: InsertSelect[PK, R]) =
     &quot;INSERT INTO &quot; + dml.relation.qualifiedName + &quot; (&quot; +
-        dml.relation.fields.map(f =&gt; quoteIdentifier(f.name)).mkString(&quot;, &quot;) + &quot;) &quot; + dml.query.toSql
+        dml.relation.fields.map(_.name).mkString(&quot;, &quot;) + &quot;) &quot; + dml.query.toSql
 
   def update[PK, R &lt;: Record[PK, R]](dml: Update[PK, R]): String = {
     var result = &quot;UPDATE &quot; + dml.node.toSql + &quot; SET &quot; +
-        dml.setClause.map(f =&gt; quoteIdentifier(f._1.name) + &quot; = ?&quot;).mkString(&quot;, &quot;)
+        dml.setClause.map(f =&gt; f._1.name + &quot; = &quot; + f._1.placeholder).mkString(&quot;, &quot;)
     if (dml.where != EmptyPredicate) result += &quot; WHERE &quot; + dml.where.toSql
     return result
   }

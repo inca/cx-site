@@ -29,30 +29,10 @@ import ru.circumflex.core._</code></pre>
         <td class="code">
           <pre class="scala"><code>class Association[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](val field: Field[K, C],
                                                            val parentRelation: Relation[K, P])
-    extends ValueHolder[P, C](field.name, field.record, field.sqlType) { assoc =&gt;</code></pre>
-        </td>
-      </tr>
-      <tr id="section-2">
-        <td class="docs">
-          <p>Column definition methods delegate to underlying field.</p>
+    extends ValueHolder[P, C] { assoc =&gt;
 
-        </td>
-        <td class="code">
-          <pre class="scala"><code>  override def notNull_?(): Boolean = field.notNull_?
-  override def NOT_NULL(): this.type = {
-    field.NOT_NULL
-    return this
-  }
-  override def unique_?(): Boolean = field.unique_?
-  override def UNIQUE(): this.type = {
-    field.UNIQUE
-    return this
-  }
-  override def defaultExpression: Option[String] = field.defaultExpression
-  override def DEFAULT(expr: String): this.type = {
-    field.DEFAULT(expr)
-    return this
-  }
+  def name = field.name
+  def record = field.record
 
   // Cascading actions
 
@@ -80,13 +60,29 @@ import ru.circumflex.core._</code></pre>
     return this
   }
 
+  // Simple expressions
+
+  def IS(record: P): Predicate =
+    new SimpleExpression(dialect.EQ(aliasedName, placeholder), List(record.PRIMARY_KEY.get))
+  def IS_NOT(record: P): Predicate =
+    new SimpleExpression(dialect.NE(aliasedName, placeholder), List(record.PRIMARY_KEY.get))
+  def IN(params: Iterable[P]): Predicate = new SimpleExpression(
+    dialect.parameterizedIn(aliasedName, params.map(p =&gt; placeholder)),
+    params.map(_.PRIMARY_KEY.get).toList)
+
+  def joinPredicate(childAlias: String, parentAlias: String): Predicate = {
+    val lh = dialect.qualifyColumn(field, childAlias)
+    val rh = dialect.qualifyColumn(parentRelation.PRIMARY_KEY, parentAlias)
+    return new SimpleExpression(dialect.EQ(lh, rh), Nil)
+  }
+
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-3">
+      <tr id="section-2">
         <td class="docs">
           <h1>Inverse Associations</h1>
-<p>Inverse assocations provide a way to access child records from parent relation. This type of relationship is often referred to as <em>one-to-one</em> or <em>one-to-many</em> (the former one is implemented by applying a <code>UNIQUE</code> constraint). They are essentially useful in a combination with <code>Criteria</code> for fetching whole hierarchy of associated records in a single SQL <code>SELECT</code>.</p>
+<p>Inverse assocations provide a way to access c hild records from parent relation. This type of relationship is often referred to as <em>one-to-one</em> or <em>one-to-many</em> (the former one is implemented by applying a <code>UNIQUE</code> constraint). They are essentially useful in a combination with <code>Criteria</code> for fetching whole hierarchy of associated records in a single SQL <code>SELECT</code>.</p>
 
         </td>
         <td class="code">
@@ -98,7 +94,7 @@ import ru.circumflex.core._</code></pre>
   def fetch(): Seq[C] = if (record.transient_?) Nil
   else contextCache.cacheInverse(record.PRIMARY_KEY(), association, {
     val root = association.field.record.relation AS &quot;root&quot;
-    ctx(&quot;orm.lastAlias&quot;) = root.alias
+    aliasStack.push(root.alias)
     SELECT(root.*).FROM(root).WHERE(association.field EQ record.PRIMARY_KEY()).list
   })
   def get(): T
@@ -113,13 +109,13 @@ import ru.circumflex.core._</code></pre>
 }
 
 class InverseMany[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
-    val record: P, val association: Association[K, C, P])
+                                                              val record: P, val association: Association[K, C, P])
     extends InverseAssociation[K, C, P, Seq[C]] {
   def get(): Seq[C] = fetch()
 }
 
 class InverseOne[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
-    val record: P, val association: Association[K, C, P])
+                                                             val record: P, val association: Association[K, C, P])
     extends InverseAssociation[K, C, P, Option[C]] {
   def get(): Option[C] = {
     val children = fetch()

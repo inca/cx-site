@@ -18,7 +18,8 @@ import java.util.Date
 import java.sql.{Timestamp, Connection, PreparedStatement, ResultSet}
 import com.mchange.v2.c3p0.{DataSources, ComboPooledDataSource}
 import collection.mutable.HashMap
-import xml._</code></pre>
+import xml._
+import util.control.ControlThrowable</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -101,15 +102,14 @@ import xml._</code></pre>
     }
     case _ =&gt; {
       ORM_LOG.info(&quot;Using c3p0 connection pool.&quot;)
-      val driver = cx.get(&quot;orm.connection.driver&quot;) match {
-        case Some(s: String) =&gt; s
-        case _ =&gt;
-          throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.driver'.&quot;)
-      }
       val url = cx.get(&quot;orm.connection.url&quot;) match {
         case Some(s: String) =&gt; s
         case _ =&gt;
           throw new ORMException(&quot;Missing mandatory configuration parameter 'orm.connection.url'.&quot;)
+      }
+      val driver = cx.get(&quot;orm.connection.driver&quot;) match {
+        case Some(s: String) =&gt; s
+        case _ =&gt; dialect.driverClass
       }
       val username = cx.get(&quot;orm.connection.username&quot;) match {
         case Some(s: String) =&gt; s
@@ -252,6 +252,9 @@ import xml._</code></pre>
     try {
       block
     } catch {
+      case e: ControlThrowable =&gt;
+        ORM_LOG.trace(&quot;Escaped nested transaction via ControlThrowable, ROLLBACK is suppressed.&quot;)
+        throw e
       case e =&gt;
         getConnection.rollback(sp)
         throw e

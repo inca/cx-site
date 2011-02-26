@@ -31,6 +31,9 @@ import ru.circumflex.core._</code></pre>
         <td class="code">
           <pre class="scala"><code>abstract class Record[PK, R &lt;: Record[PK, R]] extends Equals { this: R =&gt;
 
+  implicit def fieldPair2cmp[T1, T2](pair: (Field[T1, R], Field[T2, R])): FieldComposition2[T1, T2, R] =
+    composition(pair._1, pair._2)
+
   implicit def str2ddlHelper(str: String): DefinitionHelper[R] =
     new DefinitionHelper(str, this)</code></pre>
         </td>
@@ -44,7 +47,7 @@ import ru.circumflex.core._</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>  def PRIMARY_KEY: Field[PK, R]
+          <pre class="scala"><code>  def PRIMARY_KEY: ValueHolder[PK, R]
   def transient_?(): Boolean = PRIMARY_KEY.null_?
   def relation: Relation[PK, R]
   def uuid = getClass.getName</code></pre>
@@ -178,6 +181,17 @@ import ru.circumflex.core._</code></pre>
       </tr>
       <tr id="section-4">
         <td class="docs">
+          <h2>Field Compositions</h2>
+<p>Fields can be grouped into field compositions using the <code>composition</code> method. Compositions can be used as primary keys and participate in simple queries. Circumflex ORM currently supports only composition with arity of 2. A pair of fields is implicitly converted into <code>FieldComposition2</code> when necessary.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def composition[T1, T2](f1: Field[T1, R], f2: Field[T2, R]) =
+    new FieldComposition2[T1, T2, R](f1, f2, this)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
           <h2>Inverse Associations</h2>
 <p>One-to-one and one-to-many relationships can be implemented using <code>inverseOne</code> or <code>inverseMany</code> methods.</p>
 
@@ -190,7 +204,7 @@ import ru.circumflex.core._</code></pre>
     new InverseMany[PK, C, R](this, association)</code></pre>
         </td>
       </tr>
-      <tr id="section-5">
+      <tr id="section-6">
         <td class="docs">
           <h2>Equality &amp; Others</h2>
 <p>Two record are considered equal if they share the same type and have same primary keys. Transient records are never equal to each other.</p>
@@ -224,7 +238,7 @@ import ru.circumflex.core._</code></pre>
 }</code></pre>
         </td>
       </tr>
-      <tr id="section-6">
+      <tr id="section-7">
         <td class="docs">
           <h1>Identity Generation Strategies</h1>
 <p>Different identity generation strategies can be used by mixing in one of the <code>Generator</code> traits. Following identity generators are supported out-of-box:</p>

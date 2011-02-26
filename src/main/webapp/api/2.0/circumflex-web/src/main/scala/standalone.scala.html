@@ -12,56 +12,83 @@
           <pre class="scala"><code>package ru.circumflex.web
 
 import ru.circumflex.core._
-import javax.servlet.Filter
-import org.mortbay.jetty.servlet.{ServletHolder, DefaultServlet, Context =&gt; JettyContext}
-import org.mortbay.jetty.{Handler, Server}
-import org.apache.commons.io.FilenameUtils._</code></pre>
+import org.mortbay.jetty.servlet.{Context =&gt; JettyContext}
+import org.mortbay.jetty.webapp.WebAppContext
+import org.mortbay.jetty.{Server}</code></pre>
         </td>
       </tr>
       <tr id="section-1">
         <td class="docs">
           <h1>Standalone Server</h1>
-<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty to start accepting request without even the need to us deployment descriptor (which is otherwise required by Servlet Specification).</p>
+<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty under the curtains. It can be used to start server manually (e.g. via Scala console). Usage is simple: use <code>start</code> method to bring standalone server up and <code>stop</code> method to shut the server down. Initialization are not synchronized, so if you intend dynamic start-stop functionality, consider external synchronization.</p>
+<p>The best practice for setting up the standalone server is to provide a singleton object:</p>
+<pre><code>object MyServer extends StandaloneServer</code></pre>
 <p>Following configuration parameters are required to get standalone server up and running:</p>
 <ul>
-  <li><code>cx.root</code> specifies content root of web application (<code>src/main/webapp</code> is default;</li>
-  <li><code>cx.port</code> specifies port which Jetty will listen to;</li>
-  <li><code>cx.router</code> specifies the class name of the main <code>RequestRouter</code>.</li>
+  <li><code>cx.webappRoot</code> specifies content root of web application (<code>src/main/webapp</code> is default);</li>
+  <li><code>cx.contextPath</code> specifies the context path of web application (<code>/</code> by default);</li>
+  <li><code>cx.port</code> specifies port which Jetty will listen to.</li>
 </ul>
-<p>Usage is simple: use <code>start</code> method to bring standalone server up and <code>stop</code> method to shut the server down.</p>
-<p>Refer to source code and Jetty documentation for more information.</p>
+<p>Jetty's <code>WebAppContext</code> is used as default requests handler: it provides sensible defaults for almost every web application startup (it reads configuration from <code>web.xml</code> and all other Jetty-specific descriptors). You can override default handler:</p>
+<pre><code>object MyServer extends StandaloneServer {
+  context(new JettyContext(...))
+}</code></pre>
+<p>You can also supply your own implementation of Jetty's <code>Server</code>:</p>
+<pre><code>object MyServer extends StandaloneServer {
+   server(new JettyServer(...))
+}</code></pre>
+<p>Refer to Jetty documentation for more information.</p>
 
         </td>
         <td class="code">
           <pre class="scala"><code>class StandaloneServer {
 
-  def filters: Seq[Class[_ &lt;: Filter]] = List(classOf[CircumflexFilter])
+  protected var _jetty: Server = null
+  protected var _context: JettyContext = null
 
-  protected var jetty: Server = null
-  protected var context: JettyContext = null
+  val port: Int = cx.get(&quot;cx.port&quot;) match {
+    case Some(p: Int) =&gt; p
+    case Some(s: String) =&gt; try { s.toInt } catch { case _ =&gt; 8180 }
+    case _ =&gt; 8180
+  }
 
-  def init() = {
-    val webappRoot = cx.get(&quot;cx.root&quot;) match {
-      case Some(s: String) =&gt; s
-      case _ =&gt; &quot;src/main/webapp&quot;
+  val webappRoot: String = cx.get(&quot;cx.webappRoot&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;src/main/webapp&quot;
+  }
+
+  val contextPath: String = cx.get(&quot;cx.contextPath&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;/&quot;
+  }
+
+  def context(jettyContext: JettyContext): this.type = {
+    _context = jettyContext
+    return this
+  }
+
+  def context: JettyContext = {
+    if (_context == null) {
+      _context = new WebAppContext(webappRoot, contextPath)
     }
-    jetty = new Server(cx.get(&quot;cx.port&quot;) match {
-      case Some(p: Int) =&gt; p
-      case Some(s: String) =&gt; try { s.toInt } catch { case _ =&gt; 8180 }
-      case _ =&gt; 8180
-    })
-    context = new JettyContext(jetty, &quot;/&quot;, JettyContext.SESSIONS)
-    context.setResourceBase(separatorsToSystem(webappRoot))
-    context.addServlet(new ServletHolder(new DefaultServlet), &quot;/*&quot;)
-    filters.foreach(f =&gt; context.addFilter(f, &quot;/*&quot;, Handler.ALL))
+    return _context
   }
 
-  def start = {
-    init()
-    jetty.start
+  def server(jettyServer: Server): this.type = {
+    _jetty = jettyServer
+    return this
   }
 
-  def stop = if (jetty != null) jetty.stop
+  def server: Server = {
+    if (_jetty == null) {
+      _jetty = new Server(port)
+      _jetty.setHandler(context)
+    }
+    return _jetty
+  }
+
+  def start = server.start
+  def stop = if (_jetty != null) _jetty.stop
 
 }</code></pre>
         </td>

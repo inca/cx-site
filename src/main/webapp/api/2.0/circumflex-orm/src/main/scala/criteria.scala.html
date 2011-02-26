@@ -264,8 +264,8 @@ import ru.circumflex.core._</code></pre>
     return result
   }
 
-  def AND(criteria: Criteria[PK, R]): Criteria[PK, R] = merge(criteria, dialect.and)
-  def OR(criteria: Criteria[PK, R]): Criteria[PK, R] = merge(criteria, dialect.or)</code></pre>
+  def AND(criteria: Criteria[PK, R]): Criteria[PK, R] = merge(criteria, dialect.AND)
+  def OR(criteria: Criteria[PK, R]): Criteria[PK, R] = merge(criteria, dialect.OR)</code></pre>
         </td>
       </tr>
       <tr id="section-3">
@@ -276,12 +276,12 @@ import ru.circumflex.core._</code></pre>
         <td class="code">
           <pre class="scala"><code>  protected def merge(inverse: InverseAssociation[_, R, _, _], operator: String): Criteria[PK, R] = {
     val criteria = new Criteria[PK, R](rootNode)
-    ctx(&quot;orm.lastAlias&quot;) = rootNode.alias
-    criteria.add(inverse.association.field EQ inverse.record.asInstanceOf[R].PRIMARY_KEY())
+    aliasStack.push(rootNode.alias)
+    criteria.add(inverse.association.asInstanceOf[Association[_, _, R]] IS inverse.record.asInstanceOf[R])
     return merge(criteria, operator)
   }
-  def AND(inverse: InverseAssociation[_, R, _, _]): Criteria[PK, R] = merge(inverse, dialect.and)
-  def OR(inverse: InverseAssociation[_, R, _, _]): Criteria[PK, R] = merge(inverse, dialect.or)
+  def AND(inverse: InverseAssociation[_, R, _, _]): Criteria[PK, R] = merge(inverse, dialect.AND)
+  def OR(inverse: InverseAssociation[_, R, _, _]): Criteria[PK, R] = merge(inverse, dialect.OR)
 
 }</code></pre>
         </td>

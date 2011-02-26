@@ -25,7 +25,7 @@ import ru.circumflex.core._</code></pre>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>trait Query extends SQLable with ParameterizedExpression with Cloneable {
+          <pre class="scala"><code>trait Query extends SQLable with Expression with Cloneable {
 
   // Keep track of last execution time
   protected var _executionTime = 0l
@@ -134,7 +134,7 @@ import ru.circumflex.core._</code></pre>
 }
 
 class NativeSQLQuery[T](projection: Projection[T],
-                        expression: ParameterizedExpression)
+                        expression: Expression)
     extends SQLQuery[T](projection) {
   def parameters = expression.parameters
   def toSql = expression.toSql.replaceAll(&quot;\\{\\*\\}&quot;, projection.toSql)
@@ -162,7 +162,7 @@ class NativeSQLQuery[T](projection: Projection[T],
     where match {
       case EmptyPredicate =&gt;
         this._where = AND(predicates: _*)
-      case p: AggregatePredicate if (p.operator == dialect.and) =&gt;
+      case p: AggregatePredicate if (p.operator == dialect.AND) =&gt;
         p.add(predicates: _*)
       case p =&gt;
         this._where = _where.AND(predicates: _*)
@@ -332,7 +332,7 @@ class Select[T](projection: Projection[T]) extends SQLQuery[T](projection)
   }
 }
 
-class NativeDMLQuery(expression: ParameterizedExpression) extends DMLQuery {
+class NativeDMLQuery(expression: Expression) extends DMLQuery {
   def parameters = expression.parameters
   def toSql = expression.toSql
 }

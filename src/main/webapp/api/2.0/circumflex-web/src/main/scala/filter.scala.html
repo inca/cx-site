@@ -111,6 +111,7 @@ import ru.circumflex.core._</code></pre>
         ctx(&quot;cx.request&quot;) = new HttpRequest(req)
         ctx(&quot;cx.response&quot;) = new HttpResponse(res)
         ctx(&quot;cx.filterChain&quot;) = chain
+        ctx(&quot;cx.locale&quot;) = req.getLocale
         prepareContext(ctx)
         try {
           WEB_LOG.trace(req)
