@@ -9,7 +9,9 @@
           
         </td>
         <td class="code">
-          <pre class="scala"><code>package ru.circumflex.orm</code></pre>
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.sql._</code></pre>
         </td>
       </tr>
       <tr id="section-1">
@@ -29,6 +31,16 @@
       </tr>
       <tr id="section-2">
         <td class="docs">
+          <h2>JDBC methods</h2>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def prepareStatement(conn: Connection, sql: String): PreparedStatement =
+    conn.prepareStatement(sql)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
           <h2>SQL types</h2>
 
         </td>
@@ -47,7 +59,7 @@
   def xmlType = &quot;XML&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-3">
+      <tr id="section-4">
         <td class="docs">
           <h2>Actions for Foreign Keys</h2>
 
@@ -60,7 +72,7 @@
   def fkSetDefault = &quot;SET DEFAULT&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-4">
+      <tr id="section-5">
         <td class="docs">
           <h2>Join Keywords</h2>
 
@@ -72,7 +84,7 @@
   def fullJoin = &quot;FULL JOIN&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-5">
+      <tr id="section-6">
         <td class="docs">
           <h2>Predicates</h2>
 
@@ -108,7 +120,7 @@
   def NOT_EXISTS = &quot;NOT EXISTS&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-6">
+      <tr id="section-7">
         <td class="docs">
           <h2>Functions and others</h2>
 
@@ -124,7 +136,7 @@
   def AVG(ex: String) = &quot;AVG(&quot; + ex + &quot;)&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-7">
+      <tr id="section-8">
         <td class="docs">
           <h2>Set operations</h2>
 
@@ -138,7 +150,7 @@
   def INTERSECT_ALL = &quot;INTERSECT ALL&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-8">
+      <tr id="section-9">
         <td class="docs">
           <h2>Order specificators</h2>
 
@@ -148,7 +160,7 @@
   def desc = &quot;DESC&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-9">
+      <tr id="section-10">
         <td class="docs">
           <h2>Param placeholders</h2>
 
@@ -158,7 +170,7 @@
   def xmlPlaceholder = &quot;XMLPARSE(DOCUMENT ?)&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-10">
+      <tr id="section-11">
         <td class="docs">
           <h2>Features Compliance</h2>
 
@@ -168,7 +180,7 @@
   def supportsDropConstraints_?(): Boolean = true</code></pre>
         </td>
       </tr>
-      <tr id="section-11">
+      <tr id="section-12">
         <td class="docs">
           <h2>Commons</h2>
 
@@ -183,7 +195,9 @@
   }
 
   def relationQualifiedName(relation: Relation[_, _]) =
-    relation.schema.name + &quot;.&quot; + relation.relationName
+    if (supportsSchema_?) relation.schema.name + &quot;.&quot; + relation.relationName
+    else relation.relationName
+
 
   def alias(expression: String, alias: String) =
     expression + &quot; AS &quot; + alias
@@ -199,7 +213,7 @@
     expression + &quot; ( &quot; + subquery.toSql + &quot; )&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-12">
+      <tr id="section-13">
         <td class="docs">
           <h2>Data Definition Language</h2>
 
@@ -301,7 +315,7 @@
     &quot;CHECK (&quot; + check.expression + &quot;)&quot;</code></pre>
         </td>
       </tr>
-      <tr id="section-13">
+      <tr id="section-14">
         <td class="docs">
           <h2>Structured Query Language</h2>
 
@@ -360,16 +374,20 @@
     new Select(expr[PK](&quot;NEXTVAL('&quot; + sequenceName(node.relation.PRIMARY_KEY) + &quot;')&quot;))</code></pre>
         </td>
       </tr>
-      <tr id="section-14">
+      <tr id="section-15">
         <td class="docs">
           <h2>Data Manipulation Language</h2>
 
         </td>
         <td class="code">
-          <pre class="scala"><code>  def insert[PK, R &lt;: Record[PK, R]](dml: Insert[PK, R]): String =
-    &quot;INSERT INTO &quot; + dml.relation.qualifiedName +
-        &quot; (&quot; + dml.fields.map(_.name).mkString(&quot;, &quot;) +
-        &quot;) VALUES (&quot; + dml.fields.map(_.placeholder).mkString(&quot;, &quot;) + &quot;)&quot;
+          <pre class="scala"><code>  def insert[PK, R &lt;: Record[PK, R]](dml: Insert[PK, R]): String = {
+    var result = &quot;INSERT INTO &quot; + dml.relation.qualifiedName
+    if (dml.fields.size &gt; 0)
+      result += &quot; (&quot; + dml.fields.map(_.name).mkString(&quot;, &quot;) +
+          &quot;) VALUES (&quot; + dml.fields.map(_.placeholder).mkString(&quot;, &quot;) + &quot;)&quot;
+    else result += &quot; DEFAULT VALUES&quot;
+    return result
+  }
 
   def insertSelect[PK, R &lt;: Record[PK, R]](dml: InsertSelect[PK, R]) =
     &quot;INSERT INTO &quot; + dml.relation.qualifiedName + &quot; (&quot; +

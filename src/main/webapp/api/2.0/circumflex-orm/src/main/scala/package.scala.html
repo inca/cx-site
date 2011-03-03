@@ -33,21 +33,23 @@ import collection.mutable.Stack</code></pre>
 
   // Commons
 
-  val connectionProvider: ConnectionProvider = cx.instantiate[ConnectionProvider](
-    &quot;orm.connectionProvider&quot;, new DefaultConnectionProvider)
-
-  val typeConverter: TypeConverter = cx.instantiate[TypeConverter](
-    &quot;orm.typeConverter&quot;, new TypeConverter)
-
   val dialect: Dialect = cx.instantiate[Dialect](&quot;orm.dialect&quot;, cx.get(&quot;orm.connection.url&quot;) match {
     case Some(url: String) =&gt;
       if (url.startsWith(&quot;jdbc:postgresql:&quot;)) new PostgreSQLDialect
       else if (url.startsWith(&quot;jdbc:mysql:&quot;)) new MySQLDialect
       else if (url.startsWith(&quot;jdbc:oracle:&quot;)) new OracleDialect
       else if (url.startsWith(&quot;jdbc:h2:&quot;)) new H2Dialect
+      else if (url.startsWith(&quot;jdbc:sqlserver:&quot;)) new MSSQLDialect
+      else if (url.startsWith(&quot;jdbc:db2:&quot;)) new DB2Dialect
       else new Dialect
     case _ =&gt; new Dialect
   })
+
+  val connectionProvider: ConnectionProvider = cx.instantiate[ConnectionProvider](
+    &quot;orm.connectionProvider&quot;, new DefaultConnectionProvider)
+
+  val typeConverter: TypeConverter = cx.instantiate[TypeConverter](
+    &quot;orm.typeConverter&quot;, new TypeConverter)
 
   val transactionManager: TransactionManager = cx.instantiate[TransactionManager](
     &quot;orm.transactionManager&quot;, new DefaultTransactionManager)

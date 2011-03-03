@@ -240,7 +240,7 @@ import util.control.ControlThrowable</code></pre>
                 (errActions: Throwable =&gt; A): A = execute { conn =&gt;
     ORM_LOG.debug(sql)
     val st =_statementsCache.get(sql).getOrElse {
-      val statement = conn.prepareStatement(sql)
+      val statement = dialect.prepareStatement(conn, sql)
       _statementsCache.update(sql, statement)
       statement
     }
