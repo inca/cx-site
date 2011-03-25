@@ -1,0 +1,68 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import core._
+import java.security.MessageDigest</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>core</code> Package</h1>
+<p>Package <code>core</code> contains different shortcuts, utilities and implicits. You should import this package if you intend to use Circumflex API:</p>
+<pre><code>import ru.circumflex.core._</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object core {
+
+  val CX_LOG = new Logger(&quot;ru.circumflex.core&quot;)
+
+  val cx = Circumflex
+
+  def ctx = Context.get
+
+  lazy val msg = cx.instantiate[MessageResolver](&quot;cx.messages&quot;, new PropertyFileResolver)
+
+  // Utils
+
+  def camelCaseToUnderscore(arg: String) = arg.replaceAll(&quot;(?&lt;!^)([A-Z])&quot;,&quot;_$1&quot;).toLowerCase
+
+  def time[T](block: =&gt; T): (Long, T) = {
+    val startTime = System.currentTimeMillis
+    val result = block
+    (System.currentTimeMillis - startTime, result)
+  }
+
+  def any2option[T](obj: T): Option[T] = if (obj == null) None else Some(obj)
+
+  def digest(algorithm: String, text: String) = {
+    val md = MessageDigest.getInstance(algorithm)
+    md.update(text.getBytes)
+    md.digest()
+        .map(b =&gt; Integer.toHexString(0xFF &amp; b))
+        .map(b =&gt; if (b.length == 1) &quot;0&quot; + b else b)
+        .mkString
+  }
+  def md5(text: String) = digest(&quot;md5&quot;, text)
+  def sha256(text: String) = digest(&quot;sha-256&quot;, text)
+
+
+  @inline implicit def symbol2string(sym: Symbol): String = sym.name
+  @inline implicit def symbol2contextVarHelper(sym: Symbol): ContextVarHelper =
+    new ContextVarHelper(sym)
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

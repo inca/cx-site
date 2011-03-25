@@ -1,0 +1,185 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import java.util.Random
+import java.util.regex.Pattern
+import collection.mutable.HashMap
+import core._
+import markeven._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>markeven</code> Package</h1>
+<p>Package <code>markeven</code> contains a rendering method for Markeven Processor as well as utility methods and constants used under the hood.</p>
+<p>You should import this package to use Circumflex Markeven in your application:</p>
+<pre><code>import ru.circumflex.markeven._</code></pre>
+<h1>Rendering HTML</h1>
+<p>The <code>toHtml</code> method is used to perform text-to-html conversion using default <code>MarkevenProcessor</code>. The usage is pretty simple:</p>
+<pre class="scala"><code>val text = """
+Hello world!              {#hi.greeting.example}
+============
+
+This is a test.
+"""
+val html = toHtml(text)</code></pre>
+<p>The example above yields following HTML:</p>
+<pre class="html"><code>&lt;h1 id="hi" class="greeting example"&gt;Hello world!&lt;/h1&gt;
+&lt;p&gt;This is a test.&lt;/p&gt;</code></pre>
+<p>You can use your custom <code>MarkevenProcessor</code> implementation with rendering methods: just set the <code>markeven.processor</code> configuration parameter to fully-qualified name of your processor implementation.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object markeven {
+
+  // Rendering stuff
+
+  def processor = cx.instantiate[MarkevenProcessor](&quot;markeven.processor&quot;, new MarkevenProcessor)
+
+  def toHtml(source: CharSequence): String = processor.toHtml(source)
+
+  // Utilities
+
+  val chars = &quot;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;
+  val keySize = 20
+  val rnd = new Random
+
+  val escapeMap = Map[String, String](
+    &quot;\\\\&quot; -&gt; &quot;&amp;#92;&quot;,
+    &quot;\\`&quot; -&gt; &quot;&amp;#96;&quot;,
+    &quot;\\_&quot; -&gt; &quot;&amp;#95;&quot;,
+    &quot;\\*&quot; -&gt; &quot;&amp;#42;&quot;,
+    &quot;\\{&quot; -&gt; &quot;&amp;#123;&quot;,
+    &quot;\\}&quot; -&gt; &quot;&amp;#125;&quot;,
+    &quot;\\[&quot; -&gt; &quot;&amp;#91;&quot;,
+    &quot;\\]&quot; -&gt; &quot;&amp;#93;&quot;,
+    &quot;\\(&quot; -&gt; &quot;&amp;#40;&quot;,
+    &quot;\\)&quot; -&gt; &quot;&amp;#41;&quot;,
+    &quot;\\#&quot; -&gt; &quot;&amp;#35;&quot;,
+    &quot;\\+&quot; -&gt; &quot;&amp;#43;&quot;,
+    &quot;\\-&quot; -&gt; &quot;&amp;#45;&quot;,
+    &quot;\\~&quot; -&gt; &quot;&amp;#126;&quot;,
+    &quot;\\.&quot; -&gt; &quot;&amp;#46;&quot;,
+    &quot;\\!&quot; -&gt; &quot;&amp;#33;&quot;)
+
+  object regexes {
+    val lineEnds = Pattern.compile(&quot;\\r\\n|\\r&quot;)
+    val blankLines = Pattern.compile(&quot;^ +$&quot;, Pattern.MULTILINE)
+    val blocks = Pattern.compile(&quot;\\n{2,}&quot;)
+    val lines = Pattern.compile(&quot;\\n&quot;)
+    val htmlNameExpr = &quot;(?&gt;[a-z][a-z0-9\\-_:.]*+\\b)&quot;
+    val inlineHtmlBlockStart = Pattern.compile(&quot;^ {0,3}&lt;(&quot; + htmlNameExpr + &quot;)[\\S\\s]*?(/)?&gt;&quot;,
+      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE)
+    val inlineHtmlSpanStart = Pattern.compile(&quot;&lt;(&quot; + htmlNameExpr + &quot;)[\\S\\s]*?(/)?&gt;&quot;,
+      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE)
+    val linkDefinition = Pattern.compile(&quot;^ {0,3}\\[(.+?)\\]: *(\\S.*?)&quot; +
+        &quot;(\\n? *\&quot;(.+?)\&quot;)?(?=\\n+|\\Z)&quot;, Pattern.MULTILINE)
+    val blockSelector = Pattern.compile(&quot;(?&lt;=\\A[^\\n]*?) *?\\{(\\#[a-zA-Z0-9_-]+)?((?:\\.[a-zA-Z0-9_-]+)+)?\\}$&quot;,
+      Pattern.MULTILINE)
+    val tableCellSplit = Pattern.compile(&quot;\\|&quot;)
+    val tableSeparatorLine = Pattern.compile(&quot;^[- :|]+$&quot;)
+    val macro = Pattern.compile(&quot;\\[\\[((?&gt;[a-zA-Z0-9_-]+:))?(.*?)\\]\\]&quot;, Pattern.DOTALL)
+    val codeSpan = Pattern.compile(&quot;(`++)(.+?)\\1&quot;)
+    val protectKey = Pattern.compile(&quot;!\\}[0-9a-zA-Z]{&quot; + keySize + &quot;}&quot;)
+    val backslashChar = Pattern.compile(&quot;\\\\(\\S)&quot;)
+    val refLinks = Pattern.compile(&quot;\\[([^\\[\\]]*+)\\]\\[([^\\[\\]]*+)\\]&quot;)
+    val refImages = Pattern.compile(&quot;!\\[([^\\[\\]]*+)\\]\\[([^\\[\\]]*+)\\]&quot;)
+    val inlineLinks = Pattern.compile(&quot;\\[([^\\[\\]]*+)\\]\\((.*?)( +\&quot;(.*?)\&quot;)?\\)&quot;)
+    val inlineImages = Pattern.compile(&quot;!\\[([^\\[\\]]*+)\\]\\((.*?)( +\&quot;(.*?)\&quot;)?\\)&quot;)
+    val htmlComment = Pattern.compile(&quot;^ {0,3}&lt;!--.*?--&gt;\\s*?(?=\\n+|\\Z)&quot;, Pattern.MULTILINE | Pattern.DOTALL)
+    val spanEnhancements = Pattern.compile(&quot;([*_~])(?=\\S)(.+?)(?&lt;=\\S)\\1&quot;)
+
+    // escape patterns
+
+    val e_amp = Pattern.compile(&quot;&amp;(?!#?[xX]?[0-9a-zA-Z]+;)&quot;)
+    val e_lt = Pattern.compile(&quot;&lt;(?![a-z/?\\$!])&quot;)
+
+    // deterministic patterns
+
+    val d_code = Pattern.compile(&quot;(?: {4,}.*\\n?)+&quot;)
+    val d_div = Pattern.compile(&quot;(?: {0,3}\\|.*\\n?)+&quot;)
+    val d_blockquote = Pattern.compile(&quot;(?: {0,3}&gt;.*\\n?)+&quot;)
+    val d_hr = Pattern.compile(&quot;^-{3,} *\\n?$&quot;)
+    val d_table = Pattern.compile(&quot;^-{3,}&gt;?\\n.+\\n *-{3,}\\n?$&quot;, Pattern.DOTALL)
+    val d_heading = Pattern.compile(&quot;^(\\#{1,6}) (.*) *\\#*$&quot;, Pattern.DOTALL)
+    val d_h1 = Pattern.compile(&quot;^(.+)\\n=+\\n?$&quot;, Pattern.DOTALL)
+    val d_h2 = Pattern.compile(&quot;^(.+)\\n-+\\n?$&quot;, Pattern.DOTALL)
+
+    // trimming patterns
+
+    val t_blockquote = Pattern.compile(&quot;^ *&gt;&quot;, Pattern.MULTILINE)
+    val t_div = Pattern.compile(&quot;^ *\\|&quot;, Pattern.MULTILINE)
+    val t_ul = Pattern.compile(&quot;^(\\* +)&quot;)
+    val t_ol = Pattern.compile(&quot;^(\\d+\\. +)&quot;)
+    val t_tr = Pattern.compile(&quot;^\\|&quot;)
+
+    // list split patterns
+
+    val s_ul = Pattern.compile(&quot;\\n+(?=\\* )&quot;)
+    val s_ol = Pattern.compile(&quot;\\n+(?=\\d+\\. )&quot;)
+
+    // cache dynamic expressions
+
+    protected val outdentMap = new HashMap[Int, Pattern]
+    protected val placeholder = Pattern.compile(&quot;^&quot;, Pattern.MULTILINE)
+
+    def outdent(level: Int): Pattern = outdentMap.get(level) match {
+      case Some(p) =&gt; p
+      case _ =&gt;
+        val p = Pattern.compile(&quot;^ {0,&quot; + level + &quot;}&quot;, Pattern.MULTILINE)
+        outdentMap += (level -&gt; p)
+        p
+    }
+
+    protected val htmlTagMap = new HashMap[String, Pattern]
+
+    protected def htmlTagInternal(tag: String): Pattern = htmlTagMap.get(tag) match {
+      case Some(p) =&gt; p
+      case _ =&gt;
+        val p = Pattern.compile(&quot;(&lt;&quot; + tag + &quot;\\b.*?(/)?&gt;)|(&lt;/&quot; + tag + &quot;\\s*&gt;)&quot;,
+          Pattern.CASE_INSENSITIVE)
+        htmlTagMap += tag -&gt; p
+        p
+    }
+
+    def htmlTag(tag: String): Pattern = htmlTagInternal(tag.toLowerCase)
+
+    // typographic patterns
+
+    val ty_dash = Pattern.compile(&quot;--&quot;)
+    val ty_larr = Pattern.compile(&quot;&amp;lt;-|&lt;-&quot;)
+    val ty_rarr = Pattern.compile(&quot;-&amp;gt;|-&gt;&quot;)
+    val ty_hellip = Pattern.compile(&quot;\\.{3}&quot;)
+    val ty_trade = Pattern.compile(&quot;\\([tT][mM]\\)&quot;)
+    val ty_reg = Pattern.compile(&quot;\\([rR]\\)&quot;)
+    val ty_copy = Pattern.compile(&quot;\\([cC]\\)&quot;)
+    val ty_ldquo = Pattern.compile(&quot;(?&lt;=\\s|\\A)(?:\&quot;|&amp;quot;)(?=\\S)&quot;)
+    val ty_rdquo = Pattern.compile(&quot;(?&lt;=[\\p{L})?!.])(?:\&quot;|&amp;quot;)(?=[.,;?!*)]|\\s|\\Z)&quot;)
+  }
+
+  object typographics {
+    val dash = cx.get(&quot;me.dash&quot;).map(_.toString).getOrElse(&quot;&amp;mdash;&quot;)
+    val larr = cx.get(&quot;me.larr&quot;).map(_.toString).getOrElse(&quot;&amp;larr;&quot;)
+    val rarr = cx.get(&quot;me.rarr&quot;).map(_.toString).getOrElse(&quot;&amp;rarr;&quot;)
+    val hellip = cx.get(&quot;me.hellip&quot;).map(_.toString).getOrElse(&quot;&amp;hellip;&quot;)
+    val trade = cx.get(&quot;me.trade&quot;).map(_.toString).getOrElse(&quot;&amp;trade;&quot;)
+    val reg = cx.get(&quot;me.reg&quot;).map(_.toString).getOrElse(&quot;&amp;reg;&quot;)
+    val copy = cx.get(&quot;me.copy&quot;).map(_.toString).getOrElse(&quot;&amp;copy;&quot;)
+    val ldquo = cx.get(&quot;me.ldquo&quot;).map(_.toString).getOrElse(&quot;&amp;ldquo;&quot;)
+    val rdquo = cx.get(&quot;me.rdquo&quot;).map(_.toString).getOrElse(&quot;&amp;rdquo;&quot;)
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

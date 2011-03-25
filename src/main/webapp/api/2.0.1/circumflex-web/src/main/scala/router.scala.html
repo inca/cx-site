@@ -1,0 +1,115 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;router.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.web
+
+import ru.circumflex.core._
+import util.matching.Regex
+import xml.Node</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Routing</h1>
+<p>Circumflex Web Framework is designed around the <em>route</em> concept. A route is an HTTP method paired with some matching mechanism and attached block.</p>
+<p>Each route defines a <code>Matcher</code> which describes the conditions a request must satisfy in order to be matched. If such conditions are met, an attached block is executed which yields <code>RouteResponse</code> to the client.</p>
+<p>Routes are declared right inside the body of <code>RequestRouter</code> and are executed one-by-one until first successful match. If no routes match the request, the <code>404 NOT FOUND</code> is sent to the client (unless <code>onNoMatch</code> method is overriden in <code>CircumflexFilter</code>).</p>
+<p>Inside an attached block you can access <code>MatchResult</code> object produced by enclosing route. Match results are stored in <code>Context</code>, you can look them up by name.</p>
+<p>Take a look at our test sources at <a href="http://github.com/inca/circumflex/tree/master/circumflex-web/src/test/scala/"><code>circumflex-web/src/test/scala</code></a> to see routers in action.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class RequestRouter(val prefix: String = &quot;&quot;) {
+
+  implicit def string2response(str: String): RouteResponse =
+    new RouteResponse(str)
+  implicit def xml2response(xml: Node): RouteResponse = {
+    response.contentType(&quot;application/xml&quot;)
+    new RouteResponse(&quot;&lt;?xml version=\&quot;1.0\&quot;?&gt;\n&quot; + xml.toString)
+  }
+
+  implicit def router2response(router: RequestRouter): RouteResponse =
+    sendError(404)
+
+  implicit def string2uriMatcher(str: String): RegexMatcher =
+    new RegexMatcher(&quot;uri&quot;, request.uri, servletContext.getContextPath + prefix + str)
+  implicit def regex2uriMatcher(regex: Regex): RegexMatcher =
+    new RegexMatcher(&quot;uri&quot;, request.uri,
+      new Regex(servletContext.getContextPath + prefix + regex.toString))
+
+  // Routes
+  val get = new Route(&quot;get&quot;)
+  val head = new Route(&quot;head&quot;)
+  val getOrPost = new Route(&quot;get&quot;, &quot;post&quot;)
+  val getOrHead = new Route(&quot;get&quot;, &quot;head&quot;)
+  val post = new Route(&quot;post&quot;)
+  val put = new Route(&quot;put&quot;)
+  val patch = new Route(&quot;patch&quot;)
+  val delete = new Route(&quot;delete&quot;)
+  val options = new Route(&quot;options&quot;)
+  val any = new Route(&quot;get&quot;, &quot;post&quot;, &quot;put&quot;, &quot;patch&quot; , &quot;delete&quot;, &quot;head&quot;, &quot;options&quot;)
+
+  // Filter
+  val filter = new FilterRoute
+
+  // Shortcuts
+  def error(statusCode: Int = 400, message: String = &quot;No message available.&quot;): Nothing =
+    sendError(statusCode, message)
+  def redirect(url: String, flashes: (String, Any)*): Nothing =
+    sendRedirect(url, flashes: _*)
+  def uri: MatchResult = ctx.get(&quot;uri&quot;) match {
+    case Some(m: MatchResult) =&gt; m
+    case None =&gt; new MatchResult(&quot;uri&quot;, &quot;splat&quot; -&gt; request.uri)
+  }
+
+}
+
+trait RoutingContext[-T] {
+  def matches: Boolean
+  protected def dispatch(block: =&gt; T): Unit
+  def and: RoutingContext[T] = if (matches) this else NopRoute
+  def apply(matcher: Matcher): RoutingContext[T] = matcher.apply() match {
+    case Some(matchResults) if matches =&gt;
+      matchResults.foreach(m =&gt; ctx.update(m.name, m))
+      return this
+    case _ =&gt; return NopRoute
+  }
+  def apply(condition: =&gt; Boolean): RoutingContext[T] =
+    if (matches &amp;&amp; condition) this else NopRoute
+  def update(matcher: Matcher, block: =&gt; T): Unit =
+    apply(matcher).dispatch(block)
+  def update(condition: =&gt; Boolean, block: =&gt; T): Unit =
+    apply(condition).dispatch(block)
+}
+
+class Route(matchingMethods: String*) extends RoutingContext[RouteResponse] {
+  val matches = matchingMethods.contains(request.method)
+  protected def dispatch(block: =&gt; RouteResponse): Unit = {
+    val response = block.body
+    send(response)
+  }
+}
+
+class FilterRoute extends RoutingContext[Unit] {
+  def matches = true
+  protected def dispatch(block: =&gt; Unit) = block
+}
+
+object NopRoute extends RoutingContext[Any] {
+  protected def dispatch(block: =&gt; Any): Unit = {}
+  def matches = false
+}
+
+case class RouteResponse(val body: String)</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

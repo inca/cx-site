@@ -1,0 +1,216 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;vendor.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.sql._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Vendor-specific SQL dialects</h1>
+<p>Following vendors are currently supported by Circumflex ORM:</p>
+<ul>
+  <li>PostgreSQL 8.3+;</li>
+  <li>MySQL 5.7+;</li>
+  <li>H2 database.</li>
+</ul>
+<p>We also provide limited support for <code>Oracle</code>, <code>MS SQL Server</code> and <code>DB2</code>. We would appreciate any commits for better vendors support.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class H2Dialect extends Dialect {
+  override def driverClass = &quot;org.h2.Driver&quot;
+  override def textType = &quot;VARCHAR&quot;
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + idx.name + &quot; ON &quot; + idx.relation.qualifiedName +
+        &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      result += &quot; WHERE &quot; + idx.where.toInlineSql
+    return result
+  }
+  override def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + schema.name
+}
+
+class PostgreSQLDialect extends Dialect {
+  override def driverClass = &quot;org.postgresql.Driver&quot;
+  override def timestampType = &quot;TIMESTAMPTZ&quot;
+
+}
+
+class MySQLDialect extends Dialect {
+  override def supportsSchema_? = false
+  override def driverClass = &quot;com.mysql.jdbc.Driver&quot;
+
+  override def initializeField[R &lt;: Record[_, R]](field: Field[_, R]): Unit = {
+    // do nothing -- for MySQL you don't need to create manually a sequence for auto-incrementable fields
+  }
+
+  override def defaultExpression[R &lt;: Record[_, R]](field: Field[_, R]): String =
+    field match {
+      case a: AutoIncrementable[_, _] if (a.autoIncrement_?) =&gt;&quot; AUTO_INCREMENT&quot;
+      case _ =&gt; field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
+    }
+
+  override def identityLastIdPredicate[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): Predicate =
+    new SimpleExpression(node.alias + &quot;.&quot; + node.relation.PRIMARY_KEY.name + &quot; = LAST_INSERT_ID()&quot;, Nil)
+
+  override def identityLastIdQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new Select(expr[PK](&quot;LAST_INSERT_ID()&quot;))
+
+  override def sequenceNextValQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    throw new UnsupportedOperationException(&quot;This operation is unsupported in MySQL dialect.&quot;)
+
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + idx.name + &quot; USING &quot; + idx.using +
+        &quot; ON &quot; + idx.relation.qualifiedName + &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      ORM_LOG.warn(&quot;Ignoring WHERE clause of INDEX &quot; + idx.name +
+          &quot;: predicates are not supported.&quot;)
+    return result
+  }
+}
+
+class OracleDialect extends Dialect {
+  override def driverClass = &quot;oracle.jdbc.driver.OracleDriver&quot;
+
+  override def fkNoAction = &quot;SET_NULL&quot;
+  override def fkRestrict = &quot;SET NULL&quot;
+  override def fkSetDefault = &quot;SET NULL&quot;
+
+  override def numericType(precision: Int, scale: Int): String =
+    &quot;NUMBER&quot; + (if (precision == -1) &quot;&quot; else &quot;(&quot; + precision + &quot;,&quot; + scale + &quot;)&quot;)
+  override def textType = &quot;VARCHAR2(4000)&quot;
+  override def varcharType(length: Int): String =
+    &quot;VARCHAR2&quot; + (if (length == -1) &quot;&quot; else &quot;(&quot; + length + &quot;)&quot;)
+  override def booleanType = &quot;NUMBER(1)&quot;
+
+  override def supportsSchema_? = false
+
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + idx.name +
+        &quot; ON &quot; + idx.relation.qualifiedName + &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      ORM_LOG.warn(&quot;Ignoring WHERE clause of INDEX &quot; + idx.name +
+          &quot;: predicates are not supported.&quot;)
+    return result
+  }
+
+  override def defaultExpression[R &lt;: Record[_, R]](field: Field[_, R]): String =
+    field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
+
+  override def sequenceNextValQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new Select(expr[PK](sequenceName(node.relation.PRIMARY_KEY) + &quot;.nextval FROM dual&quot;))
+  override def identityLastIdPredicate[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): Predicate =
+    throw new UnsupportedOperationException(&quot;This operation is unsupported in Oracle dialect.&quot;)
+  override def identityLastIdQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    throw new UnsupportedOperationException(&quot;This operation is unsupported in Oracle dialect.&quot;)
+
+}
+
+class DB2Dialect extends Dialect {
+  override def driverClass = &quot;com.ibm.db2.jcc.DB2Driver&quot;
+
+  override def prepareStatement(conn: Connection, sql: String): PreparedStatement =
+    conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE)
+
+  override def textType = &quot;VARCHAR(4000)&quot;
+  override def booleanType = &quot;SMALLINT&quot;
+
+  override def defaultExpression[R &lt;: Record[_, R]](field: Field[_, R]): String =
+    field match {
+      case a: AutoIncrementable[_, _] if (a.autoIncrement_?) =&gt; &quot; GENERATED BY DEFAULT AS IDENTITY&quot;
+      case _ =&gt; field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
+    }
+
+  override def sequenceNextValQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new NativeSQLQuery[PK](expr[PK](&quot;NEXTVAL FOR &quot; + sequenceName(node.relation.PRIMARY_KEY)),
+      prepareExpr(&quot;SELECT {*} FROM SYSIBM.SYSDUMMY1&quot;))
+  override def identityLastIdPredicate[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): Predicate =
+    new SimpleExpression(node.alias + &quot;.&quot; + node.relation.PRIMARY_KEY.name + &quot; = IDENTITY_VAL_LOCAL()&quot;, Nil)
+  override def identityLastIdQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new NativeSQLQuery[PK](expr[PK](&quot;IDENTITY_VAL_LOCAL()&quot;),
+      prepareExpr(&quot;SELECT {*}  FROM SYSIBM.SYSDUMMY1&quot;))
+
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + idx.name +
+        &quot; ON &quot; + idx.relation.qualifiedName + &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      ORM_LOG.warn(&quot;Ignoring WHERE clause of INDEX &quot; + idx.name +
+          &quot;: predicates are not supported.&quot;)
+    return result
+  }
+
+  override def dropSchema(schema: Schema) = &quot;DROP SCHEMA &quot; + schema.name + &quot; RESTRICT&quot;
+
+  override def insert[PK, R &lt;: Record[PK, R]](dml: Insert[PK, R]): String = {
+    var result = &quot;INSERT INTO &quot; + dml.relation.qualifiedName
+    if (dml.fields.size &gt; 0)
+      result += &quot; (&quot; + dml.fields.map(_.name).mkString(&quot;, &quot;) +
+          &quot;) VALUES (&quot; + dml.fields.map(_.placeholder).mkString(&quot;, &quot;) + &quot;)&quot;
+    else result += &quot; VALUES DEFAULT&quot;
+    return result
+  }
+
+}
+
+class MSSQLDialect extends Dialect {
+  override def driverClass = &quot;com.microsoft.sqlserver.jdbc.SQLServerDriver&quot;
+
+  override def booleanType = &quot;BIT&quot;
+
+  override def supportsSchema_? = false
+
+  override def defaultExpression[R &lt;: Record[_, R]](field: Field[_, R]): String =
+    field match {
+      case a: AutoIncrementable[_, _] if (a.autoIncrement_?) =&gt;&quot; IDENTITY&quot;
+      case _ =&gt; field.defaultExpression.map(&quot; DEFAULT &quot; + _).getOrElse(&quot;&quot;)
+    }
+
+  override def columnDefinition[R &lt;: Record[_, R]](field: Field[_, R]): String = {
+    var result = field.name + &quot; &quot; + field.sqlType
+    result += defaultExpression(field)
+    if (field.notNull_?) result += &quot; NOT NULL&quot;
+    return result
+  }
+
+  override def createIndex(idx: Index): String = {
+    var result = &quot;CREATE &quot;
+    if (idx.unique_?) result += &quot;UNIQUE &quot;
+    result += &quot;INDEX &quot; + idx.name + &quot; ON &quot; + idx.relation.qualifiedName +
+        &quot; (&quot; + idx.expression + &quot;)&quot;
+    if (idx.where != EmptyPredicate)
+      result += &quot; WHERE &quot; + idx.where.toInlineSql
+    return result
+  }
+
+  override def sequenceNextValQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    throw new UnsupportedOperationException(&quot;This operation is unsupported in MS SQL Server dialect.&quot;)
+
+  override def identityLastIdPredicate[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): Predicate =
+    new SimpleExpression(node.alias + &quot;.&quot; + node.relation.PRIMARY_KEY.name + &quot; = @@IDENTITY&quot;, Nil)
+
+  override def identityLastIdQuery[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]): SQLQuery[PK] =
+    new Select(expr[PK](&quot;@@IDENTITY&quot;))
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

@@ -1,0 +1,199 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;filter.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.web
+
+import java.lang.reflect.InvocationTargetException
+import javax.servlet._
+import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
+import java.io._
+import java.net.URLDecoder
+import ru.circumflex.core._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Circumflex Filter</h1>
+<p><code>CircumflexFilter</code> is an entry point of your web application. It handles context lifecycle (initializes context before the request is processed and finalizes context after the response is sent), serves <a href="#static">static files</a> and executes main request router.</p>
+<p>To setup your web application place following snippet into your <code>WEB-INF/web.xml</code>:</p>
+<pre><code>&lt;filter&gt;
+  &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+  &lt;filter-class&gt;ru.circumflex.web.CircumflexFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+  &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+  &lt;url-pattern&gt;*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;</code></pre>
+<p>You can also include <code>&lt;dispatcher&gt;REQUEST&lt;/dispatcher&gt;</code>, <code>&lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;</code>, <code>&lt;dispatcher&gt;INCLUDE&lt;/dispatcher&gt;</code> and <code>&lt;dispatcher&gt;ERROR&lt;/dispatcher&gt;</code> under <code>filter-mapping</code> if your application requires so (for example, include <code>ERROR</code> dispatcher if you wish to serve error pages with Circumflex; beware of infinite loops, however).</p>
+<p>The filter configuration is saved into the <code>cx.filterConfig</code> configuration parameter and is available throughout your configuration via the <code>filterConfig</code> method of the <code>ru.circumflex.web</code> package.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class CircumflexFilter extends Filter {
+
+  def init(filterConfig: FilterConfig) = {
+    WEB_LOG.info(&quot;Circumflex 2.0.1&quot;)
+    cx(&quot;cx.filterConfig&quot;) = filterConfig
+  }
+
+  def destroy = {}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2 id="static">Serving static</h2>
+<p>Static files are images, stylesheets, javascripts and all other application assets which do not require special processing and can be served to clients &ldquo;as is&rdquo;.</p>
+<p>By default static files are served from <code>/public</code> location of your webapp root, but you can specify different location by setting the <code>cx.public</code> configuration parameter.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def serveStatic(req: HttpServletRequest,
+                  res: HttpServletResponse,
+                  chain: FilterChain): Boolean = {
+    if (req.getMethod.equalsIgnoreCase(&quot;get&quot;) || req.getMethod.equalsIgnoreCase(&quot;head&quot;)) {
+      val publicUri = cx.getOrElse(&quot;cx.public&quot;, &quot;/public&quot;).toString
+      val contextPath = servletContext.getContextPath
+      if (req.getRequestURI.startsWith(contextPath + publicUri)) {
+        chain.doFilter(req, res)
+        return true
+      }
+      val relativeUri = req.getRequestURI.substring(contextPath.length)
+      val uri = URLDecoder.decode(publicUri + relativeUri, &quot;UTF-8&quot;)
+      val path = filterConfig.getServletContext.getRealPath(uri)
+      if (path == null) return false
+      val resource = new File(path)
+      if (resource.isFile) {
+        req.getRequestDispatcher(uri).forward(req, res)
+        return true
+      }
+    }
+    return false
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h2 id="lifecycle">Main Lifecycle</h2>
+<p>The lifecycle of <code>CircumflexFilter</code> involves following actions:</p>
+<ol>
+  <li>try to serve static context and immediately exit on success;</li>
+  <li>
+    <p>initialize <code>Context</code> and fill it with following variables:</p>
+    <ul>
+      <li><code>cx.request</code> will hold current <code>HttpRequest</code>;</li>
+      <li><code>cx.response</code> will hold current <code>HttpResponse</code>;</li>
+      <li><code>cx.filterChain</code> will hold current <code>FilterChain</code>;</li>
+      <li>other variables from <code>prepareContext</code>;</li>
+    </ul>
+  </li>
+  <li>the main router is instantiated (it's class should be specified via the <code>cx.router</code> configuration parameter;</li>
+  <li>depending on the result of router's execution, either the response or the error is flushed to the client;</li>
+  <li>the <code>Context</code> is destroyed.</li>
+</ol>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def doFilter(req: ServletRequest,
+               res: ServletResponse,
+               chain: FilterChain): Unit = (req, res) match {
+    case (req: HttpServletRequest, res: HttpServletResponse) =&gt;
+      // try to serve static first
+      if (serveStatic(req, res, chain)) return
+      // initialize context
+      Context.executeInNew { ctx =&gt;
+        ctx(&quot;cx.request&quot;) = new HttpRequest(req)
+        ctx(&quot;cx.response&quot;) = new HttpResponse(res)
+        ctx(&quot;cx.filterChain&quot;) = chain
+        ctx(&quot;cx.locale&quot;) = req.getLocale
+        prepareContext(ctx)
+        try {
+          WEB_LOG.trace(req)
+          // execute main router
+          try {
+            cx.instantiate(&quot;cx.router&quot;) // ResponseSentException must be thrown
+            onNoMatch()
+          } catch {
+            case e: InvocationTargetException =&gt; e.getCause match {
+              case ex: ResponseSentException =&gt; throw ex
+              case ex: FileNotFoundException =&gt; onNotFound(ex)
+              case ex =&gt; onRouterError(ex)
+            }
+          }
+        } catch {
+          case e: ResponseSentException =&gt; WEB_LOG.trace(res)
+        }
+      }
+    case _ =&gt;
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <p>The <code>prepareContext</code> method populates current context with various useful shortcuts (from <code>web</code> package):</p>
+<ul>
+  <li><code>param</code> &mdash; the <code>param</code> object;</li>
+  <li><code>request</code> &mdash; the <code>request</code> object;</li>
+  <li><code>session</code> &mdash; the <code>session</code> object;</li>
+  <li><code>cookies</code> &mdash; the <code>cookies</code> object;</li>
+  <li><code>headers</code> &mdash; the <code>headers</code> object;</li>
+  <li><code>flash</code> &mdash; the <code>flash</code> object;</li>
+  <li><code>cfg</code> &mdash; the <code>cx</code> object;</li>
+  <li><code>msg</code> &mdash; the <code>msg</code> object.</li>
+</ul>
+<p>If you use custom filter implementation, you are can override this method to populate current context with global variables of your application.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def prepareContext(ctx: Context): Unit = {
+    'param := param
+    'request := request
+    'session := session
+    'cookies := cookies
+    'headers := headers
+    'flash := flash
+    'cfg := cx
+    'msg := msg
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <h2>Callbacks</h2>
+<p><code>CircumflexFilter</code> allows you to override following callbacks:</p>
+<ul>
+  <li><code>onNoMatch</code> is executed if no routes match current request;</li>
+  <li><code>onNotFound</code> is executed if a <code>FileNotFoundException</code> is thrown from a router;</li>
+  <li><code>onRouterError</code> is executed if a general exception is thrown from a router;</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def onNoMatch(): Unit = {
+    WEB_LOG.debug(&quot;No routes matched: &quot; + request)
+    sendError(404)
+  }
+
+  def onRouterError(e: Throwable): Unit = {
+    WEB_LOG.error(&quot;Router threw an exception, see stack trace for details.&quot;, e)
+    sendError(500)
+  }
+
+  def onNotFound(e: Throwable): Unit = {
+    WEB_LOG.debug(&quot;Resource not found, see stack trace for details.&quot;, e)
+    sendError(404)
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
