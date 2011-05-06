@@ -1,0 +1,249 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;node.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import java.lang.String</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Relation Nodes</h1>
+<p>The <code>RelationNode</code> is essentially a wrapper around relation which provides an <code>alias</code> so that it can participate in complex SQL query plans.</p>
+<p>Generally a relation node is created implicitly from <code>Relation</code>. A special alias <code>this</code> is assigned to new relation nodes, it is transformed inside queries into a query-unique alias so that no collisions occur.</p>
+<p>You may assign an alias explicitly using the <code>AS</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class RelationNode[PK, R &lt;: Record[PK, R]](val relation: Relation[PK, R])
+    extends SQLable with Cloneable with Equals {
+
+  protected var _alias: String = &quot;this&quot;
+  def alias = _alias
+  def AS(alias: String): this.type = {
+    this._alias = alias
+    return this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p>Relation nodes allow Scala-like syntactic sugar by using the <code>map</code> method. Following example gives table <code>City</code> an alias <code>ci</code> and uses it to construct a <code>Criteria</code> object.</p>
+<pre><code>(City AS "ci").map(ci =&gt; ci.criteria.add(ci.name LIKE "Lausanne")).list</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def map[T](f: RelationNode[PK, R] =&gt; T): T = f(this)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p>The <code>*</code> method creates a <code>RecordProjection</code> from this node and is widely used in the <code>SELECT</code> clause of SQL queries.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def * = new RecordProjection[PK, R](this)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <p>Each relation node define which projection it yields. When nodes are joined the resulting node contains projections from both nodes.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def projections: Seq[Projection[_]] = List(*)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <p>Creates new <code>Criteria</code> instance with this node as its query plan root.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def criteria = new Criteria[PK, R](this)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <p>Relation nodes can be joined to allow restrictions of associated relations.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def findAssociation[T, F &lt;: Record[T, F]](node: RelationNode[T, F]): Option[Association[T, R, F]] =
+    this.relation.findAssociation(node.relation)
+
+  def JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J],
+                                 on: Expression,
+                                 joinType: JoinType): JoinNode[PK, R, T, J] =
+    new JoinNode(this, node, joinType).ON(on)
+  def JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J],
+                                 joinType: JoinType = LEFT): JoinNode[PK, R, T, J] =
+    findAssociation(node) match {
+      case Some(a: Association[T, R, J]) =&gt;  // many-to-one join
+        new ManyToOneJoin[PK, R, T, J](this, node, a, joinType)
+      case _ =&gt; node.findAssociation(this) match {
+        case Some(a: Association[PK, J, R]) =&gt;  // one-to-many join
+          new OneToManyJoin[PK, R, T, J](this, node, a, joinType)
+        case _ =&gt;
+          new JoinNode(this, node, joinType).ON(EmptyPredicate)
+      }
+    }
+  def INNER_JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J]): JoinNode[PK, R, T, J] =
+    JOIN(node, INNER)
+  def LEFT_JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J]): JoinNode[PK, R, T, J] =
+    JOIN(node, LEFT)
+  def RIGHT_JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J]): JoinNode[PK, R, T, J] =
+    JOIN(node, RIGHT)
+  def FULL_JOIN[T, J &lt;: Record[T, J]](node: RelationNode[T, J]): JoinNode[PK, R, T, J] =
+    JOIN(node, FULL)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-7">
+        <td class="docs">
+          <h2>Equality &amp; Others</h2>
+<p>Two nodes are considered equal if they wrap the same relation and share same aliases.</p>
+<p>The <code>hashCode</code> method delegates to node's relation.</p>
+<p>The <code>canEqual</code> method indicates that two nodes wrap the same relation.</p>
+<p>The <code>clone</code> methods creates a shallow copy of this node (the underlying relation remains unchanged).</p>
+<p>Finally, both <code>toSql</code> and <code>toString</code> return dialect specific SQL expression which appends an alias to relation's qualified name.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  override def equals(that: Any): Boolean = that match {
+    case that: RelationNode[_, _] =&gt;
+      this.canEqual(that) &amp;&amp; this.alias == that.alias
+    case _ =&gt; false
+  }
+
+  override def hashCode: Int = relation.hashCode
+
+  def canEqual(that: Any): Boolean = that match {
+    case that: RelationNode[_, _] =&gt;
+      this.relation == that.relation
+  }
+
+  def toSql: String = dialect.alias(relation.qualifiedName, alias)
+
+  override def clone(): this.type = super.clone.asInstanceOf[this.type]
+
+  override def toString: String = toSql
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-8">
+        <td class="docs">
+          <p>The <code>ProxyNode</code> wraps a node and provides functionality to arrange joined nodes into a query plan (tree-like structure) by allowing to replace an underlying <code>node</code> with it's equivalent <code>JoinNode</code>. Most methods delegate to underlying <code>node</code>.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class ProxyNode[PK, R &lt;: Record[PK, R]](protected[orm] var node: RelationNode[PK, R])
+    extends RelationNode[PK, R](node.relation) {
+
+  override def alias = node.alias
+  override def AS(alias: String): this.type = {
+    node.AS(alias)
+    return this
+  }
+
+  override def projections = node.projections
+  override def * = node.*
+
+  override def canEqual(that: Any): Boolean = node.canEqual(that)
+  override def equals(obj: Any) = node.equals(obj)
+  override def hashCode = node.hashCode
+
+  override def toSql = node.toSql
+
+  override def clone(): this.type = {
+    val newNode = super.clone().asInstanceOf[this.type]
+    val n = node.clone().asInstanceOf[RelationNode[PK, R]]
+    newNode.node = n
+    return newNode
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-9">
+        <td class="docs">
+          <h1>Joins</h1>
+<p>Relations can be joined within one query to allow applying restrictions on associated relations. The <code>JoinNode</code> class represents a join between two relations. We stick to a general convention called <em>left associativity</em>: two joined nodes with equal left nodes are considered equal:</p>
+<pre><code>(ci JOIN co) == ci
+(ci JOIN co JOIN ca) == ((ci JOIN co) JOIN ca)</code></pre>
+<p>This way you can compose arbitrary complex query plans. The join condition (the <code>ON</code> subclause) can be either inferred from associations or specified manually using the <code>ON</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class JoinNode[PKL, L &lt;: Record[PKL, L], PKR, R &lt;: Record[PKR, R]](
+    protected var _left: RelationNode[PKL, L],
+    protected var _right: RelationNode[PKR, R],
+    protected var _joinType: JoinType) extends ProxyNode[PKL, L](_left) {
+
+  def left = _left
+  def right = _right
+  def joinType = _joinType
+
+  protected var _on: Expression = EmptyPredicate
+  def on = _on
+  def ON(expr: Expression): this.type = {
+    _on = expr
+    return this
+  }
+
+  def sqlOn = dialect.ON(this.on)
+
+  override def projections = left.projections ++ right.projections
+
+  def replaceLeft(newLeft: RelationNode[PKL, L]): this.type = {
+    this._left = newLeft
+    return this
+  }
+
+  def replaceRight(newRight: RelationNode[PKR, R]): this.type = {
+    this._right = newRight
+    return this
+  }
+
+  override def toSql = dialect.join(this)
+
+  override def clone(): this.type = super.clone()
+      .replaceLeft(this.left.clone)
+      .replaceRight(this.right.clone)
+
+  override def toString = &quot;(&quot; + left + &quot; -&gt; &quot; + right + &quot;)&quot;
+
+}
+
+class ManyToOneJoin[PKL, L &lt;: Record[PKL, L], PKR, R &lt;: Record[PKR, R]](
+    childNode: RelationNode[PKL, L],
+    parentNode: RelationNode[PKR, R],
+    val association: Association[PKR, L, R],
+    joinType: JoinType) extends JoinNode[PKL, L, PKR, R](childNode, parentNode, joinType) {
+  override def on =
+    if (_on == EmptyPredicate)
+      association.joinPredicate(childNode.alias, parentNode.alias)
+    else _on
+}
+
+class OneToManyJoin[PKL, L &lt;: Record[PKL, L], PKR, R &lt;: Record[PKR, R]](
+    parentNode: RelationNode[PKL, L],
+    childNode: RelationNode[PKR, R],
+    val association: Association[PKL, R, L],
+    joinType: JoinType) extends JoinNode[PKL, L, PKR, R](parentNode, childNode, joinType) {
+  override def on =
+    if (_on == EmptyPredicate)
+      association.joinPredicate(childNode.alias, parentNode.alias)
+    else _on
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

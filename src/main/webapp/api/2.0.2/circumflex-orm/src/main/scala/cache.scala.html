@@ -1,0 +1,255 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;cache.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._
+import collection.mutable.HashMap
+import net.sf.ehcache._
+import java.util.concurrent.atomic._
+import java.io.Serializable</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Context-Level Cache</h1>
+<p>The <code>CacheService</code> trait defines minimum functionality required for organizing context-level cache.</p>
+<p>The context-level cache is designed to maintain records within a single transaction. This functionality is required for all data-retrieval operations.</p>
+<p>The cache consists of two logical parts:</p>
+<ol>
+  <li><em>record cache</em> holds individual records by their relations and <code>id</code>s;</li>
+  <li><em>inverse cache</em> holds sequences of records by their associations and their parent's <code>id</code>s.</li>
+</ol>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait CacheService {
+
+  def invalidate: Unit = {
+    invalidateRecords
+    invalidateInverse
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Records Cache</h2>
+<p>Following methods are used to maintain records cache:</p>
+<ul>
+  <li><code>invalidateRecords</code> clears all records from cache or only those who correspond to specified <code>relation</code>;</li>
+  <li><code>getRecord</code> retrieves a record from cache by specified <code>relation</code> and <code>id</code>;</li>
+  <li><code>updateRecord</code> updates a cache with specified <code>record</code>;</li>
+  <li><code>evictRecord</code> removes a record from cache by specified <code>relation</code> and <code>id</code>.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def invalidateRecords: Unit
+  def invalidateRecords[PK, R &lt;: Record[PK, R]](
+      relation: Relation[PK, R]): Unit
+  def cacheRecord[PK, R &lt;: Record[PK, R]](
+      id: PK, relation: Relation[PK, R], record: =&gt; Option[R]): Option[R]
+  def evictRecord[PK, R &lt;: Record[PK, R]](
+      id: PK, relation: Relation[PK, R]): Unit
+  def updateRecord[PK, R &lt;: Record[PK, R]](
+      id: PK, relation: Relation[PK, R], record: R): R = {
+    evictRecord(id, relation)
+    cacheRecord(id, relation, Some(record))
+    record
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h2>Inverse Cache</h2>
+<p>Following methods are used to maintain inverse cache:</p>
+<ul>
+  <li><code>invalidateInverse</code> clears all records from inverse cache or only those who correspond to specified <code>association</code>;</li>
+  <li><code>cacheInverse</code> retrieves children records from cache by specified <code>association</code> and their <code>parentId</code> or updates cache correspondingly;</li>
+  <li><code>updateInverse</code> updates an inverse cache with specified <code>children</code>;</li>
+  <li><code>evictInverse</code> removes children from inverse cache by specified <code>association</code> and <code>parentId</code>;</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def invalidateInverse: Unit
+  def invalidateInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      association: Association[K, C, P]): Unit
+  def cacheInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      parentId: K, association: Association[K, C, P], children: =&gt; Seq[C]): Seq[C]
+  def evictInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      parentId: K, association: Association[K, C, P]): Unit
+  def updateInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      parentId: K, association: Association[K, C, P], children: Seq[C]): Seq[C] = {
+    evictInverse(parentId, association)
+    cacheInverse(parentId, association, children)
+  }
+  def evictInverse[K, P &lt;: Record[K, P]](
+      parent: P): Unit
+
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <p>The default cache service implementation relies on Scala mutable <code>HashMap</code>s. It can be overriden by setting the <code>orm.contextCache</code> parameter.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class DefaultCacheService extends CacheService {
+
+  class CacheMap extends HashMap[Any, HashMap[Any, Any]] {
+    override def apply(key: Any): HashMap[Any, Any] =
+      super.getOrElseUpdate(key, new HashMap[Any, Any])
+  }
+
+  val _recordsCache = new CacheMap
+  val _inverseCache = new CacheMap
+
+  // Records cache
+
+  def invalidateRecords: Unit = {
+    _recordsCache.clear()
+    Cacheable.relations.foreach(_.invalidateCache)
+  }
+  def invalidateRecords[PK, R &lt;: Record[PK, R]](relation: Relation[PK, R]): Unit =
+    relation match {
+      case c: Cacheable[_, _] =&gt; c.invalidateCache
+      case _ =&gt; _recordsCache.remove(relation)
+    }
+  def evictRecord[PK, R &lt;: Record[PK, R]](id: PK, relation: Relation[PK, R]): Unit =
+    relation match {
+      case c: Cacheable[_, _] =&gt; c.evict(id)
+      case _ =&gt; _recordsCache(relation).remove(id)
+    }
+  def cacheRecord[PK, R &lt;: Record[PK, R]](
+      id: PK, relation: Relation[PK, R], record: =&gt; Option[R]): Option[R] =
+    relation match {
+      case c: Cacheable[PK, R] =&gt; c.cache(id, record)
+      case _ =&gt;
+        val c = _recordsCache(relation)
+        c.get(id).map { r =&gt;
+          Statistics.recordCacheHits.incrementAndGet
+          r.asInstanceOf[R]
+        } orElse {
+          Statistics.recordCacheMisses.incrementAndGet
+          val v = record
+          v.map { r =&gt;
+            c.update(id, r)
+            r
+          }
+        }
+    }
+
+  // Inverse cache
+
+  def invalidateInverse: Unit =
+    _inverseCache.clear()
+  def invalidateInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](association: Association[K, C, P]): Unit =
+    _inverseCache(association).clear()
+  def cacheInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      parentId: K, association: Association[K, C, P], children: =&gt; Seq[C]): Seq[C] = {
+    val cache = _inverseCache(association)
+    cache.get(parentId) match {
+      case Some(children: Seq[C]) =&gt;
+        Statistics.inverseCacheHits.incrementAndGet
+        children
+      case _ =&gt;
+        Statistics.inverseCacheMisses.incrementAndGet
+        val c = children
+        cache.update(parentId, c)
+        c
+    }
+  }
+  def evictInverse[K, C &lt;: Record[_, C], P &lt;: Record[K, P]](
+      parentId: K, association: Association[K, C, P]): Unit =
+    _inverseCache(association).remove(parentId)
+  def evictInverse[K, P &lt;: Record[K, P]](
+      parent: P): Unit = {
+    _inverseCache.keys.foreach {
+      case a: Association[K, _, P] =&gt;
+        if (a.parentRelation == parent.relation)
+          _inverseCache(a).remove(parent.PRIMARY_KEY())
+      case _ =&gt;
+    }
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <p>The <code>CacheService</code> object is used to retrieve context-bound cache service.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>object CacheService {
+  def get: CacheService = ctx.get(&quot;orm.contextCache&quot;) match {
+    case Some(cs: CacheService) =&gt; cs
+    case _ =&gt;
+      val cs = cx.instantiate[CacheService](&quot;orm.contextCache&quot;, new DefaultCacheService)
+      ctx.update(&quot;orm.contextCache&quot;, cs)
+      return cs
+  }
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <h1>Application-Level Cache</h1>
+<p>Circumflex ORM lets you organize application-scope cache (backed by Terracotta Ehcache) for any relation of your application: just mix in the <code>Cacheable</code> trait into your relation. Note that since one record instance may become accessible to several threads, the modification of such records is a subject for concurrency control.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Cacheable[PK, R &lt;: Record[PK, R]] extends Relation[PK, R] { this: R =&gt;
+  protected val _cache: Ehcache = ehcacheManager.addCacheIfAbsent(qualifiedName)
+
+  // Per-relation statistics
+  val cacheHits = new AtomicInteger(0)
+  val cacheMisses = new AtomicInteger(0)
+
+  def cache(id: PK, record: =&gt; Option[R]): Option[R] = {
+    var elem = _cache.get(id)
+    if (elem == null) {
+      elem = new Element(id, record)
+      _cache.put(elem)
+      cacheMisses.incrementAndGet
+      Statistics.recordCacheMisses.incrementAndGet
+    } else {
+      cacheHits.incrementAndGet
+      Statistics.recordCacheHits.incrementAndGet
+    }
+    return elem.getValue().asInstanceOf[Option[R]]
+  }
+  def evict(id: PK): Unit =
+    _cache.remove(id)
+  def invalidateCache(): Unit =
+    _cache.removeAll()
+
+  afterInsert(r =&gt; cache(r.PRIMARY_KEY(), Some(r)))
+  afterUpdate(r =&gt; cache(r.PRIMARY_KEY(), Some(r)))
+  afterDelete(r =&gt; evict(r.PRIMARY_KEY()))
+
+  Cacheable.add(this)
+}
+
+object Cacheable {
+  private var _relations: Seq[Cacheable[_, _]] = Nil
+  def relations = _relations
+  def add[PK, R &lt;: Record[PK, R]](relation: Cacheable[PK, R]): this.type = {
+    _relations ++= List(relation)
+    return this
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

@@ -1,0 +1,195 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;common.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>SQLable &amp; Expression</h1>
+<p>Every object capable of rendering itself into an SQL statement should extend the <code>SQLable</code> trait.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SQLable {
+  def toSql: String
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h1>Parameterized expressions</h1>
+<p>The <code>Expression</code> trait provides basic functionality for dealing with SQL expressions with JDBC-style parameters.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait Expression extends SQLable {
+
+  def parameters: Seq[Any]
+
+  def toInlineSql: String = parameters.foldLeft(toSql)((sql, p) =&gt;
+    sql.replaceFirst(&quot;\\?&quot;, dialect.escapeParameter(p)
+        .replaceAll(&quot;\\\\&quot;, &quot;\\\\\\\\&quot;)
+        .replaceAll(&quot;\\$&quot;, &quot;\\\\\\$&quot;)))
+
+  override def equals(that: Any) = that match {
+    case e: Expression =&gt;
+      e.toSql == this.toSql &amp;&amp; e.parameters.toList == this.parameters.toList
+    case _ =&gt; false
+  }
+
+  override def hashCode = 0
+
+  override def toString = toSql
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h1>Schema Object</h1>
+<p>Every database object which could be created or dropped should implement the <code>SchemaObject</code> trait.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait SchemaObject {
+  def sqlCreate: String
+
+  def sqlDrop: String
+
+  def objectName: String
+
+  override def hashCode = objectName.toLowerCase.hashCode
+
+  override def equals(obj: Any) = obj match {
+    case so: SchemaObject =&gt; so.objectName.equalsIgnoreCase(this.objectName)
+    case _ =&gt; false
+  }
+
+  override def toString = objectName
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <h1>Value holders</h1>
+<p>Value holder is an atomic data-carrier unit of a record. It carries methods for identifying and manipulating data fields inside persistent records.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait ValueHolder[T, R &lt;: Record[_, R]] extends Container[T] with Wrapper[Option[T]] {
+  def name: String
+  def record: R
+  def item = value</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <h2>Setters</h2>
+<p>Setters provide a handy mechanism for preprocessing values before setting them. They are functions <code>T =&gt; T</code> which are applied one-by-one each time you set new non-null value. You can add a setter by invoking the <code>addSetter</code> method:</p>
+<pre><code>val pkg = "package".TEXT.NOT_NULL
+    .addSetter(_.trim)
+    .addSetter(_.toLowerCase)
+    .addSetter(_.replaceAll("/","."))
+
+pkg := "  ru/circumflex/ORM  "  // "ru.circumflex.orm" will be assigned</code></pre>
+<h2>Accessing &amp; Setting Values</h2>
+<p>Values are stored internally as <code>Option[T]</code>. <code>None</code> stands both for uninitialized and <code>null</code> values. Following examples show how field values can be accessed or set:</p>
+<pre><code>val id = "id" BIGINT
+
+// accessing
+id.value    // Option[Long]
+id.get      // Option[Long]
+id()        // Long or exception
+getOrElse(default: Long)  // Long
+
+// setting
+id.set(Some(1l))
+id.setNull
+id := 1l</code></pre>
+<p>The <code>null_?</code> method indicates whether the underlying value is <code>null</code> or not.</p>
+<h2>Methods from <code>Option</code></h2>
+<p>Since <code>ValueHolder</code> is just a wrapper around <code>Option</code>, we provide some methods to work with your values in functional style (they delegate to their equivalents in <code>Option</code>).</p>
+<h2>Equality &amp; Others</h2>
+<p>Two fields are considered equal if they belong to the same type of records and share the same name.</p>
+<p>The <code>hashCode</code> calculation is consistent with <code>equals</code> definition.</p>
+<p>The <code>canEqual</code> method indicates whether the two fields belong to the same type of records.</p>
+<p>Finally, <code>toString</code> returns the qualified name of relation which it belongs to followed by a dot and the field name.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  override def equals(that: Any): Boolean = that match {
+    case that: ValueHolder[_, _] =&gt; this.canEqual(that) &amp;&amp;
+        this.name == that.name
+    case _ =&gt; false
+  }
+  override lazy val hashCode: Int =  record.relation.qualifiedName.hashCode * 31 +
+      name.hashCode
+  def canEqual(that: Any): Boolean = that match {
+    case that: ValueHolder[_, _] =&gt; this.record.canEqual(that.record)
+    case _ =&gt; false
+  }
+  override def toString: String = record.relation.qualifiedName + &quot;.&quot; + name</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <p>The <code>placeholder</code> method returns an expression which is used to mark a parameter inside JDBC <code>PreparedStatement</code> (usually <code>?</code> works, but custom data-type may require some special treatment).</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def placeholder = dialect.placeholder</code></pre>
+        </td>
+      </tr>
+      <tr id="section-7">
+        <td class="docs">
+          <h2>Composing predicates</h2>
+<p><code>ValueHolder</code> provides very basic functionality for predicates composition:</p>
+<ul>
+  <li><code>aliasedName</code> returns the name of this holder qualified with node alias (in appropriate context);</li>
+  <li><code>EQ</code> creates an equality predicate (i.e. <code>column = value</code> or <code>column = column</code>);</li>
+  <li><code>NE</code> creates an inequality predicate (i.e. <code>column &lt;&gt; value</code> or <code>column &lt;&gt; column</code>).</li>
+  <li><code>IS_NULL</code> and <code>IS_NOT_NULL</code> creates (not-)nullability predicates (i.e. <code>column IS NULL</code> or <code>column IS NOT NULL</code>).</li>
+</ul>
+<p>More specific predicates can be acquired from subclasses.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def aliasedName = aliasStack.pop match {
+    case Some(alias: String) =&gt; alias + &quot;.&quot; + name
+    case _ =&gt; name
+  }
+
+  def EQ(value: T): Predicate =
+    new SimpleExpression(dialect.EQ(aliasedName, placeholder), List(value))
+  def EQ(col: ColumnExpression[_, _]): Predicate =
+    new SimpleExpression(dialect.EQ(aliasedName, col.toSql), Nil)
+  def NE(value: T): Predicate =
+    new SimpleExpression(dialect.NE(aliasedName, placeholder), List(value))
+  def NE(col: ColumnExpression[_, _]): Predicate =
+    new SimpleExpression(dialect.NE(aliasedName, col.toSql), Nil)
+  def IS_NULL: Predicate =
+    new SimpleExpression(dialect.IS_NULL(aliasedName), Nil)
+  def IS_NOT_NULL: Predicate =
+    new SimpleExpression(dialect.IS_NOT_NULL(aliasedName), Nil)
+
+}
+
+class ColumnExpression[T, R &lt;: Record[_, R]](column: ValueHolder[T, R])
+    extends Expression {
+  def parameters = Nil
+  val toSql = column.aliasedName
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

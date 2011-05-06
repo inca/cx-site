@@ -1,0 +1,76 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import core._, freemarker._, web._
+import java.io._
+import _root_.freemarker.template._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>ftl</code> package</h1>
+<p>Package <code>ftl</code> contains rendering methods, <code>ftl</code> for use in Circumflex Web Framework and <code>ftl2xxx</code> to render an FTL template into <code>xxx</code>. It also maintains Freemarker configuration, use <code>ftlConfig</code> to access it if you need custom operations, or use <code>ftl.configuration</code> configuration parameter to provide your own implementation of FreeMarker <code>Configuration</code>.</p>
+<p>You should import this package to use Circumflex FreeMarker Helper in your application:</p>
+<pre><code>import ru.circumflex.freemarker._</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object freemarker {
+
+  val ftlConfig: Configuration = cx.instantiate[Configuration](
+    &quot;ftl.configuration&quot;, new DefaultConfiguration)
+
+  def ftl(template: String, data: Any = ctx): Nothing =
+    response.body(r =&gt; ftlConfig.getTemplate(template).process(data, r.getWriter)).flush_!
+
+  def ftl2string(template: String, root: Any = ctx): String = {
+    val result = new StringWriter
+    ftlConfig.getTemplate(template).process(root, result)
+    return result.toString
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h1>Configuring Object Wrapper</h1>
+<p>Circumflex FreeMarker Helper provides facilities to make Scala objects available inside FreeMarker templates. These facilities are implemented inside <code>ScalaObjectWrapper</code>.</p>
+<p>There are couple of things which can be configured:</p>
+<ul>
+  <li>by default, all public fields can be resolved on any object (e.g. <code>${myObj.myField}</code>); to disable this, set <code>ftl.wrapper.resolveFields</code> configuration parameter to <code>false</code>;</li>
+  <li>by default, all public methods can be resolved on any object (e.g. <code>${myObj.myMethod("Hello")}</code>); to disable this, set <code>ftl.wrapper.resolveMethods</code> configuration parameter to <code>false</code>;</li>
+  <li>you can set <code>ftl.wrapper.delegateToDefault</code> configuration parameter to <code>true</code> in order to delegate resolving to FreeMarker's default object wrapper (<code>ObjectWrapper.DEFAULT_WRAPPER</code>); this can be useful if you work with Java types in your Scala applications (e.g. Java lists or maps); by default the delegation does not occur (<code>null</code> is returned if resolving fails).</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  val resolveFields = cx.get(&quot;ftl.wrapper.resolveFields&quot;) match {
+    case Some(b: Boolean) =&gt; b
+    case Some(s: String) =&gt; s.toBoolean
+    case _ =&gt; true
+  }
+  val resolveMethods = cx.get(&quot;ftl.wrapper.resolveMethods&quot;) match {
+    case Some(b: Boolean) =&gt; b
+    case Some(s: String) =&gt; s.toBoolean
+    case _ =&gt; true
+  }
+  val delegateToDefault = cx.get(&quot;ftl.wrapper.delegateToDefault&quot;) match {
+    case Some(b: Boolean) =&gt; b
+    case Some(s: String) =&gt; s.toBoolean
+    case _ =&gt; false
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

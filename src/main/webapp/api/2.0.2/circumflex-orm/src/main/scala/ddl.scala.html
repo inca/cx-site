@@ -1,0 +1,204 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;ddl.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex.orm
+
+import ru.circumflex.core._</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Exporting Database Schema</h1>
+<p>The <code>DDLUnit</code> class provides API for creating and dropping database schema. It features arranging database objects in correct order (preliminary auxiliary objects, tables, constraints, auxiliary database objects) and configurable logging.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class DDLUnit {
+
+  protected var _schemata: Seq[Schema] = Nil
+  def schemata = _schemata
+  protected var _tables: Seq[Table[_, _]] = Nil
+  def tables = _tables
+  protected var _views: Seq[View[_, _]] = Nil
+  def views = _views
+  protected var _constraints: Seq[Constraint] = Nil
+  def constraints = _constraints
+  protected var _preAux: Seq[SchemaObject] = Nil
+  def preAux = _preAux
+  protected var _postAux: Seq[SchemaObject] = Nil
+  def postAux = _postAux
+
+  protected var _msgs: Seq[Msg] = Nil
+  def messages = _msgs
+  def msgsArray: Array[Msg] = messages.toArray
+
+  def this(objects: SchemaObject*) = {
+    this()
+    add(objects: _*)
+  }
+
+  def resetMsgs(): this.type = {
+    _msgs = Nil
+    return this
+  }
+
+  def clear() = {
+    _schemata = Nil
+    _tables = Nil
+    _views = Nil
+    _constraints = Nil
+    _preAux = Nil
+    _postAux = Nil
+    resetMsgs()
+  }
+
+  def add(objects: SchemaObject*): this.type = {
+    objects.foreach(addObject(_))
+    return this
+  }
+
+  def addObject(obj: SchemaObject): this.type = {
+    def processRelation(r: Relation[_, _]) = {
+      addObject(r.schema)
+      r.preAux.foreach(o =&gt;
+        if (!_preAux.contains(o)) _preAux ++= List(o))
+      r.postAux.foreach(o =&gt; addObject(o))
+    }
+    obj match {
+      case t: Table[_, _] =&gt; if (!_tables.contains(t)) {
+        _tables ++= List(t)
+        t.constraints.foreach(c =&gt; addObject(c))
+        t.indexes.foreach(i =&gt; addObject(i))
+        processRelation(t)
+      }
+      case v: View[_, _] =&gt; if (!_views.contains(v)) {
+        _views ++= List(v)
+        processRelation(v)
+      }
+      case c: Constraint =&gt; if (!_constraints.contains(c))
+        _constraints ++= List(c)
+      case s: Schema =&gt; if (!_schemata.contains(s))
+        _schemata ++= List(s)
+      case o =&gt; if (!_postAux.contains(o))
+        _postAux ++= List(o)
+    }
+    return this
+  }
+
+  protected def dropObjects(objects: Seq[SchemaObject]): Unit =
+    for (o &lt;- objects.reverse) tx.execute (o.sqlDrop) { st =&gt;
+      st.executeUpdate
+      _msgs ++= List(new Msg(
+        &quot;orm.ddl.info&quot;,
+        &quot;status&quot; -&gt; (&quot;DROP &quot;  + o.objectName + &quot;: OK&quot;),
+        &quot;sql&quot; -&gt; o.sqlDrop))
+    } { e =&gt;
+      _msgs ++= List(new Msg(
+        &quot;orm.ddl.info&quot;,
+        &quot;status&quot; -&gt; (&quot;DROP &quot;  + o.objectName + &quot;: &quot; + e.getMessage),
+        &quot;sql&quot; -&gt; o.sqlDrop,
+        &quot;error&quot; -&gt; e.getMessage))
+    }
+
+  protected def createObjects(objects: Seq[SchemaObject]): Unit =
+    for (o &lt;- objects) tx.execute(o.sqlCreate) { st =&gt;
+      st.executeUpdate
+      _msgs ++= List(new Msg(
+        &quot;orm.ddl.info&quot;,
+        &quot;status&quot; -&gt; (&quot;CREATE &quot;  + o.objectName + &quot;: OK&quot;),
+        &quot;sql&quot; -&gt; o.sqlCreate))
+    } { e =&gt;
+      _msgs ++= List(new Msg(
+        &quot;orm.ddl.error&quot;,
+        &quot;status&quot; -&gt; (&quot;CREATE &quot;  + o.objectName + &quot;: &quot; + e.getMessage),
+        &quot;sql&quot; -&gt; o.sqlCreate,
+        &quot;error&quot; -&gt; e.getMessage))
+    }
+
+  def DROP(): this.type = {
+    resetMsgs()
+    _drop()
+    return this
+  }
+
+  def _drop(): Unit = tx.execute { conn =&gt;
+  // We will commit every successfull statement.
+    val autoCommit = conn.getAutoCommit
+    conn.setAutoCommit(true)
+    // Execute a script.
+    dropObjects(postAux)
+    dropObjects(views)
+    if (dialect.supportsDropConstraints_?)
+      dropObjects(constraints)
+    dropObjects(tables)
+    dropObjects(preAux)
+    if (dialect.supportsSchema_?)
+      dropObjects(schemata)
+    // Restore auto-commit.
+    conn.setAutoCommit(autoCommit)
+  } { throw _ }
+
+  def CREATE(): this.type = {
+    resetMsgs()
+    _create()
+    return this
+  }
+
+  def _create(): Unit = tx.execute { conn =&gt;
+  // We will commit every successfull statement.
+    val autoCommit = conn.getAutoCommit
+    conn.setAutoCommit(true)
+    // Execute a script.
+    if (dialect.supportsSchema_?)
+      createObjects(schemata)
+    createObjects(preAux)
+    createObjects(tables)
+    createObjects(constraints)
+    createObjects(views)
+    createObjects(postAux)
+    // Restore auto-commit.
+    conn.setAutoCommit(autoCommit)
+  } { throw _ }
+
+  def DROP_CREATE(): this.type = {
+    resetMsgs()
+    _drop()
+    _create()
+    return this
+  }
+
+  def close(): Unit = {
+    tx.close()
+    connectionProvider.close()
+  }
+
+  override def toString: String = {
+    var result = &quot;Circumflex DDL Unit: &quot;
+    if (messages.size == 0) {
+      val objectsCount = (schemata.size +
+          tables.size +
+          constraints.size +
+          views.size +
+          preAux.size +
+          postAux.size)
+      result += objectsCount + &quot; objects in queue.&quot;
+    } else {
+      val infoCount = messages.filter(_.key == &quot;orm.ddl.info&quot;).size
+      val errorsCount = messages.filter(_.key == &quot;orm.ddl.error&quot;).size
+      result += infoCount + &quot; successful statements, &quot; + errorsCount + &quot; errors.&quot;
+    }
+    return result
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>
