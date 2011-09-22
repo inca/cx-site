@@ -58,8 +58,8 @@ Here's a simple example of fictional domain model:
 And here's a snippet which shows various querying options:
 
     // Prepare the relations that will participate in queries:                              {.scala}
-    val ci = City as "ci"
-    val co = Country as "co"
+    val ci = City AS "ci"
+    val co = Country AS "co"
     // Select all cities of Switzerland, return Seq[City]:
     SELECT (ci.*) FROM (ci JOIN co) WHERE (co.code LIKE "ch") ORDER_BY (ci.name ASC) list
     // Select countries and count their cities, return Seq[(Option[Country], Option[Long])]:
