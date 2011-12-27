@@ -1,0 +1,21 @@
+<h1>ORM: Querying</h1>
+<h2 id="select">Select Queries</h2>
+<p>Select queries are used to retrieve <a href="/orm/ddl/part&#95;1.html#record">records</a> or arbitrary <a href="/orm/querying/part&#95;1.html#projection">projections</a> with neat object-oriented DSL which closely resembles SQL syntax:</p>
+<pre class="scala"><code>// prepare relation nodes which will participate in query:
+val co = Country AS "co"
+val ci = City AS "ci"
+// prepare a query:
+val q = SELECT (co.*) FROM (co JOIN ci) WHERE (ci.name LIKE "Lausanne") ORDER_BY (co.name ASC)
+// execute a query:
+q.list    // returns Seq[Country]</code></pre>
+<p>The <code>Select</code> class provides functionality for select queries. It has following structure:</p>
+<ul>
+  <li><code>SELECT</code> clause &mdash; specifies a <a href="/orm/querying/part&#95;1.html#projection">projection</a> which determines the actual result of query execution;</li>
+  <li><code>FROM</code> clause &mdash; specifies <a href="/orm/querying/part&#95;1.html#node">relation nodes</a> which will participate in query;</li>
+  <li><code>WHERE</code> clause &mdash; specifies a <a href="/orm/querying/part&#95;2.html#predicate">predicate</a> which will be used by database to filter the records in result set;</li>
+  <li><code>ORDER_BY</code> clause &mdash; tells database how the result set should be <a href="/orm/querying/part&#95;4.html#order-by">sorted</a>;</li>
+  <li><code>GROUP_BY</code> clause &mdash; specifies a subset of <a href="/orm/querying/part&#95;1.html#projection">projections</a> which will be used by database for <a href="/orm/querying/part&#95;4.html#group-by">grouping</a>;</li>
+  <li><code>HAVING</code> clause &mdash; specifies additional <a href="/orm/querying/part&#95;2.html#predicate">predicate</a> which will be applied by database after <a href="/orm/querying/part&#95;4.html#group-by">grouping</a>;</li>
+  <li><code>LIMIT</code> clause and <code>OFFSET</code> clause &mdash; tell database to return a subset of result set and specify it's boundaries;</li>
+  <li><a href="/orm/querying/part&#95;5.html#set-ops">set operations</a> &mdash; allow to combine the results of two or more <a href="#sql">SQL queries</a>.</li>
+</ul>

@@ -1,0 +1,48 @@
+<h1>ORM: Querying</h1>
+<h2 id="join">Joins</h2>
+<p><em>Joins</em> are used to combine records from two or more relations within a query.</p>
+<p>Joins concept is a part of <a href="http://en.wikipedia.org/wiki/Relational&#95;algebra" title="Relational algebra definition on Wikipedia">relational algebra</a>. If you are not familiar with joins in relational databases, consider spending some time to learn a bit about them. A good place to start will be the <a href="http://en.wikipedia.org/wiki/Join&#95;(SQL)" title="SQL Join definition on Wikipedia">Join_(SQL) article on Wikipedia</a>.</p>
+<p>Joins allow you to build queries which span across several associated relations:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+// find cities by the name of their corresponding countries:
+SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')</code></pre>
+<p>As the example above shows, joins are intended to be used in the <code>FROM</code> clause of query. The result of calling the <code>JOIN</code> method is an instance of <code>JoinNode</code> class:</p>
+<pre class="scala"><code>val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]</code></pre>
+<p>Every <code>JoinNode</code> has it's left side and right side (<code>co JOIN ci</code> is <strong>not</strong> equivalent to <code>ci JOIN co</code>).</p>
+<h3 id="joins-left-ass">Left Associativity</h3>
+<p>An important thing to know is that the join operation is <strong>left-associative</strong>: if join is applied to <code>JoinNode</code> instance, the operation will be delegated to the <code>left</code> side of <code>JoinNode</code>.</p>
+<p>To illustrate this, let's take three associated tables, <code>Country</code>, <code>City</code> and <code>Street</code>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+val st = Street AS "st"</code></pre>
+<p>We want to join them in following order: <code>Country</code> &rarr; (<code>City</code> &rarr; <code>Street</code>). Since join operation is left-associative, we need extra parentheses:</p>
+<pre class="scala"><code>co JOIN (ci JOIN st)</code></pre>
+<p>Now let's join the same tables in following order: (<code>City</code> &rarr; <code>Street</code>) &rarr; <code>Country</code>. In this case the parentheses can be omitted:</p>
+<pre class="scala"><code>ci JOIN st JOIN co</code></pre>
+<h3 id="joins-predicate">Joining Predicate</h3>
+<p>By default Circumflex ORM will try to determine joining predicate (the <code>ON</code> subclause) by searching the <a href="/orm/ddl/part&#95;2.html#association">associations</a> between relations.</p>
+<p>Let's say we have two associated relations, <code>Country</code> and <code>City</code>. We can use implicit joins between <code>Country</code> and <code>City</code>:</p>
+<pre class="scala"><code>Country AS "co" JOIN (City AS "ci")
+// country AS co LEFT JOIN city AS ci ON ci.country_code = co.code
+City AS "ci" JOIN (Country AS "co")
+// city AS ci LEFT JOIN country AS co ON ci.country_code = co.code</code></pre>
+<p>However, if no explicit association exist between relations (or if they are ambiguous), you may need to specify the join predicate explicitly:</p>
+<pre class="scala"><code>ci.JOIN(co).ON("ci.country_code = co.code")</code></pre>
+<h3 id="joins-type">Join Types</h3>
+<p>Like in SQL, joins can be of several types. Depending on the type of join, rows which do not match the joining predicate will be eliminated from one of the sides of join. Following join types are available:</p>
+<ul>
+  <li><code>INNER</code> joins eliminate unmatched rows from both sides;</li>
+  <li><code>LEFT</code> joins return all matched rows plus one copy for each row in the left side relation for which there was no matching right-hand row (extended with <code>NULL</code>s on the right);</li>
+  <li><code>RIGHT</code> joins, conversely, return all matched rows plus one copy for each row in the right side relation for which there was no matching right-hand row (extended with <code>NULL</code>s on the left);</li>
+  <li><code>FULL</code> joins return all the joined rows, plus one row for each unmatched left-hand row (extended with <code>NULL</code>s on the right), plus one row for each unmatched right-hand row (extended with <code>NULL</code>s on the left).;</li>
+  <li>cross joins are achieved by passing multiple <code>RelationNode</code> arguments to <code>FROM</code>, they produce the Cartesian product of records, no join conditions are applied to them.</li>
+</ul>
+<p>If no join type specified explicitly, <code>LEFT</code> join is assumed by default.</p>
+<p>You can specify the type of join by passing an argument to the <code>JOIN</code> method:</p>
+<pre class="scala"><code>(Country AS "co").JOIN(City AS "ci", INNER)</code></pre>
+<p>Or you may call one of specific methods instead:</p>
+<pre class="scala"><code>Country AS "co" INNER_JOIN (City AS "ci")
+Country AS "co" LEFT_JOIN (City AS "ci")
+Country AS "co" RIGHT_JOIN (City AS "ci")
+Country AS "co" FULL_JOIN (City AS "ci")</code></pre>

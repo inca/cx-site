@@ -1,0 +1,10 @@
+<h1 id="abstractions">Central abstractions</h1>
+<p>Applications built with Circumflex ORM usually operate on following abstractions:</p>
+<ul>
+  <li><code>Record</code> &mdash; wraps a row in a database <code>Table</code> or <code>View</code>, encapsulates the database access and adds domain logic on that data;</li>
+  <li><code>Relation</code> &mdash; encapsulates database object (<code>Table</code> or <code>View</code>) for corresponding <code>Record</code> and adds methods for <a href="[[link:orm:querying]]">querying</a>, <a href="[[link:orm:data manipulation]]">manipulating</a> and <a href="[[link:orm:data definition#validation]]">validating</a> its data;</li>
+  <li><code>Field</code> &mdash; corresponds to atomic data unit inside <code>Record</code> or database column in <code>Table</code>;</li>
+  <li><a href="[[link:orm:data definition#association]]"><code>Association</code></a> &mdash; incapsulates <code>Field</code> which links one type of <code>Record</code> with another, this relationship is expressed by foreign keys in the database;</li>
+  <li><code>Query</code> &mdash; communicates with database either for <a href="[[link:orm:querying]]">data retrieval</a> or <a href="[[link:orm:data manipulation]]">data manipulation</a>;</li>
+  <li><code>SchemaObject</code> &mdash; represents an abstract database object (such as trigger, index, constraint or stored procedure); tables and views are database objects, too.</li>
+</ul>

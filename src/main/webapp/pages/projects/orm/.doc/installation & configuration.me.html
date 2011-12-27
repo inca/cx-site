@@ -1,0 +1,29 @@
+<h1 id="install">Installation &amp; Configuration</h1>
+<p>There's a couple of things you need to do in order to get started with Circumflex ORM.</p>
+<p>First, make sure that <code>circumflex-orm-&lt;version&gt;.jar</code> is in the classpath. The easiest way to do so is to add corresponding <code>dependency</code> to your <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;cx.version&gt;&lt;!-- desired version --&gt;&lt;/cx.version&gt;
+&lt;/properties&gt;
+&lt;dependencies&gt;
+  &lt;!-- Circumflex ORM --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-orm&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<p>Second, configure database access by specifying following configuration parameters:</p>
+<ul>
+  <li><code>orm.connection.driver</code> &mdash; fully-qualified class name of JDBC Driver of your database vendor;</li>
+  <li><code>orm.connection.url</code> &mdash; URL for database communication (read the documentation of your database vendor for more information);</li>
+  <li><code>orm.connection.username</code> and <code>orm.connection.password</code> &mdash; database account data which will be used to obtain JDBC connections.</li>
+</ul>
+<p>Here's the example <code>cx.properties</code> file:</p>
+<pre class="no-highlight"><code>orm.connection.driver=org.postgresql.Driver
+orm.connection.url=jdbc:postgresql://localhost:5432/mydb
+orm.connection.username=myuser
+orm.connection.password=mypassword</code></pre>
+<p>Please refer to <a href="/core.html#cfg">Circumflex Configuration API</a> for more information on how to configure your application.</p>
+<h2 id="import">Imports</h2>
+<p>All code examples assume that you have following <code>import</code> statement in code where necessary:</p>
+<pre class="scala"><code>import ru.circumflex.orm._</code></pre>

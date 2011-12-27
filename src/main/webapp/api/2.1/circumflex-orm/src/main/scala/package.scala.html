@@ -1,0 +1,179 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;package.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+
+import core._
+import collection.mutable.Stack
+import java.util.regex.Pattern</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The <code>orm</code> Package</h1>
+<p>Package <code>orm</code> contains different shortcuts, utilities, helpers and implicits &mdash; the basis of DSL of Circumflex ORM.</p>
+<p>You should import this package to use Circumflex ORM in your application:</p>
+<pre><code>import ru.circumflex.orm._</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package object orm {
+
+  val ORM_LOG = new Logger(&quot;ru.circumflex.orm&quot;)
+
+  lazy val DEFAULT_ORM_CONF = cx.instantiate[ORMConfiguration](
+    &quot;orm.configuration&quot;, new SimpleORMConfiguration(&quot;&quot;))
+  def ormConf = ctx.get(&quot;orm.conf&quot;) match {
+    case Some(c: ORMConfiguration) =&gt; c
+    case _ =&gt; DEFAULT_ORM_CONF
+  }
+
+  def tx: Transaction = ormConf.transactionManager.get
+  def COMMIT() {
+    tx.commit()
+  }
+  def ROLLBACK() {
+    tx.rollback()
+  }
+
+  def using[A](newConf: ORMConfiguration)(block: =&gt; A): A =
+    Context.executeInNew { ctx =&gt;
+      ctx.update(&quot;orm.conf&quot;, newConf)
+      block
+    }
+
+  def usingAll[A](newConfs: ORMConfiguration*)(block: ORMConfiguration =&gt; A): Seq[A] =
+    newConfs.map { c =&gt; using(c) { block(c) } }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Alias Stack</h2>
+<p>Circumflex ORM offers nice DSL to reference fields of aliased tables:</p>
+<pre><code>val co = Country AS "co"
+val predicate = co.name EQ "Switzerland"</code></pre>
+<p>In this example <code>RelationNode[Country]</code> with alias <code>"co"</code> is implicitly converted into <code>Country</code>, its underlying <code>Relation</code>, because only that relation owns field <code>name</code>. However, the information about the alias is lost during this conversion. We use <code>aliasStack</code> to remember it during conversion so it can be accessed later.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  object aliasStack {
+    protected def _stack: Stack[String] = ctx.get(&quot;orm.aliasStack&quot;) match {
+      case Some(s: Stack[String]) =&gt; s
+      case _ =&gt;
+        val s = Stack[String]()
+        ctx += &quot;orm.aliasStack&quot; -&gt; s
+        s
+    }
+    def pop(): Option[String] = if (_stack.size == 0) None else Some(_stack.pop())
+    def push(alias: String) {
+      _stack.push(alias)
+    }
+  }
+
+  // Pimping core libs
+
+  implicit def str2expr(str: String): Expression = prepareExpr(str)
+  implicit def string2exprHelper(expression: String): SimpleExpressionHelper =
+    new SimpleExpressionHelper(expression)
+  implicit def string2nativeHelper(expression: String): NativeQueryHelper =
+    new NativeQueryHelper(expression)
+  implicit def pair2proj[T1, T2](t: (Projection[T1], Projection[T2])) =
+    new PairProjection(t._1, t._2)
+
+  // Constants
+
+  val NO_ACTION = ForeignKeyAction(ormConf.dialect.fkNoAction)
+  val CASCADE = ForeignKeyAction(ormConf.dialect.fkCascade)
+  val RESTRICT = ForeignKeyAction(ormConf.dialect.fkRestrict)
+  val SET_NULL = ForeignKeyAction(ormConf.dialect.fkSetNull)
+  val SET_DEFAULT = ForeignKeyAction(ormConf.dialect.fkSetDefault)
+
+  val INNER = JoinType(ormConf.dialect.innerJoin)
+  val LEFT = JoinType(ormConf.dialect.leftJoin)
+  val RIGHT = JoinType(ormConf.dialect.rightJoin)
+  val FULL = JoinType(ormConf.dialect.fullJoin)
+
+  val OP_UNION = SetOperation(ormConf.dialect.UNION)
+  val OP_UNION_ALL = SetOperation(ormConf.dialect.UNION_ALL)
+  val OP_EXCEPT = SetOperation(ormConf.dialect.EXCEPT)
+  val OP_EXCEPT_ALL = SetOperation(ormConf.dialect.EXCEPT_ALL)
+  val OP_INTERSECT = SetOperation(ormConf.dialect.INTERSECT)
+  val OP_INTERSECT_ALL = SetOperation(ormConf.dialect.INTERSECT_ALL)
+
+  // Predicates DSL
+
+  def AND(predicates: Predicate*) =
+    new AggregatePredicateHelper(predicates.head).AND(predicates.tail: _*)
+  def OR(predicates: Predicate*) =
+    new AggregatePredicateHelper(predicates.head).OR(predicates.tail: _*)
+  def NOT(predicate: Predicate) =
+    new SimpleExpression(ormConf.dialect.not(predicate.toSql), predicate.parameters)
+
+  def prepareExpr(expression: String, params: Pair[String, Any]*): SimpleExpression = {
+    var sqlText = expression
+    var parameters: Seq[Any] = Nil
+    val paramsMap = Map[String, Any](params: _*)
+    val pattern = Pattern.compile(&quot;:(\\w+)\\b&quot;)
+    val matcher = pattern.matcher(expression)
+    while (matcher.find) {
+      val name = matcher.group(1)
+      paramsMap.get(name) match {
+        case Some(param) =&gt; parameters ++= List(param)
+        case _ =&gt; parameters ++= List(&quot;:&quot; + name)
+      }
+    }
+    sqlText = matcher.replaceAll(&quot;?&quot;)
+    new SimpleExpression(sqlText, parameters)
+  }
+
+  // Simple subqueries DSL
+
+  def EXISTS(subquery: SQLQuery[_]) =
+    new SubqueryExpression(ormConf.dialect.EXISTS, subquery)
+  def NOT_EXISTS(subquery: SQLQuery[_]) =
+    new SubqueryExpression(ormConf.dialect.NOT_EXISTS, subquery)
+
+  // Simple projections
+
+  def expr[T](expression: String): ExpressionProjection[T] =
+    new ExpressionProjection[T](expression)
+  def COUNT(expr: Expression): Projection[Long] =
+    new ExpressionProjection[Long](ormConf.dialect.COUNT(expr.toSql))
+  def COUNT_DISTINCT(expr: Expression): Projection[Long] =
+    new ExpressionProjection[Long](ormConf.dialect.COUNT_DISTINCT(expr.toSql))
+  def MAX[T](expr: Expression) =
+    new ExpressionProjection[T](ormConf.dialect.MAX(expr.toSql))
+  def MIN[T](expr: Expression) =
+    new ExpressionProjection[T](ormConf.dialect.MIN(expr.toSql))
+  def SUM[T](expr: Expression) =
+    new ExpressionProjection[T](ormConf.dialect.SUM(expr.toSql))
+  def AVG[T](expr: Expression) =
+    new ExpressionProjection[T](ormConf.dialect.AVG(expr.toSql))
+
+  // Queries DSL
+
+  def SELECT[T](p1: Projection[T], p2: Projection[_], pn: Projection[_]*) = {
+    val projections = List(p1, p2) ++ pn
+    new Select(new AliasMapProjection(projections))
+  }
+  def SELECT[T](projection: Projection[T]): Select[T] = new Select(projection)
+  def INSERT_INTO[PK, R &lt;: Record[PK, R]](relation: Relation[PK, R]) =
+    new InsertSelectHelper(relation)
+  def UPDATE[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]) =
+    new Update(node)
+  def DELETE[PK, R &lt;: Record[PK, R]](node: RelationNode[PK, R]) =
+    new Delete(node)
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

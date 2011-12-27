@@ -1,0 +1,136 @@
+<h1>ORM: Querying</h1>
+<h2 id="predicate">Predicates</h2>
+<p><em>Predicate</em> is a parameterized expression which is resolved by database into a boolean-value function. Generally, predicates are used inside <code>WHERE</code> or <code>HAVING</code> clauses of SQL queries to filter the rows in result set.</p>
+<p>Predicates are represented by the <code>Predicate</code> class. The easiest way to compose a <code>Predicate</code> instance is to use implicit conversion from <code>String</code> or <code>Field</code> to <code>SimpleExpressionHelper</code> and call one of it's methods:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")</code></pre>
+<p>Following helper methods are available in <code>SimpleExpressionHelper</code>:</p>
+<table width="100%">
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>Method</th>
+      <th>SQL equivalent</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="7">Comparison operators</td>
+      <td><code>EQ(value: Any)</code></td>
+      <td><code>= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>NE(value: Any)</code></td>
+      <td><code>&lt;&gt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>GT(value: Any)</code></td>
+      <td><code>&gt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>GE(value: Any)</code></td>
+      <td><code>&gt;= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>LT(value: Any)</code></td>
+      <td><code>&lt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>LE(value: Any)</code></td>
+      <td><code>&lt;= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>BETWEEN(lower: Any, upper: Any)</code></td>
+      <td><code>BETWEEN ? AND ?</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Null handling</td>
+      <td><code>IS_NULL</code></td>
+      <td><code>IS NULL</code></td>
+    </tr>
+    <tr>
+      <td><code>IS_NOT_NULL</code></td>
+      <td><code>IS NOT NULL</code></td>
+    </tr>
+    <tr>
+      <td rowspan="14">Subqueries</td>
+      <td><code>IN(query: SQLQuery[_])</code></td>
+      <td><code>IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NOT_IN(query: SQLQuery[_])</code></td>
+      <td><code>NOT IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_ALL(query: SQLQuery[_])</code></td>
+      <td><code>= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&gt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_SOME(query: SQLQuery[_])</code></td>
+      <td><code>= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&gt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td rowspan="3">Miscellaneous</td>
+      <td><code>LIKE(value: Any)</code></td>
+      <td><code>LIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>ILIKE(value: Any)</code></td>
+      <td><code>ILIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>IN(params: Any*)</code></td>
+      <td><code>IN (?, ?, ...)</code></td>
+    </tr>
+  </tbody>
+</table>
+<p>You can combine several predicates into <code>AggregatePredicate</code> using either <code>OR</code> or <code>AND</code> methods:</p>
+<pre class="scala"><code>AND(co.name LIKE "Switz%", co.code EQ "ch")
+// or in infix notation:
+(co.name LIKE "Switz%") OR (co.code EQ "ch")</code></pre>
+<p>You can negotiate a predicate using the <code>NOT</code> method:</p>
+<pre class="scala"><code>NOT(co.name LIKE "Switz%")</code></pre>
+<p><code>String</code> values are implicitly converted into <code>SimpleExpression</code> predicate without parameters:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'"))</code></pre>
+<p>You can also use <code>prepareExpr</code> to compose a custom expression with parameters:</p>
+<pre class="scala"><code>prepareExpr("co.name like :name or co.code like :code", "name" -&gt; "Switz%", "code" -&gt; "ch")
+</code></pre>

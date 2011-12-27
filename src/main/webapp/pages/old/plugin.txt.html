@@ -1,0 +1,110 @@
+<h1>Circumflex Maven Plugin</h1>
+<p>Circumflex comes shipped with handy Maven plugin which can help you with following tasks:</p>
+<ul>
+  <li><a href="#cfg">configuring Circumflex application</a> using <code>pom.xml</code> instead of <code>cx.properties</code>;</li>
+  <li><a href="#schema">exporting database schema</a> of <a href="/orm.html">Circumflex ORM</a> project on build;</li>
+  <li>generating source code documentation with <a href="/index.html#docco">Docco</a>.</li>
+</ul>
+<h1 id="cfg">Configuring Circumflex Application</h1>
+<p>The <code>cfg</code> goal is used to create <code>cx.properties</code> file filled with properties defined in the <code>properties</code> section of your <code>pom.xml</code>. It is a very convenient way to configure various aspects of your Circumflex application. This approach gives you following advantages:</p>
+<ul>
+  <li>different environments using Maven profiles and <code>settings.xml</code>;</li>
+  <li>property inheritance;</li>
+  <li>possibility to reuse properties with the <code>${prop}</code> notation inside your <code>pom.xml</code>;</li>
+</ul>
+<p>All you have to do is configure the <code>cfg</code> goal of <code>maven-cx-plugin</code>:</p>
+<pre class="xml"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+  &lt;build&gt;
+    &lt;sourceDirectory&gt;src/main/scala&lt;/sourceDirectory&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-cx-plugin&lt;/artifactId&gt;
+        &lt;version&gt;${cx.version}&lt;/version&gt;
+        &lt;executions&gt;
+          &lt;execution&gt;
+            &lt;id&gt;configure&lt;/id&gt;
+            &lt;phase&gt;process-resources&lt;/phase&gt;
+            &lt;goals&gt;
+              &lt;goal&gt;cfg&lt;/goal&gt;
+            &lt;/goals&gt;
+          &lt;/execution&gt;
+        &lt;/executions&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+&lt;/project&gt;</code></pre>
+<p>After that you may specify configuration properties right in the <code>properties</code> section of your <code>pom.xml</code> (note that <code>cx.properties</code> from your <code>src/main/resourses</code> <strong>will not be used anymore</strong>):</p>
+<pre class="xml"><code>&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                         http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+  &lt;properties&gt;
+     &lt;cx.router&gt;com.myapp.web.MainRouter&lt;/cx.router&gt;
+     &lt;cx.public&gt;/static&lt;/cx.public&gt;
+  &lt;/properties&gt;
+&lt;/project&gt;</code></pre>
+<h1 id="schema">Exporting Database Schema</h1>
+<p>You can configure your application to execute schema export scripts on build. Just add a configuration for <code>maven-cx-plugin</code> to your <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-cx-plugin&lt;/artifactId&gt;
+        &lt;version&gt;${cx.version}&lt;/version&gt;
+        &lt;configuration&gt;
+          &lt;packages&gt;
+            &lt;package&gt;com.myapp.model&lt;/package&gt;
+          &lt;/packages&gt;
+        &lt;/configuration&gt;
+        &lt;dependencies&gt;
+          &lt;dependency&gt;
+            &lt;groupId&gt;your-jdbc-driver-vendor&lt;/groupId&gt;
+            &lt;artifactId&gt;your-jdbc-driver-artifact&lt;/artifactId&gt;
+            &lt;version&gt;your-jdbc-driver-version&lt;/version&gt;
+          &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+&lt;/project&gt;</code></pre>
+<p>Then simply execute following string in your project root:</p>
+<pre class="no-highlight"><code>$ mvn clean compile cx:schema</code></pre>
+<p>The database objects from specified <code>package</code> (<code>com.myapp.model</code> in our example) will be created. To drop objects first, add <code>-Ddrop</code> to execution line. Note that plugin searches for schema objects in compiled classes inside project's <code>outputDirectory</code>. Make sure you <code>clean compile</code> your project before running <code>cx:schema</code> to avoid ambiguous situations.</p>
+<p>Also note that specifying the <code>dependency</code> to JDBC driver inside <code>maven-cx-plugin</code> configuration is <strong>mandatory</strong> even if you already have one in your project. This is caused by classloading limitations of <a href="http://www.mchange.com/projects/c3p0/index.html">c3p0</a>.</p>
+<h1 id="docco">Generating Source Documentation</h1>
+<p>You can use Docco to build your source documentation (just like we did to document <a href="/api">our codebase</a>).</p>
+<p>Circumflex Docco recognizes documentation in following format:</p>
+<pre><code>/*! Your documentation in Markeven
+...
+...
+*/
+your_source_code</code></pre>
+<p>The API generation is simple: you add a configuration for <code>maven-cx-plugin</code> to your <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd"&gt;
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-cx-plugin&lt;/artifactId&gt;
+        &lt;version&gt;${cx.version}&lt;/version&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+&lt;/project&gt;</code></pre>
+<p>Then you execute following in your project root:</p>
+<pre class="no-highlight"><code>$ mvn cx:docco</code></pre>
+<p>The documentation will be created in <code>target/docco</code>.</p>

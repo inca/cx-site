@@ -1,0 +1,77 @@
+<h1 id="start">Quick start</h1>
+<h2 id="existing-projects">Use With Existing Projects</h2>
+<p>If you already have a project and wish to use one of the Circumflex components, just add the corresponding dependency to your project's <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;cx.version&gt;&lt;!-- desired version --&gt;&lt;/cx.version&gt;
+&lt;/properties&gt;
+&lt;dependencies&gt;
+  &lt;!-- Circumflex Web Framework --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-web&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;!-- Circumflex ORM --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-orm&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;!-- Circumflex Freemarker Views --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-ftl&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;!-- Circumflex Markeven --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-markeven&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;!-- Circumflex Scalate --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-scalate&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;!-- Circumflex Docco --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-docco&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<p>Note that all Circumflex components should share the same version. Check out the <a href="http://repo2.maven.org/maven2/ru/circumflex/circumflex-parent">Central Maven Repository</a> to determine the latest version of Circumflex.</p>
+<h2 id="new-projects">Create New Project</h2>
+<p>As soon as Circumflex is built, you are ready to create your first project. Change to the directory where you store your projects, and run:</p>
+<pre class="no-highlight"><code>$ mvn archetype:generate</code></pre>
+<p>Choose the <strong>circumflex-archetype</strong> from your local catalog:</p>
+<pre class="no-highlight"><code>Choose archetype:
+1: local -&gt; circumflex-archetype (Circumflex Application Archetype)
+2: internal -&gt; . . .
+Choose a number:  (1/2/3/ . . .) 17: : 1</code></pre>
+<p>Provide basic information about your project:</p>
+<pre class="no-highlight"><code>Define value for groupId: : com.myapp
+Define value for artifactId: : myapp
+Define value for version:  1.0-SNAPSHOT: : 1.0
+Define value for package:  com.myapp: :</code></pre>
+<p>After you confirm your choice, a simple Circumflex application will be created. To run it, go to your project root (it matches the <code>artifactId</code> that you specified above) and execute the following:</p>
+<pre class="no-highlight"><code>$ mvn compile jetty:run</code></pre>
+<p>The following lines indicate that your application is ready to serve requests:</p>
+<pre class="no-highlight"><code>[INFO] Started Jetty Server
+[INFO] Starting scanner at interval of 5 seconds.</code></pre>
+<p>Now you may visit your application at <a href="http://localhost:8180">http://localhost:8180</a>.</p>
+<h2 id="sources">Build From Sources</h2>
+<p>You can obtain the latest Circumflex sources at <a href="http://github.com/inca/circumflex">GitHub</a>:</p>
+<pre class="no-highlight"><code>$ git clone git://github.com/inca/circumflex.git</code></pre>
+<p>Circumflex, like all Scala applications, is compiled into Java VM bytecode. Make sure that the latest <a href="http://java.sun.com/javase/downloads/index.jsp">Java 6 SDK</a> is installed on your system.</p>
+<p>Circumflex uses <a href="http://maven.apache.org">Apache Maven 2</a> for build management. If you don't already have Maven 2, <a href="http://maven.apache.org/download.html#Installation">install it</a>. Note that some operating systems (e.g. Mac OS X 10.5 and higher) are shipped with Maven 2 by default. On some systems it is also preferrable to install Maven 2 via package managers. For example, on Debian or Ubuntu systems you can install Maven 2 by executing the following line:</p>
+<pre class="no-highlight"><code>$ sudo apt-get install maven2</code></pre>
+<p>If you are unfamiliar with Maven, you should probably read the <a href="http://maven.apache.org/guides/getting-started/maven-in-five-minutes.html">Maven in 5 Minutes</a> article or <a href="http://maven.apache.org/guides/getting-started/index.html">Getting Started Guide</a>.</p>
+<p>Once you are ready to build, execute the following in the Circumflex root directory:</p>
+<pre class="no-highlight"><code>$ mvn clean install</code></pre>
+<p>After the build has successfully finished, Circumflex with all its dependencies will be available in your local Maven 2 repository (it may take a while to download dependencies the first time).</p>
+<h2 id="sbt">Build With SBT</h2>
+<p>An application skeleton for SBT has been kindly provided by <a href="http://github.com/andreyshikov">andreyshikov</a>, it shows how to configure simple Circumflex application to build with SBT.</p>
+<p>You can clone it from <a href="http://github.com/andreyshikov/circumflex-sbt-quickstart">http://github.com/andreyshikov/circumflex-sbt-quickstart</a>.</p>

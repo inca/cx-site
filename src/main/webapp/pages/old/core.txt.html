@@ -1,0 +1,94 @@
+<h1 id="core">Circumflex Core</h1>
+<p>Circumflex Core is a tiny library shared by all Circumflex projects. It consists of following components.</p>
+<ul>
+  <li><a href="#cfg">Configuration API</a></li>
+  <li><a href="#ctx">Context API</a></li>
+  <li><a href="#msg">Messages API</a></li>
+</ul>
+<p>You should familiarize yourself with Circumflex Core concepts to gain maximum efficiency from your development.</p>
+<h1 id="cfg">Configuration API</h1>
+<p>All Circumflex components share the same approach to configuration. Configuration parameters offer applications and libraries a way to alter their behavior under different environments and deployment scenarios, thus eliminating the need of revisiting the code.</p>
+<p>You may specify configuration parameters in two different ways.</p>
+<ul>
+  <li>
+    <p>Specify configuration parameters in <code>cx.properties</code> file:</p>
+    <pre><code>cx.router=com.myapp.web.MainRouter</code></pre>
+  </li>
+</ul>
+<p>This file should be in the classpath; if you use Maven, just place it into <code>src/main/resources</code>   directory.</p>
+<ul>
+  <li>
+    <p>Specify configuration parameters in the <code>&lt;properties&gt;</code> section your <code>pom.xml</code> and configure <code>maven-cx-plugin</code>:</p>
+    <pre class="xml"><code>&lt;project xmlns="http://maven.apache.org/POM/4.0.0"&gt;
+  &lt;properties&gt;
+    &lt;cx.router&gt;com.myapp.web.MainRouter&lt;/cx.router&gt;
+  &lt;/properties&gt;
+  ...
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-cx-plugin&lt;/artifactId&gt;
+        &lt;version&gt;${cx.version}&lt;/version&gt;
+        &lt;executions&gt;
+          &lt;execution&gt;
+            &lt;id&gt;configure&lt;/id&gt;
+            &lt;phase&gt;process-resources&lt;/phase&gt;
+            &lt;goals&gt;
+              &lt;goal&gt;cfg&lt;/goal&gt;
+            &lt;/goals&gt;
+          &lt;/execution&gt;
+        &lt;/executions&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+  &lt;/build&gt;
+&lt;/project&gt;</code></pre>
+  </li>
+</ul>
+<p>See the <a href="/plugin.html#cfg">Circumflex Maven Plugin documentation</a> for more details.</p>
+<p>Of course, nothing stops you from using Circumflex to deal with your own configuration. It's pretty simple:</p>
+<pre class="scala"><code>val cfg = cx.get("myCfgParam") match {
+  case s: String =&gt; ...
+  case cfg: MyConfigurationObject =&gt; ...
+  case _ =&gt; ...
+}</code></pre>
+<p>You can also configure your application programmatically:</p>
+<pre class="scala"><code>cx("myCfgParam") = new MyConfigurationObject</code></pre>
+<p>For further information refer to <a href="/api/2.0/circumflex-core/circumflex.scala">Circumflex API documentation</a>.</p>
+<h1 id="ctx">Context API</h1>
+<p>Context is a thread-local container which allows you to share objects (also known as context variables) within one logical scope.</p>
+<p>Such logical scope could be anything: database transaction, HTTP request, user session within GUI form, etc. Within this scope you can obtain current context by calling <code>Context.get</code> method (or using <code>ctx</code> method of package <code>ru.circumflex.core</code>).</p>
+<p>Most Circumflex components depend on context and, therefore, can only be run inside context-aware code. Application is responsible for maintaining context lifecycle. For example, <a href="/web.html">Circumflex Web Framework</a> takes care of context initialization and finalization inside <code>CircumflexFilter</code>.</p>
+<p>Inside context scope you can store and access context variables using following syntax:</p>
+<pre class="scala"><code>// store
+ctx("myParam") = new MyObject
+'myParam := new MyObject
+'myParam.update(new MyObject)
+// access
+ctx.getAs[T]("myParam")              // Option[T]
+'myParam.get[T]                      // Option[T]
+'myParam.getOrElse[T](default: T)    // T</code></pre>
+<p>For further information refer to <a href="/api/2.0/circumflex-core/context.scala">Circumflex API documentation</a>.</p>
+<h1 id="msg">Messages API</h1>
+<p>Messages API offers you a convenient way to internationalize your application.</p>
+<p>Generally, all strings which should be presented to user are stored in separate <code>.properties</code>-files as suggested by <a href="http://java.sun.com/javase/technologies/core/basic/intl">Java Internationalization</a>.</p>
+<p>Circumflex Messages API goes beyound this simple approach and offers delegating resolving, messages grouping, parameters interpolation and formatting.</p>
+<p>The usage is pretty simple: you use the <code>msg</code> method of package object <code>ru.circumflex.core</code> to retrieve localized messages by keys:</p>
+<pre class="scala"><code>val greeting = msg("hello")
+val tagName = msg.getOrElse("someTag", "unknown")</code></pre>
+<p>Then you specify message bundles in <code>src/main/resources</code> with base name <code>Messages</code> (the location and the base name can be changed with <code>cx.messages.root</code> and <code>cx.messages.name</code> configuration parameters):</p>
+<pre class="no-highlight"><code># src/main/resources/Messages.properties
+hello=Hello!
+# src/main/resources/Messages_pt.properties
+hello=Hola!</code></pre>
+<p>The locale is taken from <code>cx.locale</code> context variable (see <code>Context</code> for more details). If no such variable found in the context, then the platform's default locale is used.</p>
+<p>Circumflex Messages API features very robust ranged resolving. The message is searched using the range of keys, from the most specific to the most general ones: if the message is not resolved with given key, then the key is truncated from the left side to the first dot (<code>.</code>) and the message is searched again. For example, if you are looking for a message with the key <code>com.myapp.model.Account.name.empty</code> (possibly while performing domain model validation), then following keys will be used to lookup an appropriate message (until first success):</p>
+<pre><code>com.myapp.model.Account.name.empty
+myapp.model.Account.name.empty
+model.Account.name.empty
+Account.name.empty
+name.empty
+empty</code></pre>
+<p>Messages can also be formatted. We support both classic <code>MessageFormat</code> style (you know, with <code>{0}</code>s in text and varargs) and parameters interpolation (key-value pairs are passed as arguments to <code>fmt</code> method, each <code>{key}</code> in message is replaced by corresponding value).</p>
+<p>The cool thing about Circumflex Messages API is that it supports hot editing (without the need of redeployment) with effective last-modified-timestamp-based cache.</p>
+<p>For further information refer to <a href="/api/2.0/circumflex-core/messages.scala">Circumflex API documentation</a>.</p>

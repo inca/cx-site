@@ -1,0 +1,166 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;response.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package web
+import javax.servlet.http.HttpServletResponse
+import collection.mutable.{ListBuffer, HashMap}
+import java.lang.String
+import java.util.Date</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>HTTP Response</h1>
+<p>The <code>HttpResponse</code> class provides functionality to prepare HTTP responses which will be sent to clients.</p>
+<p>This class is designed to hold the response state, which then will be applied to actual <code>HttpServletResponse</code> using the <code>flush</code> method.</p>
+<p>Since Circumflex is UTF-friendly it will implicitly set character encoding of response body to <code>UTF-8</code>. Feel free to change it if your application requires so.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class HttpResponse(val raw: HttpServletResponse) {
+
+  def flush(): Nothing = {
+    if (!raw.isCommitted) {
+      if (statusCode != -1)
+        raw.setStatus(statusCode)
+      if (contentLength != -1)
+        raw.setContentLength(contentLength)
+      // apply headers
+      headers.foreach {
+        case (k: String, v: Date) =&gt; raw.setDateHeader(k, v.getTime)
+        case (k: String, v: Int) =&gt; raw.setIntHeader(k, v)
+        case (k: String, v) =&gt; raw.setHeader(k, v.toString)
+      }
+      // apply cookies
+      cookies.foreach(c =&gt; raw.addCookie(c.convert()))
+      // write response body
+      body(raw)
+      // flush
+      raw.flushBuffer()
+    }
+    // throw an exception to the container
+    throw new ResponseSentException()
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <h2>Response Basics</h2>
+<ul>
+  <li><code>bufferSize</code> returns or sets the size of response buffer;</li>
+  <li><code>contentType</code> returns or sets the MIME type of the response, the default one is <code>text/html</code> (we are web framework after all!);</li>
+  <li><code>encoding</code> returns or sets the name of the character encoding used in response body, as mentioned above, we implicitly set this to <code>UTF-8</code>;</li>
+  <li><code>statusCode</code> returns or sets the status code of the response.</li>
+  <li><code>contentLength</code> returns or sets the <code>Content-Length</code> header of the response.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def bufferSize = raw.getBufferSize
+  def bufferSize(bs: Int): this.type = {
+    raw.setBufferSize(bs)
+    this
+  }
+  def contentType = raw.getContentType
+  def contentType(ct: String): this.type = {
+    raw.setContentType(ct)
+    this
+  }
+  def encoding = raw.getCharacterEncoding
+  def encoding(e: String): this.type = {
+    raw.setCharacterEncoding(e)
+    this
+  }
+  protected var _statusCode: Int = -1
+  def statusCode = _statusCode
+  def statusCode(sc: Int): this.type = {
+    _statusCode = sc
+    this
+  }
+  protected var _contentLength: Int = -1   // -1 means that container's default will be used
+  def contentLength = _contentLength
+  def contentLength(cl: Int): this.type = {
+    _contentLength = cl
+    this
+  }
+
+  // set encoding and content type implicitly
+  encoding(&quot;UTF-8&quot;)
+  contentType(&quot;text/html&quot;)</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <h2>Response Body</h2>
+<p>The body of the response is set by supplying a function which works with <code>HttpServletResponse</code> passed inside that function. The function is invoked inside the <code>flush</code> method when response is completely ready to be sent &mdash; this is done to avoid <code>IllegalStateException</code>s when working with response.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  protected var _body: HttpServletResponse =&gt; Unit = r =&gt; {}
+  def body = _body
+  def body(f: HttpServletResponse =&gt; Unit): this.type = {
+    _body = f
+    this
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-4">
+        <td class="docs">
+          <h2>Headers</h2>
+<p>Response headers contain operational information about the response. Circumflex Web Framework lets you access response headers via the <code>headers</code> object.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  object headers extends HashMap[String, Any] {
+    update(&quot;X-Powered-By&quot;, &quot;Circumflex 2.1.1&quot;)
+  }</code></pre>
+        </td>
+      </tr>
+      <tr id="section-5">
+        <td class="docs">
+          <h2>Cookies</h2>
+<p>The <code>cookies</code> field lets you set response cookies.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  val cookies = new ListBuffer[HttpCookie]</code></pre>
+        </td>
+      </tr>
+      <tr id="section-6">
+        <td class="docs">
+          <h2>Helpers</h2>
+<p>Circumflex Web Framework includes following helpers to perform some common tasks:</p>
+<ul>
+  <li>set <code>Content-Disposition</code> header to <code>attachment</code> with specified <code>filename</code> using the <code>attachment</code> method;</li>
+  <li>set <code>Pragma: no-cache</code>, <code>Cache-Control: no-store</code> and <code>Expires: 0</code> to disable client-side cache using <code>noCache</code> method.</li>
+</ul>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def attachment(filename: String): this.type = {
+    headers(&quot;Content-Disposition&quot;) =
+        &quot;attachment; filename=\&quot;&quot; + new String(filename.getBytes(&quot;UTF-8&quot;), &quot;ISO-8859-1&quot;) + &quot;\&quot;&quot;
+    this
+  }
+
+  def noCache(): this.type = {
+    headers(&quot;Pragma&quot;) = &quot;no-cache&quot;
+    headers(&quot;Cache-Control&quot;) = &quot;no-store&quot;
+    headers(&quot;Expires&quot;) = 0l
+    this
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

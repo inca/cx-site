@@ -1,0 +1,18 @@
+<h1 id="start">FreeMarker Helper: Quick start</h1>
+<h2 id="existing-projects">Use With Existing Projects</h2>
+<p>If you already have a project and wish to use one of the Circumflex FreeMarker component, just add the corresponding dependency to your project's <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;cx.version&gt;&lt;!-- desired version --&gt;&lt;/cx.version&gt;
+&lt;/properties&gt;
+&lt;dependencies&gt;
+  &lt;!-- Circumflex Freemarker Views --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-ftl&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<p>You should import this package to use Circumflex FreeMarker Helper in your application:</p>
+<pre class="scala"><code>import ru.circumflex.freemarker._</code></pre>
+<p>The usage is trivial:</p>
+<pre class="scala"><code>ftl("index.ftl")</code></pre>

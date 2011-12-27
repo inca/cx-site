@@ -1,0 +1,41 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;xsendfile.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package web
+import java.io.File</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>X-SendFile feature</h1>
+<p>Most modern web servers provide the <code>X-SendFile</code> feature: they take control over the process of sending a file to the client. Your application, for example, may check permissions, set some headers, like <code>Content-Disposition</code>, and then delegate the hard stuff to web server.</p>
+<p>Refer to the documentation of your favorite web server for more information.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>trait XSendFileHeader {
+  def name: String
+  def value(f: File): String
+}
+
+object DefaultXSendFileHeader extends XSendFileHeader {
+  def name = &quot;X-SendFile&quot;
+  def value(f: File): String = f.getAbsolutePath
+}
+
+trait NginxXSendFileHeader extends XSendFileHeader {
+  def name = &quot;X-Accel-Redirect&quot;
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

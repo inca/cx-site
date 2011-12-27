@@ -5,7 +5,7 @@ import core._, web._, freemarker._
 import java.io._
 import org.apache.commons.io.FileUtils._
 
-class MainRouter extends RequestRouter {
+class MainRouter extends Router {
 
   'sitemap := Cache.get[Page]("page:/pages/sitemap", new Page("/pages/sitemap"))
 

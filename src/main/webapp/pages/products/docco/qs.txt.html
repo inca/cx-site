@@ -1,0 +1,19 @@
+<h1 id="start">Docco: Quick start</h1>
+<h2 id="existing-projects">Use With Existing Projects</h2>
+<p>If you already have a project and wish to use one of the Circumflex Docco component, just add the corresponding dependency to your project's <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;cx.version&gt;&lt;!-- desired version --&gt;&lt;/cx.version&gt;
+&lt;/properties&gt;
+&lt;dependencies&gt;
+  &lt;!-- Circumflex Docco --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-docco&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<p>The usage is trivial:</p>
+<pre><code>Docco("my.scala").toHtml("my.scala.html")</code></pre>
+<p>or shortcut of above:</p>
+<pre><code>Docco("my.scala").toHtml</code></pre>
+<p>Docco uses <a href="http://freemarker.org" title="FreeMarker Templating Engine">FreeMarker</a> to process pages, so you can provide your own FreeMarker <code>Configuration</code> and templates.</p>

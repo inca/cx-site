@@ -1,0 +1,37 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;exception.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package core</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Exception</h1>
+<p>All exceptions thrown from Circumflex components should extend <code>CircumflexException</code> class.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class CircumflexException(msg: String, cause: Throwable = null)
+    extends RuntimeException(msg, cause) {
+  def this(cause: Throwable) = this(null, cause)
+}
+
+class ValidationException(val errors: Seq[Msg])
+    extends CircumflexException(&quot;&quot;) {
+  override def getMessage = &quot;Validation failed: &quot; + errors
+  def this(msg: Msg) = this(List(msg))
+  def this(msg: Msg, msgs: Msg*) = this(List(msg) ++ msgs.toSeq)
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

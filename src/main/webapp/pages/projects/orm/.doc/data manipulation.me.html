@@ -1,0 +1,52 @@
+<h1 id="dml">Data manipulation</h1>
+<p>Aside from information retrieval tasks, queries may be intended to change data in some way:</p>
+<ul>
+  <li>add new records;</li>
+  <li>update existing records (either partially or fully);</li>
+  <li>delete existing records.</li>
+</ul>
+<p>Such queries are often refered to as <em>data manipulation queries</em>.</p>
+<h2 id="iud">Insert, Update &amp; Delete</h2>
+<p>Circumflex ORM employs Active Record design pattern. Each <code>Record</code> has following data manipulation methods which correspond to their SQL analogues:</p>
+<ul>
+  <li><code>INSERT_!(fields: Field[_, R]*)</code> &mdash; executes an SQL <code>INSERT</code> statement for the record, that is, persists that record into database table. You can optionally specify <code>fields</code> which will appear in the statement; if no <code>fields</code> specified, then only non-empty fields will be used (they will be populated with <code>NULL</code>s or default values by database).</li>
+  <li><code>INSERT(fields: Field[_, R]*)</code> &mdash; same as <code>INSERT_!</code>, but runs record <a href="[[link:orm:data definition#validation]]">validation</a> before actual execution;</li>
+  <li><code>UDPATE_!(fields: Field[_, R]*)</code> &mdash; executes an SQL <code>UPDATE</code> statement for the record, that is, updates all record's fields (or only specified <code>fields</code>, if any). The record is being looked up by it's <code>id</code>, so this method does not make any sense with transient records.</li>
+  <li><code>UPDATE(fields: Field[_, R]*)</code> &mdash; same as <code>UPDATE_!</code>, but runs record <a href="[[link:orm:data definition#validation]]">validation</a> before actual execution;</li>
+  <li><code>DELETE_!()</code> &mdash; executes an SQL <code>DELETE</code> statement for the record, that is, removes that record from database. The record is being looked up by it's <code>id</code>, so this method does not make any sense with transient records.</li>
+</ul>
+<h2 id="save">Save</h2>
+<p>Circumflex ORM provides higher abstraction for persisting records &mdash; the <code>save_!</code> method. It's algorithm is trivial:</p>
+<ul>
+  <li>if record is persistent (<code>id</code> is not empty), it is updated using the <code>UPDATE_!</code> method;</li>
+  <li>otherwise the <code>INSERT_!</code> method is called, which causes database to persist the record.</li>
+</ul>
+<p>There is also a handy <code>save()</code> method, which runs record <a href="[[link:orm:data definition#validation]]">validation</a> and then delegates to <code>save_!()</code>.</p>
+<p>Note that in order to use <code>save</code> and <code>save_!</code> methods your records should support <a href="[[link:orm:data definition#idgen]]">identifier generation</a>.</p>
+<h2 id="bulk">Bulk Queries</h2>
+<p>Circumflex ORM provides support for the following bulk data manipulation queries:</p>
+<ul>
+  <li><a href="#insert-select"><code>INSERT &hellip; SELECT</code></a> &mdash; inserts the result set of specified <a href="[[link:orm:querying]]"><code>SQLQuery</code></a> into specified <a href="[[link:orm:data definition#relation]]"><code>Relation</code></a>;</li>
+  <li><a href="#update-delete"><code>UPDATE</code></a> &mdash; updates certain rows in specified <a href="[[link:orm:data definition#relation]]"><code>Relation</code></a>;</li>
+  <li><a href="#update-delete"><code>DELETE</code></a> &mdash; removes certain rows from specified <a href="[[link:orm:data definition#relation]]"><code>Relation</code></a>.</li>
+</ul>
+<p>All data manipulation queries derive from the <code>DMLQuery</code> class. It defines a single method for execution, <code>execute()</code>, which executes corresponding statement and returns the number of affected rows.</p>
+<p>Also note that each execution of any data manipulation query evicts all records from transaction-scoped cache.</p>
+<h3 id="insert-select">Insert-Select</h3>
+<p>The <code>InsertSelect</code> query has following syntax:</p>
+<pre class="scala"><code>// prepare query
+val q = (Country AS "co").map(co =&gt; INSERT_INTO (co) SELECT ...)
+// execute it
+q.execute</code></pre>
+<p>Note that <a href="[[link:orm:querying#projection]]">projections</a> of specified <a href="[[link:orm:querying]]"><code>SQLQuery</code></a> must match the columns of the <a href="[[link:orm:data definition#relation]]"><code>Relation</code></a>.</p>
+<h3 id="update-delete">Update &amp; Delete</h3>
+<p>SQL databases support <code>UPDATE</code> and <code>DELETE</code> statements for bulk operations. Circumflex ORM provides equivalent abstractions for these operations, <code>Update</code> and <code>Delete</code> respectively.</p>
+<p>The <code>Update</code> query allows you to use DSL for updating fields of multiple records at a time:</p>
+<pre class="scala"><code>(Country AS "co").map(co =&gt;
+  UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk") execute)</code></pre>
+<p>The <code>Delete</code> query allows you to delete multiple records from a single <a href="[[link:orm:data definition#relation]]">relation</a>:</p>
+<pre class="scala"><code>(Country AS "co").map(co =&gt; DELETE (co) execute)</code></pre>
+<p>An optional <code>WHERE</code> clause specifies <a href="[[link:orm:querying#predicate]]">predicate</a> for searched update or delete:</p>
+<pre class="scala"><code>UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
+DELETE (co) WHERE (co.code LIKE 'uk')</code></pre>
+<p>Many database vendors also allow <code>USING</code> clause in <code>UPDATE</code> and <code>DELETE</code> statements. Circumflex ORM does not support this feature yet.</p>

@@ -1,0 +1,57 @@
+<h1>ORM: Querying</h1>
+<h2 id="node">Relation Nodes</h2>
+<p><code>RelationNode</code> wraps a <a href="/orm/ddl/part&#95;1.html#relation"><code>Relation</code></a> with an <code>alias</code> so that it can be a part of <code>FROM</code> clause of database query.</p>
+<p>Relation nodes are represented by the <code>RelationNode</code> class, they are created by calling the <code>AS</code> method of <a href="/orm/ddl/part&#95;1.html#relation"><code>Relation</code></a>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+// fetch all countries
+SELECT (co.*) FROM (co) list</code></pre>
+<p>A handy <code>map</code> method can be used to make code a bit clearer:</p>
+<pre class="scala"><code>// fetch all countries
+SELECT (co.*) FROM (co) list</code></pre>
+<p>Relation nodes can be organized into <em>query trees</em> using <a href="/orm/querying/part&#95;3.html#join">joins</a>.</p>
+<h2 id="projection">Projections</h2>
+<p><em>Projection</em> reflects the type of data returned by query. Generally, it consists of expression which can be understood in the <code>SELECT</code> clause of database and a logic to translate the corresponding part of result set into specific type.</p>
+<p>Projections are represented by the <code>Projection[T]</code> trait, where <code>T</code> denotes to the type of objects which should be read from result set. Projections which only read from single database column are refered to as <em>atomic projections</em>, they are subclassed from the <code>AtomicProjection</code> trait. Projections which span across multiple database columns are refered to as <em>composite projections</em>, they are subclassed from the <code>CompositeProjection</code> trait and consist of one or more <code>subProjections</code>.</p>
+<p>The most popular projection is <code>RecordProjection</code>, it is designed to retrieve <a href="/orm/ddl/part&#95;1.html#record">records</a>. The <code>*</code> method of <a href="#node"><code>RelationNode</code></a> returns a corresponding <code>RecordProjection</code> for relation.</p>
+<p>You can also query single fields, <code>Field</code> is converted to <code>FieldProjection</code> implicitly when called against <code>RelationNode</code>:</p>
+<pre class="scala"><code>val ci = City AS "ci"
+(SELECT (ci.id) FROM ci).list      // returns Seq[Long]
+(SELECT (ci.name) FROM ci).list    // returns Seq[String]</code></pre>
+<p>You can also query a pair of two projections with following syntax:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+SELECT (ci.* -&gt; co.*) FROM (co JOIN ci) list    // returns Seq[(Option[City], Option[Country])]</code></pre>
+<p>Another useful projection is <code>AliasMapProjection</code>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+SELECT(ci.* AS "city", co.* AS "country").FROM(co JOIN ci).list    // returns Seq[Map[String, Any]]</code></pre>
+<p>In this example the query returns a set of maps. Each map contains a <code>City</code> record under <code>city</code> key and a <code>Country</code> record under the <code>country</code> key. The <code>SELECT</code> clause accepts arbitrary quantity of projections.</p>
+<p>You can even use arbitrary expression which your database understands as long as you specify the expected type:</p>
+<pre class="scala"><code>SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]</code></pre>
+<p>There are also some predefined projection helpers for your convenience:</p>
+<ul>
+  <li><code>COUNT</code>;</li>
+  <li><code>COUNT_DISTINCT</code>;</li>
+  <li><code>MAX</code>;</li>
+  <li><code>MIN</code>;</li>
+  <li><code>SUM</code>;</li>
+  <li><code>AVG</code>.</li>
+</ul>
+<p>For example, following snippet will return the count of records in the <code>City</code> table:</p>
+<pre class="scala"><code>(City AS "ci").map(ci =&gt; SELECT(COUNT(ci.id)).FROM(ci).unique)</code></pre>
+<p>You can easily implement your own projection helper. For example, if you use SQL <code>substring</code> function frequently, you can &laquo;teach&raquo; Circumflex ORM to select substrings.</p>
+<p>Here's the code you should place somewhere in your library (or utility singleton):</p>
+<pre class="scala"><code>object MyOrmUtils {
+  def SUBSTR(f: TextField, from: Int = 0, length: Int = 0) = {
+    var sql = "substring(" + f.name
+    if (from &gt; 0) sql += " from " + from
+    if (length &gt; 0) sql += " for " + length
+    sql += ")"
+    new ExpressionProjection[String](sql)
+  }
+}</code></pre>
+<p>And here's the code to use it:</p>
+<pre class="scala"><code>import MyOrmUtils._
+(Country AS "co")
+    .map(co =&gt; SELECT(SUBSTR(co.code, 1, 1)).FROM(co).list)   // returns Seq[String]
+</code></pre>

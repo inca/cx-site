@@ -1,0 +1,20 @@
+<h1 id="export-schema">ORM: Exporting Database Schema</h1>
+<p>Database schema scripts are generated with <code>DDLUnit</code>. You can use this class to create and drop database objects programmatically:</p>
+<pre class="scala"><code>val ddl = new DDLUnit(Country, City)
+// drop objects
+ddl.DROP
+// create objects
+ddl.CREATE
+// drop and then create objects
+ddl.DROP_CREATE</code></pre>
+<p><code>DDLUnit</code> creates objects in the following order:</p>
+<ul>
+  <li>preliminary auxiliary objects;</li>
+  <li>tables;</li>
+  <li>constraints;</li>
+  <li>views;</li>
+  <li>posterior auxiliary objects.</li>
+</ul>
+<p>Respectively, drop script works with objects in a reverse order.</p>
+<p>After the execution, <code>DDLUnit</code> produces <code>messages</code>.</p>
+<p>You can also setup <code>maven-cx-plugin</code> to export the schema for your Maven project within a build profile. Read more on <a href="/plugin.html#schema">Circumflex Maven Plugin page</a>.</p>

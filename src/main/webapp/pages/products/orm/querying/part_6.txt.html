@@ -1,0 +1,67 @@
+<h1>ORM: Querying</h1>
+<h2 id="criteria">Criteria API</h2>
+<p>Most (if not all) of your data retrieval queries will be focused to retrieve only one type of <a href="/orm/ddl/part&#95;1.html#record">records</a>. <em>Criteria API</em> aims to minimize your effort on writing such queries. Following snippet shows three equivalents of the same query:</p>
+<pre class="scala"><code>// Select query:
+(Country AS "co").map(co =&gt; SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list)
+// Criteria query:
+Country.criteria.add(Country.name LIKE "Sw%").list
+// or with RelationNode:
+co.criteria.add(co.name LIKE "Sw%").list</code></pre>
+<p>As you can see, <code>Criteria</code> queries are more compact because boilerplate <code>SELECT</code> and <code>FROM</code> clauses are omitted.</p>
+<p>But aside from shortening the syntax, Criteria API offers unique functionality &mdash; <a href="#prefetch">associations prefetching</a>, which can greatly speed up your application when working with graphs of associated objects.</p>
+<p>The <code>Criteria[R]</code> object has following methods for execution:</p>
+<ul>
+  <li><code>list()</code> executes a query and returns <code>Seq[R]</code>;</li>
+  <li><code>unique()</code> executes a query and returns <code>Option[R]</code>, an exception is thrown if more than one row is returned from database;</li>
+  <li><code>mkSelect</code> transforms a <code>Criteria</code> into the <a href="/orm/querying/index.html#select"><code>Select</code> query</a>;</li>
+  <li><code>mkUpdate</code> transforms a <code>Criteria</code> into the <a href="/orm/dml.html#update-delete"><code>Update</code> query</a>;</li>
+  <li><code>mkSelect</code> transforms a <code>Criteria</code> into the <a href="/orm/dml.html#update-delete"><code>Delete</code> query</a>;</li>
+  <li><code>toString</code> shows query tree for debugging.</li>
+</ul>
+<p>You can use <a href="/orm/querying/part&#95;2.html#predicate">predicates</a> to narrow the result set. Unlike <a href="/orm/querying/index.html#select"><code>Select</code> queries</a>, predicates are added to <code>Criteria</code> object using the <code>add</code> method and then are assembled into the conjunction:</p>
+<pre class="scala"><code>co.criteria
+    .add(co.name LIKE "Sw%")
+    .add(co.code LIKE "ch")
+    .list</code></pre>
+<p>You can apply <a href="/orm/querying/part&#95;4.html#order-by">ordering</a> using the <code>addOrder</code> method:</p>
+<pre class="scala"><code>co.criteria.addOrder(co.name).addOrder(co.code).list</code></pre>
+<p>Also you can add one or more <a href="/orm/ddl/part&#95;2.html#association">associated</a> <a href="/orm/ddl/part&#95;1.html#relation">relations</a> to the query plan using the <code>addJoin</code> method so that you can specify constraints upon them:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+co.criteria.addJoin(ci).add(ci.name LIKE "Lausanne").list</code></pre>
+<p>Automatic joins are used to update query plan properly. There is no limitation on quantity or depth of joined relations. However, some database vendors have limitations on maximum size of queries or maximum amount of relations participating in a single query.</p>
+<p>One serious limitation of Criteria API is that it does not support <code>LIMIT</code> and <code>OFFSET</code> clauses due to the fact that <a href="#prefetch">association prefetching</a> normally causes result set to yield more than one row per record. You can still use <code>LIMIT</code> and <code>OFFSET</code> with <a href="/orm/querying/part&#95;4.html#limit-offset">SQL queries</a>;</p>
+<h3 id="prefetch">Prefetching Associations</h3>
+<p>When working with <a href="/orm/ddl/part&#95;2.html#association">associated</a> <a href="/orm/ddl/part&#95;1.html#record">records</a> you often need a whole graph of associations to be fetched.</p>
+<p>Normally associations are fetched eagerly first time they are accessed, but when it is done for every record in a possibly big result set, it would result in significant performance degradation (see the <a href="http://www.pramatr.com/blog/2009/02/05/sql-n-1-selects-explained/" title="n+1 selects explained">n + 1 selects problem explained</a> blogpost).</p>
+<p>With Criteria API you have an option to fetch as many associations as you want in a single query. This technique is refered to as <em>associations prefetching</em> or <em>eager fetching</em>.</p>
+<p>To understand how associations prefetching works, let's take a look at the following domain model sample:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def PRIMARY_KEY = code
+  def relation = Country
+  val code = "code" VARCHAR(2) DEFAULT("'ch'")
+  val name = "name" TEXT
+  def cities = inverseMany(City.country)
+}
+
+object Country extends Country with Table[String, Country]
+
+class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+  def PRIMARY_KEY = id
+  def relation = City
+  val id = "id".LONG.NOT_NULL.AUTO_INCREMENT
+  val name = "name" TEXT
+  val country = "country_code".VARCHAR(2).NOT_NULL
+      .REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(CASCADE)
+}
+
+object City extends City with Table[Long, City]</code></pre>
+<p>You see two <a href="/orm/ddl/part&#95;1.html#relation">relations</a>, <code>Country</code> and <code>City</code>. Each city has one <a href="/orm/ddl/part&#95;2.html#association">associated</a> <code>country</code>, and, conversely, each country has a list of corresponding <code>cities</code>.</p>
+<p>Now you wish to fetch all cities with their corresponding countries in a single query:</p>
+<pre class="scala"><code>val cities = City.criteria.prefetch(City.country).list
+cities.foreach(c =&gt; println(c.country()))   // no selects issued</code></pre>
+<p>The example above shows the prefetching for straight associations. Same logic applies to inverse associations prefetching, for example, fetching all countries with their corresponding cities:</p>
+<pre class="scala"><code>val countries = Country.criteria.prefetch(City.country).list
+countries.foreach(c =&gt; println(c.cities()))   // no selects issued</code></pre>
+<p>Okay. Now we totally hear you saying: &ldquo;How is that really possible?&rdquo; &mdash; so let's explain a bit. Each <code>Criteria</code> object maintains it's own tree of associations, which is used to form the <code>FROM</code> clause of the query (using <a href="/orm/querying/part&#95;3.html#joins-auto">automatic left-joins</a>) and, eventually, to parse the result set. The data from result set is parsed into chunks and loaded into transaction-scoped cache, which is subsequently used by associations and inverse associations to avoid unnecessary selects.</p>
+<p>There is no limitation on quantity or depth of prefetches. However, some database vendors have limitations on maximum size of queries or maximum amount of relations participating in a single query.</p>

@@ -1,0 +1,21 @@
+<h1 id="ddl">ORM: Data Definition</h1>
+<p>The process of creating the domain model of application is refered to as <em>data definition</em>. It usually involves following steps:</p>
+<ul>
+  <li>defining a <em>record</em>, a subclass of <code>Record</code>;</li>
+  <li>defining <em>fields</em> and <em>associations</em> of the record;</li>
+  <li>defining the <em>primary key</em> of the record;</li>
+  <li>defining the <em>relation</em>, a companion object subclassed from corresponding record and mixed with one of the <code>Relation</code> traits (<code>Table</code> or <code>View</code>);</li>
+  <li>adding <em>constraints</em>, <em>indexes</em> and other <em>auxiliary database objects</em> to relation;</li>
+  <li>adding methods for <a href="/products/orm/querying/index.html#sql">querying</a> and <a href="/products/orm/dml.html#dml">manipulating</a> records to relation;</li>
+  <li>specifying, how the record should be <a href="/products/orm/ddl/part&#95;2.html#validation">validated</a>.</li>
+</ul>
+<p>Here's a simple example of fictional domain model:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  val code = "code".VARCHAR(2).NOT_NULL
+  val name = "name".TEXT.NOT_NULL
+
+  def PRIMARY_KEY = code
+  def relation = Country
+}
+
+object Country extends Country with Table[String, Country]</code></pre>

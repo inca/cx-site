@@ -1,0 +1,10 @@
+<h1 id="abstractions">ORM: Central abstractions</h1>
+<p>Applications built with Circumflex ORM usually operate on following abstractions:</p>
+<ul>
+  <li><a href="/orm/ddl/part&#95;1.html#record"><code>Record</code></a> &mdash; wraps a row in a database <code>Table</code> or <code>View</code>, encapsulates the database access and adds domain logic on that data;</li>
+  <li><a href="/orm/ddl/part&#95;1.html#relation"><code>Relation</code></a> &mdash; encapsulates database object (<code>Table</code> or <code>View</code>) for corresponding <code>Record</code> and adds methods for <a href="/orm/querying/index.html#sql">querying</a>, <a href="/orm/dml.html#dml">manipulating</a> and <a href="/orm/ddl/part&#95;2.html#validation">validating</a> its data;</li>
+  <li><code>Field</code> &mdash; corresponds to atomic data unit inside <code>Record</code> or database column in <code>Table</code>;</li>
+  <li><a href="/orm/ddl/part&#95;2.html#association"><code>Association</code></a> &mdash; incapsulates <code>Field</code> which links one type of <code>Record</code> with another, this relationship is expressed by foreign keys in the database;</li>
+  <li><code>Query</code> &mdash; communicates with database either for <a href="/orm/querying/index.html#sql">data retrieval</a> or <a href="/orm/dml.html">data manipulation</a>;</li>
+  <li><code>SchemaObject</code> &mdash; represents an abstract database object (such as trigger, index, constraint or stored procedure); tables and views are database objects, too.</li>
+</ul>

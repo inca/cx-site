@@ -1,0 +1,766 @@
+<h1 id="orm">Circumflex ORM</h1>
+<p>Circumflex ORM is an <a href="http://en.wikipedia.org/wiki/Object-relational&#95;mapping" title="ORM definition on Wikipedia">Object-Relational Mapping (ORM)</a> framework for creating fast, concise and efficient data-centric applications with elegant DSL.</p>
+<p>The term &laquo;Object-Relational Mapping&raquo; refers to the technique of mapping a data representation from an object model to a relational data model. ORM tools may significantly speed up development by eliminating boilerplates for common <a href="http://en.wikipedia.org/wiki/Create,&#95;read,&#95;update&#95;and&#95;delete" title="CRUD definition on Wikipedia">CRUD</a> operations, making applications more portable by incapsulating vendor-specific SQL dialects, providing object-oriented API for querying, allowing transparent navigation between object associations and much more.</p>
+<h1 id="install">Installation &amp; Configuration</h1>
+<p>There's a couple of things you need to do in order to get started with Circumflex ORM.</p>
+<p>First, make sure that <code>circumflex-orm-&lt;version&gt;.jar</code> is in the classpath. The easiest way to do so is to add corresponding <code>dependency</code> to your <code>pom.xml</code>:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;cx.version&gt;&lt;!-- desired version --&gt;&lt;/cx.version&gt;
+&lt;/properties&gt;
+&lt;dependencies&gt;
+  &lt;!-- Circumflex ORM --&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;ru.circumflex&lt;/groupId&gt;
+    &lt;artifactId&gt;circumflex-orm&lt;/artifactId&gt;
+    &lt;version&gt;{cx.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<p>Second, configure database access by specifying following configuration parameters:</p>
+<ul>
+  <li><code>orm.connection.driver</code> &mdash; fully-qualified class name of JDBC Driver of your database vendor;</li>
+  <li><code>orm.connection.url</code> &mdash; URL for database communication (read the documentation of your database vendor for more information);</li>
+  <li><code>orm.connection.username</code> and <code>orm.connection.password</code> &mdash; database account data which will be used to obtain JDBC connections.</li>
+</ul>
+<p>Here's the example <code>cx.properties</code> file:</p>
+<pre class="no-highlight"><code>orm.connection.driver=org.postgresql.Driver
+orm.connection.url=jdbc:postgresql://localhost:5432/mydb
+orm.connection.username=myuser
+orm.connection.password=mypassword</code></pre>
+<p>Please refer to <a href="/core.html#cfg">Circumflex Configuration API</a> for more information on how to configure your application.</p>
+<h2 id="import">Imports</h2>
+<p>All code examples assume that you have following <code>import</code> statement in code where necessary:</p>
+<pre class="scala"><code>import ru.circumflex.orm._</code></pre>
+<h1 id="abstractions">Central abstractions</h1>
+<p>Applications built with Circumflex ORM usually operate on following abstractions:</p>
+<ul>
+  <li><code>Record</code> &mdash; wraps a row in a database <code>Table</code> or <code>View</code>, encapsulates the database access and adds domain logic on that data;</li>
+  <li><code>Relation</code> &mdash; encapsulates database object (<code>Table</code> or <code>View</code>) for corresponding <code>Record</code> and adds methods for <a href="#sql">querying</a>, <a href="#dml">manipulating</a> and <a href="#validation">validating</a> its data;</li>
+  <li><code>Field</code> &mdash; corresponds to atomic data unit inside <code>Record</code> or database column in <code>Table</code>;</li>
+  <li><a href="#association"><code>Association</code></a> &mdash; incapsulates <code>Field</code> which links one type of <code>Record</code> with another, this relationship is expressed by foreign keys in the database;</li>
+  <li><code>Query</code> &mdash; communicates with database either for <a href="#sql">data retrieval</a> or <a href="#dml">data manipulation</a>;</li>
+  <li><code>SchemaObject</code> &mdash; represents an abstract database object (such as trigger, index, constraint or stored procedure); tables and views are database objects, too.</li>
+</ul>
+<h1 id="ddl">Data Definition</h1>
+<p>The process of creating the domain model of application is refered to as <em>data definition</em>. It usually involves following steps:</p>
+<ul>
+  <li>defining a <em>record</em>, a subclass of <code>Record</code>;</li>
+  <li>defining <em>fields</em> and <em>associations</em> of the record;</li>
+  <li>defining the <em>primary key</em> of the record;</li>
+  <li>defining the <em>relation</em>, a companion object subclassed from corresponding record and mixed with one of the <code>Relation</code> traits (<code>Table</code> or <code>View</code>);</li>
+  <li>adding <em>constraints</em>, <em>indexes</em> and other <em>auxiliary database objects</em> to relation;</li>
+  <li>adding methods for <a href="#sql">querying</a> and <a href="#dml">manipulating</a> records to relation;</li>
+  <li>specifying, how the record should be <a href="#validation">validated</a>.</li>
+</ul>
+<p>Here's a simple example of fictional domain model:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  val code = "code".VARCHAR(2).NOT_NULL
+  val name = "name".TEXT.NOT_NULL
+
+  def PRIMARY_KEY = code
+  def relation = Country
+}
+
+object Country extends Country with Table[String, Country]</code></pre>
+<h2 id="record">Record</h2>
+<p>In this example the <code>Country</code> table will have two fields, <code>code</code> and <code>name</code>. The first type parameter, <code>String</code>, designates the type of primary key (we refer to this type as <code>PK</code>). The second type parameter points to class itself to ensure type safety. The <code>Record</code> class has two abstract methods which should be implemented: <code>PRIMARY_KEY</code> and <code>relation</code>.</p>
+<p>The <code>PRIMARY_KEY</code> method points to <code>Field</code> which type matches <code>PK</code> (<code>String</code> in our example). Primary key uniquely identifies a record in database table. Unfortunately, Circumflex ORM does not support composite primary keys yet.</p>
+<p>The <code>relation</code> points to companion object which corresponds to record. It must have the same name as record class and should extend a record itself to inherit all its fields.</p>
+<p>The body of record class contains field definitions. A field should be a public immutable (<code>val</code>) member of record class. Each field corresponds to a column in database table.</p>
+<p>As the example above shows, the syntax of field definition closely resembles classic DDL for generating database schema for tables: you specify the column name with <code>String</code>, then you call one of the methods to create a field of certain type, then you optionally call one of methods that change the definition of target column.</p>
+<p>Generally, spaces may be used to delimit method calls and improve readability of column definitions. However, sometimes Scala compiler forces you to use dot-notation:</p>
+<pre class="scala"><code>val name = "name".TEXT.NOT_NULL</code></pre>
+<p>Following methods are used to create field definitions:</p>
+<table width="100%">
+  <thead>
+  <tr>
+    <th>Method</th>
+    <th>SQL type</th>
+    <th>Scala type</th>
+    <th>Implementing class</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>INTEGER</code></td>
+    <td><code>INTEGER</code></td>
+    <td><code>Int</code></td>
+    <td><code>IntField</code></td>
+  </tr>
+  <tr>
+    <td><code>BIGINT</code></td>
+    <td><code>BIGINT</code></td>
+    <td><code>Long</code></td>
+    <td><code>LongField</code></td>
+  </tr>
+  <tr>
+    <td><code>DOUBLE(precision: Int, scale: Int)</code></td>
+    <td><code>NUMERIC(p, s)</code></td>
+    <td><code>Double</code></td>
+    <td><code>DoubleField</code></td>
+  </tr>
+  <tr>
+    <td><code>NUMERIC(precision: Int, scale: Int
+        roundingMode: BigDecimal.RoundingMode.RoundingMode)</code></td>
+    <td><code>NUMERIC(p, s)</code></td>
+    <td><code>scala.math.BigDecimal</code></td>
+    <td><code>NumericField</code></td>
+  </tr>
+  <tr>
+    <td><code>TEXT</code></td>
+    <td><code>TEXT</code></td>
+    <td><code>String</code></td>
+    <td><code>TextField</code></td>
+  </tr>
+  <tr>
+    <td><code>VARCHAR(length: Int)</code></td>
+    <td><code>VARCHAR(l)</code></td>
+    <td><code>String</code></td>
+    <td><code>TextField</code></td>
+  </tr>
+  <tr>
+    <td><code>BOOLEAN</code></td>
+    <td><code>BOOLEAN</code></td>
+    <td><code>Boolean</code></td>
+    <td><code>BooleanField</code></td>
+  </tr>
+  <tr>
+    <td><code>DATE</code></td>
+    <td><code>DATE</code></td>
+    <td><code>java.util.Date</code></td>
+    <td><code>DateField</code></td>
+  </tr>
+  <tr>
+    <td><code>TIME</code></td>
+    <td><code>TIME</code></td>
+    <td><code>java.util.Date</code></td>
+    <td><code>TimeField</code></td>
+  </tr>
+  <tr>
+    <td><code>TIMESTAMP</code></td>
+    <td><code>TIMESTAMP</code></td>
+    <td><code>java.util.Date</code></td>
+    <td><code>TimestampField</code></td>
+  </tr>
+  </tbody>
+</table>
+<p>In the table above the default SQL types show the types defined in default dialect, which can be overriden in vendor-specific dialects. Besides it is possible to define a field with custom SQL type by subclassing the <code>Field</code> class. Refer to <a href="/api/2.0/circumflex-orm/field.scala">Circumflex ORM API documentation</a> for details.</p>
+<p>Since version 2.0 genearated columns <strong>will not have</strong> <code>NOT NULL</code> constraints by default (this behavior is consistent with SQL specifications). You should call <code>NOT_NULL</code> method to express <code>NOT NULL</code> constraint in column definition:</p>
+<pre class="scala"><code>val mandatory = "mandatory".TEXT.NOT_NULL
+val optional = "optional".TEXT</code></pre>
+<p>You can optionally initialize a field with value with <code>NOT_NULL</code>:</p>
+<pre class="scala"><code>val createdAt = "created_at".TIMESTAMP.NOT_NULL(new Date)</code></pre>
+<p>You can also specify the default expression for the field, it will be rendered in database column definition:</p>
+<pre class="scala"><code>val radius = "radius".NUMERIC.NOT_NULL
+val square = "square".NUMERIC.NOT_NULL.DEFAULT("PI() * (radius ^ 2)")</code></pre>
+<p>You can also create a single-column unique constraint using the <code>UNIQUE</code> method:</p>
+<pre class="scala"><code>val login = "login".VARCHAR(64).NOT_NULL.UNIQUE</code></pre>
+<p>Fields operate with values. The syntax for accessing and setting values is self-descriptive:</p>
+<pre class="scala"><code>val age = "age".INTEGER  // Field[Int, R]
+// accessing
+age.value                     // Option[Int]
+age.get                       // Option[Int]
+age()                         // Int
+age.getOrElse(default: Int)   // Int
+age.null_?                    // Boolean
+// setting
+age := 25
+age.set(25)
+age.set(Some(25))
+age.set(None)
+age.setNull</code></pre>
+<p>It is a good practice to place domain-specific logic inside record classes. The following example shows the most trivial case: overriding <code>toString</code> and providing alternative constructor:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def PRIMARY_KEY = code
+  def relation = Country
+  // Constructor shortcuts
+  def this(code: String, name: String) = {
+    this()
+    this.code := code
+    this.name := name
+  }
+  // Fields
+  val code = "code" VARCHAR(2) DEFAULT("'ch'")
+  val name = "name" TEXT
+  // Miscellaneous
+  override def toString = name.getOrElse("Unknown")
+}</code></pre>
+<h2 id="relation">Relation</h2>
+<p>Relation is defined as a companion object for corresponding <a href="#record">record</a>. As mentioned before, the relation object should have the same name as its corresponding record class, should extend that record class and should mix in one of the <code>Relation</code> traits (<code>Table</code> or <code>View</code>):</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def relation = Country
+  // ...
+}
+object Country extends Country with Table[String, Country]</code></pre>
+<p>You can place the definitions of constraints and indexes inside the body of relation, they should be public immutable (<code>val</code>) members of relation:</p>
+<pre class="scala"><code>object Country extends Country with Table[String, Country] {
+  // a named UNIQUE constraint
+  val codeKey = CONSTRAINT("code_uniq").UNIQUE(this.code)
+  // a UNIQUE constraint with default name
+  val codeKey = UNIQUE(this.code)
+  // a named CHECK constraint:
+  val codeChk = CONSTRAINT("code_chk").CHECK("code IN ('ch', 'us', 'uk', 'fr', 'es', 'it', 'pt')")
+  // a named FOREIGN KEY constraint:
+  val fkey = CONSTRAINT("eurozone_code_fkey").FOREIGN_KEY(EuroZone, this.code -&gt; EuroZone.code)
+  // an index:
+  val idx = "country_code_idx".INDEX("LOWER(code)").USING("btree").UNIQUE
+}</code></pre>
+<p>Consult <a href="/api/2.0/circumflex-orm/sql.scala">Circumflex ORM API Documentation</a> for other definition options.</p>
+<p>The relation object is also the right place for various querying methods:</p>
+<pre class="scala"><code>object User extends Table[Long, User] {
+  def findByLogin(l: String): Option[User] = (this AS "u").map(u =&gt;
+      SELECT(u.*).FROM(u).WHERE(u.login LIKE l).unique)
+}</code></pre>
+<p>See <a href="#sql">querying</a>, <a href="#dml">data manipulation</a> and <a href="#criteria">Criteria API</a> sections for more information.</p>
+<h2 id="idgen">Generating Identifiers</h2>
+<p>Circumflex ORM allows you to use database-generated identifiers as primary keys. Let's take a look at following data definition snippet:</p>
+<pre class="scala"><code>class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+  val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+  val name = "name".TEXT.NOT_NULL
+  def PRIMARY_KEY = id
+  def relation = City
+}
+
+object City extends City with Table[Long, City]</code></pre>
+<p>This snippet shows a surrogate primary key example. The value of <code>id</code> is generated when a record is inserted. Then additional SQL select is issued to read this generated value.</p>
+<p>For more information refer to <a href="/api/2.0/circumflex-orm/record.scala">Circumflex ORM API Documentation</a>.</p>
+<h2 id="association">Associations</h2>
+<p>An <em>association</em> provides a way to link one relation with another.</p>
+<pre class="scala"><code>class City extends Record[Long, City] {
+  val country = "country_code".TEXT.REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(NO_ACTION)
+}</code></pre>
+<p>As the example above shows, associations are created from fields using the <code>REFERENCES</code> method. The type of the field must match the type of primary key of referenced relation.</p>
+<p>Associations also implicitly add foreign key constraint to table's definition. The cascading actions can be specified by invoking <code>ON_DELETE</code> and <code>ON_UPDATE</code> with one of the following arguments:</p>
+<ul>
+  <li><code>NO_ACTION</code> (default),</li>
+  <li><code>CASCADE</code>,</li>
+  <li><code>RESTRICT</code>,</li>
+  <li><code>SET_NULL</code>,</li>
+  <li><code>SET_DEFAULT</code>.</li>
+</ul>
+<p>Associations are directed: the relation that owns an association is often refered to as a <em>child relation</em>, while the relation to which an associations references is often refered to as a <em>parent relation</em>.</p>
+<p>Like with regular field, you can set an retrieve the association's value:</p>
+<pre class="scala"><code>// accessing
+country.value                       // Option[Country]
+country.get                         // Option[Country]
+country()                           // Country
+country.getOrElse(default: Country) // Country
+country.null_?                      // Boolean
+// setting
+country := switzerland
+country.set(switzerland)
+country.set(Some(switzerland))
+country.set(None)
+country.setNull</code></pre>
+<p>Associations do not store objects themselves. Instead they store the primary key of an object in their internal field. You can access and set this value directly using the <code>field</code> method:</p>
+<pre class="scala"><code>country.field   // Field[String, R]
+country.field := "ch"</code></pre>
+<p>When you access association using its <code>get</code>, <code>apply</code>, <code>value</code> or <code>getOrElse</code> methods, the actual record is returned from cache of current transaction. However, if record does not exist in cache yet, a transparent SQL select will be issued to fetch this record. This technique is usually refered to as <em>lazy initialization</em> or <em>lazy fetching</em>:</p>
+<pre class="scala"><code>val c = new City
+c.id := 16
+c.country()   // a SELECT query is executed to retrieve a Country
+              // for the City with id = 16
+c.country()   // further selects are not issued</code></pre>
+<p>The other side of association can optionally define an <em>inverse association</em> using following syntax:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def cities = inverseMany(City.country)
+}</code></pre>
+<p>Inverse associations are not represented by field in their relation, they are initialized by issuing the <code>SELECT</code> statement against child relation:</p>
+<pre class="scala"><code>val c = new Country
+c.code := 'ch'
+c.cities()   // a SELECT query is executed to retrieve a set of City objects
+             // which have country_code = 'ch'
+c.cities()   // further selects are not issued</code></pre>
+<p>Here we have the so-called &laquo;one-to-many&raquo; relationship. The &laquo;one-to-one&raquo; relationship is simulated by placing a unique constraint on association (in child table) and using <code>inverseOne</code> in parent table.</p>
+<p>You can also perform <em>association prefetching</em> for both straight and inverse associations using the <a href="#criteria">Criteria API</a>.</p>
+<h2 id="validation">Validation</h2>
+<p>A record can be optionally validated before it is saved into database.</p>
+<p>The validation is performed using one or more <em>validators</em>, functions which take a <code>Record</code> and return <code>Option[Msg]</code>: <code>None</code> if validation succeeds or <code>Some[Msg]</code> otherwise. In case of failed validation the <code>Msg</code> object is used to describe the exact problem. Refer to <a href="/api/2.0/circumflex-core/messages.scala">Circumflex Messages API Documentation</a> to find out how to work with messages.</p>
+<p>Validators are added to the <code>validation</code> object inside <a href="#relation">relation</a>:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  validation.add(r =&gt; ...)
+      .add(r =&gt; ...)
+}</code></pre>
+<p>There are several predefined validators available for your convenience:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  validation.notNull(_.code)
+      .notEmpty(_.code)
+      .pattern(_.code, "(?i:[a-z]{2})")
+}</code></pre>
+<p>A record is validated when either <code>validate</code> or <code>validate_!</code> is invoked. The first one returns <code>Option[MsgGroup]</code>:</p>
+<pre class="scala"><code>rec.validate match {
+  case None =&gt; ...            // validation succeeded
+  case Some(errors) =&gt; ...    // validation failed
+}</code></pre>
+<p>The second one does not return anything, but throws <code>ValidationException</code> if validation fails.</p>
+<p>The <code>validate_!</code> method is also called when a record is being saved into database, read more in <a href="#iud">Insert, Update &amp; Delete</a> section.</p>
+<p>It is also fairly easy to implement custom validators. Following example shows a validator for checking unique email addresses:</p>
+<pre class="scala"><code>object Account extends Table[Long, Account] {
+  validation.add(r =&gt; criteria
+      .add(r.email EQ r.email())
+      .unique
+      .map(a =&gt; new Msg(r.email.uuid + ".unique")))
+}</code></pre>
+<h1 id="export-schema">Exporting Database Schema</h1>
+<p>Database schema scripts are generated with <code>DDLUnit</code>. You can use this class to create and drop database objects programmatically:</p>
+<pre class="scala"><code>val ddl = new DDLUnit(Country, City)
+// drop objects
+ddl.DROP
+// create objects
+ddl.CREATE
+// drop and then create objects
+ddl.DROP_CREATE</code></pre>
+<p><code>DDLUnit</code> creates objects in the following order:</p>
+<ul>
+  <li>preliminary auxiliary objects;</li>
+  <li>tables;</li>
+  <li>constraints;</li>
+  <li>views;</li>
+  <li>posterior auxiliary objects.</li>
+</ul>
+<p>Respectively, drop script works with objects in a reverse order.</p>
+<p>After the execution, <code>DDLUnit</code> produces <code>messages</code>.</p>
+<p>You can also setup <code>maven-cx-plugin</code> to export the schema for your Maven project within a build profile. Read more on <a href="/plugin.html#schema">Circumflex Maven Plugin page</a>.</p>
+<h1 id="sql">Querying</h1>
+<p>A precise request for information retrieval from database is often refered to as <em>query</em>. There are various ways you can query your data with Circumflex ORM:</p>
+<ul>
+  <li>using <a href="#select">select queries</a>, a neat object-oriented DSL for retrieving <a href="#record">records</a> as well as arbitrary <a href="#projection">projections</a> with SQL-like syntax;</li>
+  <li>using the <a href="#criteria">Criteria API</a>, an alternative DSL for retrieving <a href="#record">records</a> with associations prefetching capabilities;</li>
+  <li>using native queries for executing vendor-specific queries for <a href="#record">records</a> or arbitrary <a href="#projection">projections</a>.</li>
+</ul>
+<p>All data retrieval queries derive from the <code>SQLQuery[T]</code> class. It defines following methods for query execution:</p>
+<ul>
+  <li><code>list()</code> executes a query and returns <code>Seq[T]</code>;</li>
+  <li><code>unique()</code> executes a query and returns <code>Option[T]</code>, an exception is thrown if more than one row is returned from database;</li>
+  <li><code>resultSet[A](actions: ResultSet =&gt; A)</code> executes a query and passes JDBC <code>ResultSet</code> object to specified <code>actions</code> function, the result is determined by that function.</li>
+</ul>
+<h2 id="select">Select Queries</h2>
+<p>Select queries are used to retrieve <a href="#record">records</a> or arbitrary <a href="#projection">projections</a> with neat object-oriented DSL which closely resembles SQL syntax:</p>
+<pre class="scala"><code>// prepare relation nodes which will participate in query:
+val co = Country AS "co"
+val ci = City AS "ci"
+// prepare a query:
+val q = SELECT (co.*) FROM (co JOIN ci) WHERE (ci.name LIKE "Lausanne") ORDER_BY (co.name ASC)
+// execute a query:
+q.list    // returns Seq[Country]</code></pre>
+<p>The <code>Select</code> class provides functionality for select queries. It has following structure:</p>
+<ul>
+  <li><code>SELECT</code> clause &mdash; specifies a <a href="#projection">projection</a> which determines the actual result of query execution;</li>
+  <li><code>FROM</code> clause &mdash; specifies <a href="#node">relation nodes</a> which will participate in query;</li>
+  <li><code>WHERE</code> clause &mdash; specifies a <a href="#predicate">predicate</a> which will be used by database to filter the records in result set;</li>
+  <li><code>ORDER_BY</code> clause &mdash; tells database how the result set should be <a href="#order-by">sorted</a>;</li>
+  <li><code>GROUP_BY</code> clause &mdash; specifies a subset of <a href="#projection">projections</a> which will be used by database for <a href="#group-by">grouping</a>;</li>
+  <li><code>HAVING</code> clause &mdash; specifies additional <a href="#predicate">predicate</a> which will be applied by database after <a href="#group-by">grouping</a>;</li>
+  <li><code>LIMIT</code> clause and <code>OFFSET</code> clause &mdash; tell database to return a subset of result set and specify it's boundaries;</li>
+  <li><a href="#set-ops">set operations</a> &mdash; allow to combine the results of two or more <a href="#sql">SQL queries</a>.</li>
+</ul>
+<h2 id="node">Relation Nodes</h2>
+<p><code>RelationNode</code> wraps a <a href="#relation"><code>Relation</code></a> with an <code>alias</code> so that it can be a part of <code>FROM</code> clause of database query.</p>
+<p>Relation nodes are represented by the <code>RelationNode</code> class, they are created by calling the <code>AS</code> method of <a href="#relation"><code>Relation</code></a>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+// fetch all countries
+SELECT (co.*) FROM (co) list</code></pre>
+<p>A handy <code>map</code> method can be used to make code a bit clearer:</p>
+<pre class="scala"><code>// fetch all countries
+SELECT (co.*) FROM (co) list</code></pre>
+<p>Relation nodes can be organized into <em>query trees</em> using <a href="#join">joins</a>.</p>
+<h2 id="projection">Projections</h2>
+<p><em>Projection</em> reflects the type of data returned by query. Generally, it consists of expression which can be understood in the <code>SELECT</code> clause of database and a logic to translate the corresponding part of result set into specific type.</p>
+<p>Projections are represented by the <code>Projection[T]</code> trait, where <code>T</code> denotes to the type of objects which should be read from result set. Projections which only read from single database column are refered to as <em>atomic projections</em>, they are subclassed from the <code>AtomicProjection</code> trait. Projections which span across multiple database columns are refered to as <em>composite projections</em>, they are subclassed from the <code>CompositeProjection</code> trait and consist of one or more <code>subProjections</code>.</p>
+<p>The most popular projection is <code>RecordProjection</code>, it is designed to retrieve <a href="#record">records</a>. The <code>*</code> method of <a href="#node"><code>RelationNode</code></a> returns a corresponding <code>RecordProjection</code> for relation.</p>
+<p>You can also query single fields, <code>Field</code> is converted to <code>FieldProjection</code> implicitly when called against <code>RelationNode</code>:</p>
+<pre class="scala"><code>val ci = City AS "ci"
+(SELECT (ci.id) FROM ci).list      // returns Seq[Long]
+(SELECT (ci.name) FROM ci).list    // returns Seq[String]</code></pre>
+<p>You can also query a pair of two projections with following syntax:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+SELECT (ci.* -&gt; co.*) FROM (co JOIN ci) list    // returns Seq[(Option[City], Option[Country])]</code></pre>
+<p>Another useful projection is <code>AliasMapProjection</code>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+SELECT(ci.* AS "city", co.* AS "country").FROM(co JOIN ci).list    // returns Seq[Map[String, Any]]</code></pre>
+<p>In this example the query returns a set of maps. Each map contains a <code>City</code> record under <code>city</code> key and a <code>Country</code> record under the <code>country</code> key. The <code>SELECT</code> clause accepts arbitrary quantity of projections.</p>
+<p>You can even use arbitrary expression which your database understands as long as you specify the expected type:</p>
+<pre class="scala"><code>SELECT(expr[java.util.Date]("current_timestamp")).unique   // returns Option[java.util.Date]</code></pre>
+<p>There are also some predefined projection helpers for your convenience:</p>
+<ul>
+  <li><code>COUNT</code>;</li>
+  <li><code>COUNT_DISTINCT</code>;</li>
+  <li><code>MAX</code>;</li>
+  <li><code>MIN</code>;</li>
+  <li><code>SUM</code>;</li>
+  <li><code>AVG</code>.</li>
+</ul>
+<p>For example, following snippet will return the count of records in the <code>City</code> table:</p>
+<pre class="scala"><code>(City AS "ci").map(ci =&gt; SELECT(COUNT(ci.id)).FROM(ci).unique)</code></pre>
+<p>You can easily implement your own projection helper. For example, if you use SQL <code>substring</code> function frequently, you can &laquo;teach&raquo; Circumflex ORM to select substrings.</p>
+<p>Here's the code you should place somewhere in your library (or utility singleton):</p>
+<pre class="scala"><code>object MyOrmUtils {
+  def SUBSTR(f: TextField, from: Int = 0, length: Int = 0) = {
+    var sql = "substring(" + f.name
+    if (from &gt; 0) sql += " from " + from
+    if (length &gt; 0) sql += " for " + length
+    sql += ")"
+    new ExpressionProjection[String](sql)
+  }
+}</code></pre>
+<p>And here's the code to use it:</p>
+<pre class="scala"><code>import MyOrmUtils._
+(Country AS "co")
+    .map(co =&gt; SELECT(SUBSTR(co.code, 1, 1)).FROM(co).list)   // returns Seq[String]</code></pre>
+<h2 id="predicate">Predicates</h2>
+<p><em>Predicate</em> is a parameterized expression which is resolved by database into a boolean-value function. Generally, predicates are used inside <code>WHERE</code> or <code>HAVING</code> clauses of SQL queries to filter the rows in result set.</p>
+<p>Predicates are represented by the <code>Predicate</code> class. The easiest way to compose a <code>Predicate</code> instance is to use implicit conversion from <code>String</code> or <code>Field</code> to <code>SimpleExpressionHelper</code> and call one of it's methods:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) WHERE (co.name LIKE "Switz%")</code></pre>
+<p>Following helper methods are available in <code>SimpleExpressionHelper</code>:</p>
+<table width="100%">
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>Method</th>
+      <th>SQL equivalent</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="7">Comparison operators</td>
+      <td><code>EQ(value: Any)</code></td>
+      <td><code>= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>NE(value: Any)</code></td>
+      <td><code>&lt;&gt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>GT(value: Any)</code></td>
+      <td><code>&gt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>GE(value: Any)</code></td>
+      <td><code>&gt;= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>LT(value: Any)</code></td>
+      <td><code>&lt; ?</code></td>
+    </tr>
+    <tr>
+      <td><code>LE(value: Any)</code></td>
+      <td><code>&lt;= ?</code></td>
+    </tr>
+    <tr>
+      <td><code>BETWEEN(lower: Any, upper: Any)</code></td>
+      <td><code>BETWEEN ? AND ?</code></td>
+    </tr>
+    <tr>
+      <td rowspan="2">Null handling</td>
+      <td><code>IS_NULL</code></td>
+      <td><code>IS NULL</code></td>
+    </tr>
+    <tr>
+      <td><code>IS_NOT_NULL</code></td>
+      <td><code>IS NOT NULL</code></td>
+    </tr>
+    <tr>
+      <td rowspan="14">Subqueries</td>
+      <td><code>IN(query: SQLQuery[_])</code></td>
+      <td><code>IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NOT_IN(query: SQLQuery[_])</code></td>
+      <td><code>NOT IN (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_ALL(query: SQLQuery[_])</code></td>
+      <td><code>= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&gt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&gt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt; ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_ALL(query: SQLQuery[_])</code></td>
+      <td><code>&lt;= ALL (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>EQ_SOME(query: SQLQuery[_])</code></td>
+      <td><code>= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>NE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt;&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GT_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&gt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>GE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&gt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LT_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt; SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td><code>LE_SOME(query: SQLQuery[_])</code></td>
+      <td><code>&lt;= SOME (SELECT ...)</code></td>
+    </tr>
+    <tr>
+      <td rowspan="3">Miscellaneous</td>
+      <td><code>LIKE(value: Any)</code></td>
+      <td><code>LIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>ILIKE(value: Any)</code></td>
+      <td><code>ILIKE ?</code></td>
+    </tr>
+    <tr>
+      <td><code>IN(params: Any*)</code></td>
+      <td><code>IN (?, ?, ...)</code></td>
+    </tr>
+  </tbody>
+</table>
+<p>You can combine several predicates into <code>AggregatePredicate</code> using either <code>OR</code> or <code>AND</code> methods:</p>
+<pre class="scala"><code>AND(co.name LIKE "Switz%", co.code EQ "ch")
+// or in infix notation:
+(co.name LIKE "Switz%") OR (co.code EQ "ch")</code></pre>
+<p>You can negotiate a predicate using the <code>NOT</code> method:</p>
+<pre class="scala"><code>NOT(co.name LIKE "Switz%")</code></pre>
+<p><code>String</code> values are implicitly converted into <code>SimpleExpression</code> predicate without parameters:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) WHERE ("co.code like 'ch'"))</code></pre>
+<p>You can also use <code>prepareExpr</code> to compose a custom expression with parameters:</p>
+<pre class="scala"><code>prepareExpr("co.name like :name or co.code like :code", "name" -&gt; "Switz%", "code" -&gt; "ch")</code></pre>
+<h2 id="order-by">Ordering</h2>
+<p>Ordering expressions appear in <code>ORDER_BY</code> clause of <code>Select</code>, they determine how rows in result set will be sorted. The easiest way to specify ordering expressions is to use implicit convertions from <code>String</code> or <code>Field</code> into <code>Order</code>:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) ORDER_BY (co.name)</code></pre>
+<p>You can also add either <code>ASC</code> or <code>DESC</code> ordering specificator to explicitly set the direction of sorting:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)</code></pre>
+<p>If no specificator given, ascending sorting is assumed by default.</p>
+<h2 id="join">Joins</h2>
+<p><em>Joins</em> are used to combine records from two or more relations within a query.</p>
+<p>Joins concept is a part of <a href="http://en.wikipedia.org/wiki/Relational&#95;algebra" title="Relational algebra definition on Wikipedia">relational algebra</a>. If you are not familiar with joins in relational databases, consider spending some time to learn a bit about them. A good place to start will be the <a href="http://en.wikipedia.org/wiki/Join&#95;(SQL)" title="SQL Join definition on Wikipedia">Join_(SQL) article on Wikipedia</a>.</p>
+<p>Joins allow you to build queries which span across several associated relations:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+// find cities by the name of their corresponding countries:
+SELECT (ci.*) FROM (ci JOIN co) WHERE (co.name LIKE 'Switz%')</code></pre>
+<p>As the example above shows, joins are intended to be used in the <code>FROM</code> clause of query. The result of calling the <code>JOIN</code> method is an instance of <code>JoinNode</code> class:</p>
+<pre class="scala"><code>val co2ci = (Country AS "co") JOIN (City AS "ci")   // JoinNode[Country, City]</code></pre>
+<p>Every <code>JoinNode</code> has it's left side and right side (<code>co JOIN ci</code> is <strong>not</strong> equivalent to <code>ci JOIN co</code>).</p>
+<h3 id="joins-left-ass">Left Associativity</h3>
+<p>An important thing to know is that the join operation is <strong>left-associative</strong>: if join is applied to <code>JoinNode</code> instance, the operation will be delegated to the <code>left</code> side of <code>JoinNode</code>.</p>
+<p>To illustrate this, let's take three associated tables, <code>Country</code>, <code>City</code> and <code>Street</code>:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+val st = Street AS "st"</code></pre>
+<p>We want to join them in following order: <code>Country</code> &rarr; (<code>City</code> &rarr; <code>Street</code>). Since join operation is left-associative, we need extra parentheses:</p>
+<pre class="scala"><code>co JOIN (ci JOIN st)</code></pre>
+<p>Now let's join the same tables in following order: (<code>City</code> &rarr; <code>Street</code>) &rarr; <code>Country</code>. In this case the parentheses can be omitted:</p>
+<pre class="scala"><code>ci JOIN st JOIN co</code></pre>
+<h3 id="joins-predicate">Joining Predicate</h3>
+<p>By default Circumflex ORM will try to determine joining predicate (the <code>ON</code> subclause) by searching the <a href="#association">associations</a> between relations.</p>
+<p>Let's say we have two associated relations, <code>Country</code> and <code>City</code>. We can use implicit joins between <code>Country</code> and <code>City</code>:</p>
+<pre class="scala"><code>Country AS "co" JOIN (City AS "ci")
+// country AS co LEFT JOIN city AS ci ON ci.country_code = co.code
+City AS "ci" JOIN (Country AS "co")
+// city AS ci LEFT JOIN country AS co ON ci.country_code = co.code</code></pre>
+<p>However, if no explicit association exist between relations (or if they are ambiguous), you may need to specify the join predicate explicitly:</p>
+<pre class="scala"><code>ci.JOIN(co).ON("ci.country_code = co.code")</code></pre>
+<h3 id="joins-type">Join Types</h3>
+<p>Like in SQL, joins can be of several types. Depending on the type of join, rows which do not match the joining predicate will be eliminated from one of the sides of join. Following join types are available:</p>
+<ul>
+  <li><code>INNER</code> joins eliminate unmatched rows from both sides;</li>
+  <li><code>LEFT</code> joins return all matched rows plus one copy for each row in the left side relation for which there was no matching right-hand row (extended with <code>NULL</code>s on the right);</li>
+  <li><code>RIGHT</code> joins, conversely, return all matched rows plus one copy for each row in the right side relation for which there was no matching right-hand row (extended with <code>NULL</code>s on the left);</li>
+  <li><code>FULL</code> joins return all the joined rows, plus one row for each unmatched left-hand row (extended with <code>NULL</code>s on the right), plus one row for each unmatched right-hand row (extended with <code>NULL</code>s on the left).;</li>
+  <li>cross joins are achieved by passing multiple <code>RelationNode</code> arguments to <code>FROM</code>, they produce the Cartesian product of records, no join conditions are applied to them.</li>
+</ul>
+<p>If no join type specified explicitly, <code>LEFT</code> join is assumed by default.</p>
+<p>You can specify the type of join by passing an argument to the <code>JOIN</code> method:</p>
+<pre class="scala"><code>(Country AS "co").JOIN(City AS "ci", INNER)</code></pre>
+<p>Or you may call one of specific methods instead:</p>
+<pre class="scala"><code>Country AS "co" INNER_JOIN (City AS "ci")
+Country AS "co" LEFT_JOIN (City AS "ci")
+Country AS "co" RIGHT_JOIN (City AS "ci")
+Country AS "co" FULL_JOIN (City AS "ci")</code></pre>
+<h2 id="group-by">Grouping &amp; Having</h2>
+<p>A query can optionally condense into a single row all selected rows that share the same value for a subset of query <a href="#projection">projections</a>. Such queries are often refered to as <em>grouping queries</em> and the projections are usually refered to as <em>grouping projections</em>.</p>
+<p>Grouping queries are built using the <code>GROUP_BY</code> clause:</p>
+<pre class="scala"><code>SELECT (co.*) FROM co GROUP_BY (co.*)</code></pre>
+<p>As the example above shows, grouping projections are specified as arguments to the <code>GROUP_BY</code> method.</p>
+<p>Grouping queries are often used in conjunction with aggregate functions. If aggregate functions are used, they are computed across all rows making up each group, producing separate value for each group, whereas without <code>GROUP_BY</code> an aggregate produces a single value computed across all the selected rows:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+// how many cities correspond to each selected country?
+SELECT (co.* -&gt; COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*)</code></pre>
+<p>Groups can be optionally filtered using the <code>HAVING</code> clause. It accepts a <a href="#predicate">predicate</a>:</p>
+<pre class="scala"><code>SELECT (co.* -&gt; COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) HAVING (co.code LIKE "c_")</code></pre>
+<p>Note that <code>HAVING</code> is different from <code>WHERE</code>: <code>WHERE</code> filters individual rows before the application of <code>GROUP_BY</code>, while <code>HAVING</code> filters group rows created by <code>GROUP_BY</code>.</p>
+<h2 id="limit-offset">Limit &amp; Offset</h2>
+<p>The <code>LIMIT</code> clause specifies the maximum number of rows a query will return:</p>
+<pre class="scala"><code>// select 10 first countries:
+SELECT (co.*) FROM co LIMIT 10</code></pre>
+<p>The <code>OFFSET</code> clause specifies the number of rows to skip before starting to return results. When both are specified, the amount of rows specified in the <code>OFFSET</code> clause is skipped before starting to count the maximum amount of returned rows specified in the <code>LIMIT</code> clause:</p>
+<pre class="scala"><code>// select 5 countries starting from 10th:
+SELECT (co.*) FROM co LIMIT 5 OFFSET 10</code></pre>
+<p>Note that query planners in database engines often take <code>LIMIT</code> and <code>OFFSET</code> into account when generating a query plan, so you are very likely to get different row orders for different <code>LIMIT</code>/<code>OFFSET</code> values. Thus, you should use explicit <a href="#order-by">ordering</a> to achieve consistent and predictable results when selecting different subsets of a query result with <code>LIMIT</code>/<code>OFFSET</code>.</p>
+<h2 id="set-ops">Union, Intersect &amp; Except</h2>
+<p>Most database engines allow to comine the results of two queries using the <em>set operations</em>. Following set operations are available:</p>
+<ul>
+  <li><code>UNION</code> &mdash; appends the result of one query to another, eliminating duplicate rows from its result;</li>
+  <li><code>UNION_ALL</code> &mdash; same as <code>UNION</code>, but leaves duplicate rows in result set;</li>
+  <li><code>INTERSECT</code> &mdash; returns all rows that are in the result of both queries, duplicate rows are eliminated;</li>
+  <li><code>INTERSECT_ALL</code> &mdash; same as <code>INTERSECT</code>, but no duplicate rows are eliminated;</li>
+  <li><code>EXCEPT</code> &mdash; returns all rows that are in the result of left-hand query, but not in the result of right-hand query; again, the duplicates are eliminated;</li>
+  <li><code>EXCEPT_ALL</code> &mdash; same as <code>EXCEPT</code>, but duplicates are left in the result set.</li>
+</ul>
+<p>The syntax for using set operations is:</p>
+<pre class="scala"><code>// select the names of both countries and cities in a single result set:
+SELECT (co.name) FROM co UNION (SELECT (ci.name) FROM ci)</code></pre>
+<p>Set operations can also be nested and chained:</p>
+<pre class="scala"><code>q1 INTERSECT q2 EXCEPT q3
+(q1 UNION q2) INTERSECT q3</code></pre>
+<p>The queries combined using set operations should have matching <a href="#projection">projections</a>. Following will not compile:</p>
+<pre class="scala"><code>SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)</code></pre>
+<h2 id="query-reuse">Reusing Query Objects</h2>
+<p>When working with data-centric applications, you often need the same query to be executed with different parameters. The most obvious solution is to build <code>Query</code> objects dynamically:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  def findByCode(code: String): Option[Country] = (this AS "co").map(co =&gt;
+      SELECT (co.*) FROM co WHERE (co.code LIKE code) unique)
+}</code></pre>
+<p>However, you can use <em>named parameters</em> to reuse the same <code>Query</code> object:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  val co = AS("co")
+  val byCode = SELECT (co.*) FROM co WHERE (co.code LIKE ":code")
+  def findByCode(c: String): Option[Country] = byCode.set("code", c).unique
+}</code></pre>
+<h2 id="criteria">Criteria API</h2>
+<p>Most (if not all) of your data retrieval queries will be focused to retrieve only one type of <a href="#record">records</a>. <em>Criteria API</em> aims to minimize your effort on writing such queries. Following snippet shows three equivalents of the same query:</p>
+<pre class="scala"><code>// Select query:
+(Country AS "co").map(co =&gt; SELECT (co.*) FROM (co) WHERE (co.name LIKE "Sw%") list)
+// Criteria query:
+Country.criteria.add(Country.name LIKE "Sw%").list
+// or with RelationNode:
+co.criteria.add(co.name LIKE "Sw%").list</code></pre>
+<p>As you can see, <code>Criteria</code> queries are more compact because boilerplate <code>SELECT</code> and <code>FROM</code> clauses are omitted.</p>
+<p>But aside from shortening the syntax, Criteria API offers unique functionality &mdash; <a href="#prefetch">associations prefetching</a>, which can greatly speed up your application when working with graphs of associated objects.</p>
+<p>The <code>Criteria[R]</code> object has following methods for execution:</p>
+<ul>
+  <li><code>list()</code> executes a query and returns <code>Seq[R]</code>;</li>
+  <li><code>unique()</code> executes a query and returns <code>Option[R]</code>, an exception is thrown if more than one row is returned from database;</li>
+  <li><code>mkSelect</code> transforms a <code>Criteria</code> into the <a href="#select"><code>Select</code> query</a>;</li>
+  <li><code>mkUpdate</code> transforms a <code>Criteria</code> into the <a href="#update-delete"><code>Update</code> query</a>;</li>
+  <li><code>mkSelect</code> transforms a <code>Criteria</code> into the <a href="#update-delete"><code>Delete</code> query</a>;</li>
+  <li><code>toString</code> shows query tree for debugging.</li>
+</ul>
+<p>You can use <a href="#predicate">predicates</a> to narrow the result set. Unlike <a href="#select"><code>Select</code> queries</a>, predicates are added to <code>Criteria</code> object using the <code>add</code> method and then are assembled into the conjunction:</p>
+<pre class="scala"><code>co.criteria
+    .add(co.name LIKE "Sw%")
+    .add(co.code LIKE "ch")
+    .list</code></pre>
+<p>You can apply <a href="#order-by">ordering</a> using the <code>addOrder</code> method:</p>
+<pre class="scala"><code>co.criteria.addOrder(co.name).addOrder(co.code).list</code></pre>
+<p>Also you can add one or more <a href="#association">associated</a> <a href="#relation">relations</a> to the query plan using the <code>addJoin</code> method so that you can specify constraints upon them:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+co.criteria.addJoin(ci).add(ci.name LIKE "Lausanne").list</code></pre>
+<p>Automatic joins are used to update query plan properly. There is no limitation on quantity or depth of joined relations. However, some database vendors have limitations on maximum size of queries or maximum amount of relations participating in a single query.</p>
+<p>One serious limitation of Criteria API is that it does not support <code>LIMIT</code> and <code>OFFSET</code> clauses due to the fact that <a href="#prefetch">association prefetching</a> normally causes result set to yield more than one row per record. You can still use <code>LIMIT</code> and <code>OFFSET</code> with <a href="#limit-offset">SQL queries</a>;</p>
+<h3 id="prefetch">Prefetching Associations</h3>
+<p>When working with <a href="#association">associated</a> <a href="#record">records</a> you often need a whole graph of associations to be fetched.</p>
+<p>Normally associations are fetched eagerly first time they are accessed, but when it is done for every record in a possibly big result set, it would result in significant performance degradation (see the <a href="http://www.pramatr.com/blog/2009/02/05/sql-n-1-selects-explained/" title="n+1 selects explained">n + 1 selects problem explained</a> blogpost).</p>
+<p>With Criteria API you have an option to fetch as many associations as you want in a single query. This technique is refered to as <em>associations prefetching</em> or <em>eager fetching</em>.</p>
+<p>To understand how associations prefetching works, let's take a look at the following domain model sample:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def PRIMARY_KEY = code
+  def relation = Country
+  val code = "code" VARCHAR(2) DEFAULT("'ch'")
+  val name = "name" TEXT
+  def cities = inverseMany(City.country)
+}
+
+object Country extends Country with Table[String, Country]
+
+class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+  def PRIMARY_KEY = id
+  def relation = City
+  val id = "id".LONG.NOT_NULL.AUTO_INCREMENT
+  val name = "name" TEXT
+  val country = "country_code".VARCHAR(2).NOT_NULL
+      .REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(CASCADE)
+}
+
+object City extends City with Table[Long, City]</code></pre>
+<p>You see two <a href="#relation">relations</a>, <code>Country</code> and <code>City</code>. Each city has one <a href="#association">associated</a> <code>country</code>, and, conversely, each country has a list of corresponding <code>cities</code>.</p>
+<p>Now you wish to fetch all cities with their corresponding countries in a single query:</p>
+<pre class="scala"><code>val cities = City.criteria.prefetch(City.country).list
+cities.foreach(c =&gt; println(c.country()))   // no selects issued</code></pre>
+<p>The example above shows the prefetching for straight associations. Same logic applies to inverse associations prefetching, for example, fetching all countries with their corresponding cities:</p>
+<pre class="scala"><code>val countries = Country.criteria.prefetch(City.country).list
+countries.foreach(c =&gt; println(c.cities()))   // no selects issued</code></pre>
+<p>Okay. Now we totally hear you saying: &ldquo;How is that really possible?&rdquo; &mdash; so let's explain a bit. Each <code>Criteria</code> object maintains it's own tree of associations, which is used to form the <code>FROM</code> clause of the query (using <a href="#joins-auto">automatic left-joins</a>) and, eventually, to parse the result set. The data from result set is parsed into chunks and loaded into <a href="#cache">transaction-scoped cache</a>, which is subsequently used by associations and inverse associations to avoid unnecessary selects.</p>
+<p>There is no limitation on quantity or depth of prefetches. However, some database vendors have limitations on maximum size of queries or maximum amount of relations participating in a single query.</p>
+<h1 id="dml">Data manipulation</h1>
+<p>Aside from information retrieval tasks, queries may be intended to change data in some way:</p>
+<ul>
+  <li>add new records;</li>
+  <li>update existing records (either partially or fully);</li>
+  <li>delete existing records.</li>
+</ul>
+<p>Such queries are often refered to as <em>data manipulation queries</em>.</p>
+<h2 id="iud">Insert, Update &amp; Delete</h2>
+<p>Circumflex ORM employs Active Record design pattern. Each <code>Record</code> has following data manipulation methods which correspond to their SQL analogues:</p>
+<ul>
+  <li><code>INSERT_!(fields: Field[_, R]*)</code> &mdash; executes an SQL <code>INSERT</code> statement for the record, that is, persists that record into database table. You can optionally specify <code>fields</code> which will appear in the statement; if no <code>fields</code> specified, then only non-empty fields will be used (they will be populated with <code>NULL</code>s or default values by database).</li>
+  <li><code>INSERT(fields: Field[_, R]*)</code> &mdash; same as <code>INSERT_!</code>, but runs record <a href="#validation">validation</a> before actual execution;</li>
+  <li><code>UDPATE_!(fields: Field[_, R]*)</code> &mdash; executes an SQL <code>UPDATE</code> statement for the record, that is, updates all record's fields (or only specified <code>fields</code>, if any). The record is being looked up by it's <code>id</code>, so this method does not make any sense with transient records.</li>
+  <li><code>UPDATE(fields: Field[_, R]*)</code> &mdash; same as <code>UPDATE_!</code>, but runs record <a href="#validation">validation</a> before actual execution;</li>
+  <li><code>DELETE_!()</code> &mdash; executes an SQL <code>DELETE</code> statement for the record, that is, removes that record from database. The record is being looked up by it's <code>id</code>, so this method does not make any sense with transient records.</li>
+</ul>
+<h2 id="save">Save</h2>
+<p>Circumflex ORM provides higher abstraction for persisting records &mdash; the <code>save_!</code> method. It's algorithm is trivial:</p>
+<ul>
+  <li>if record is persistent (<code>id</code> is not empty), it is updated using the <code>UPDATE_!</code> method;</li>
+  <li>otherwise the <code>INSERT_!</code> method is called, which causes database to persist the record.</li>
+</ul>
+<p>There is also a handy <code>save()</code> method, which runs record <a href="#validation">validation</a> and then delegates to <code>save_!()</code>.</p>
+<p>Note that in order to use <code>save</code> and <code>save_!</code> methods your records should support <a href="#idgen">identifier generation</a>.</p>
+<h2 id="bulk">Bulk Queries</h2>
+<p>Circumflex ORM provides support for the following bulk data manipulation queries:</p>
+<ul>
+  <li><a href="#insert-select"><code>INSERT &hellip; SELECT</code></a> &mdash; inserts the result set of specified <a href="#sql"><code>SQLQuery</code></a> into specified <a href="#relation"><code>Relation</code></a>;</li>
+  <li><a href="#update-delete"><code>UPDATE</code></a> &mdash; updates certain rows in specified <a href="#relation"><code>Relation</code></a>;</li>
+  <li><a href="#update-delete"><code>DELETE</code></a> &mdash; removes certain rows from specified <a href="#relation"><code>Relation</code></a>.</li>
+</ul>
+<p>All data manipulation queries derive from the <code>DMLQuery</code> class. It defines a single method for execution, <code>execute()</code>, which executes corresponding statement and returns the number of affected rows.</p>
+<p>Also note that each execution of any data manipulation query evicts all records from <a href="#cache">transaction-scoped cache</a>.</p>
+<h3 id="insert-select">Insert-Select</h3>
+<p>The <code>InsertSelect</code> query has following syntax:</p>
+<pre class="scala"><code>// prepare query
+val q = (Country AS "co").map(co =&gt; INSERT_INTO (co) SELECT ...)
+// execute it
+q.execute</code></pre>
+<p>Note that <a href="#projection">projections</a> of specified <a href="#sql"><code>SQLQuery</code></a> must match the columns of the <a href="#relation"><code>Relation</code></a>.</p>
+<h3 id="update-delete">Update &amp; Delete</h3>
+<p>SQL databases support <code>UPDATE</code> and <code>DELETE</code> statements for bulk operations. Circumflex ORM provides equivalent abstractions for these operations, <code>Update</code> and <code>Delete</code> respectively.</p>
+<p>The <code>Update</code> query allows you to use DSL for updating fields of multiple records at a time:</p>
+<pre class="scala"><code>(Country AS "co").map(co =&gt;
+  UPDATE (co) SET (co.name, "United Kingdom") SET (co.code, "uk") execute)</code></pre>
+<p>The <code>Delete</code> query allows you to delete multiple records from a single <a href="#relation">relation</a>:</p>
+<pre class="scala"><code>(Country AS "co").map(co =&gt; DELETE (co) execute)</code></pre>
+<p>An optional <code>WHERE</code> clause specifies <a href="#predicate">predicate</a> for searched update or delete:</p>
+<pre class="scala"><code>UPDATE (co) SET (co.name, "United Kingdom") WHERE (co.code LIKE 'uk')
+DELETE (co) WHERE (co.code LIKE 'uk')</code></pre>
+<p>Many database vendors also allow <code>USING</code> clause in <code>UPDATE</code> and <code>DELETE</code> statements. Circumflex ORM does not support this feature yet.</p>

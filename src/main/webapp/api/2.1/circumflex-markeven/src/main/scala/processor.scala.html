@@ -1,0 +1,729 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;processor.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package markeven
+
+import java.util.regex._
+import java.io._
+import collection.mutable.{HashMap, ListBuffer}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>The Markeven Processor</h1>
+<p><code>MarkevenProcessor</code> transforms text files into HTML using a set of simple rules. <code>MarkevenProcessor</code> should be instantiated for every task and should not be shared between threads or tasks to avoid orphaned data.</p>
+<p>Markeven takes most ideas from <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a>, but has more strict rules, which lead to better source structure and enhanced performance.</p>
+<h1 id="syntax">Syntax cheatsheet</h1>
+<h2>Block elements</h2>
+<p>Markeven recognizes following block-level elements:</p>
+<ul>
+  <li><a href="#p">paragraphs</a>;</li>
+  <li><a href="#div">sections (or divs)</a>;</li>
+  <li><a href="#hX">headings</a>;</li>
+  <li><a href="#pre">preformatted code blocks</a>;</li>
+  <li><a href="#ol-ul">ordered and unordered lists</a>;</li>
+  <li><a href="#table">tables</a>;</li>
+  <li><a href="#blockquote">blockquotes</a>;</li>
+  <li><a href="#hr">horizontal rulers</a>;</li>
+  <li><a href="#inline-html">inline HTML</a></li>
+</ul>
+<p>Block elements are always delimited by two or more line ends (<code>\n\n</code>):</p>
+<pre class="no-highlight"><code>This is a paragraph
+
+    this is a code block</code></pre>
+<h3 id="p">Paragraphs</h3>
+<p>A paragraph is simply one or more lines of text. Multiple lines are joined into a single paragraph:</p>
+<pre class="no-highlight"><code>Paragraph one.
+
+Paragraph two.
+More text.
+
+Paragraph three.
+More text.
+Even more text.</code></pre>
+<p>Following markup will be generated:</p>
+<pre class="html"><code>&lt;p&gt;Paragraph one.&lt;/p&gt;
+&lt;p&gt;Paragraph two. More text.&lt;/p&gt;
+&lt;p&gt;Paragraph three. More text. Even more text.&lt;/p&gt;</code></pre>
+<p>Like in Markdown, if you wish to place linebreak, leave two or more space characters at the end of the line.</p>
+<h3 id="div">Sections (divs)</h3>
+<p>Section is a block which is rendered into an HTML <code>div</code> element. Each line of a section must start with a pipe <code>|</code> character:</p>
+<pre class="no-highlight"><code>| This is a section with two paragraphs.
+| I am the first one.
+|
+| And I am the second one.</code></pre>
+<p>Following markup will be generated:</p>
+<pre class="html"><code>&lt;div&gt;
+  &lt;p&gt;This is a section with two paragraphs.  I am the first one.&lt;/p&gt;
+  &lt;p&gt;And I am the second one.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+<p>Sections are frequently used in conjunction with <a href="#selectors">block selectors</a> by web designers to achieve certain effects like styling, animating, etc.</p>
+<h3 id="hX">Headings</h3>
+<p>Markeven supports both ATX and Setex styles proposed by Markdown:</p>
+<pre class="no-highlight"><code>This is first-level heading
+===========================
+
+This is second-level heading
+----------------------------
+
+# First level again
+
+## Second level here
+
+### Third level
+
+#### Fourth level
+
+##### Fifth level
+
+###### Sixth level</code></pre>
+<p>Unline Markdown, Markeven do not allow closing <code>#</code>s, so following example:</p>
+<pre class="no-highlight"><code># This is a heading which ends with #</code></pre>
+<p>will be transformed into:</p>
+<pre class="html"><code>&lt;h1&gt;This is a heading which ends with #&lt;/h1&gt;</code></pre>
+<h3 id="pre">Preformatted code blocks</h3>
+<p>Code blocks are used to write about programming or markup stuff. Their contents is usually rendered using monospaced font and is interpreted literally. To produce a code block, indent every line of block with at least 4 spaces or 1 tab:</p>
+<pre class="no-highlight"><code>Here's some code:
+
+    println("Hello world!")</code></pre>
+<p>Markeven will produce:</p>
+<pre class="html"><code>&lt;p&gt;Here's some code:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;println("Hello world!")
+&lt;/code&gt;&lt;/pre&gt;</code></pre>
+<p>You can indent only the first line of the code block. Note, however, that Markeven will trim at most 4 spaces in the beginning of each line.</p>
+<p>You can also use GitHub like syntax to create fenced code blocks in case you find indenting each code line cumbersome:</p>
+<pre class="awesome-code"><code>def toHtml(str: String) = markeven.toHtml(str)</code></pre>
+<p>This will produce following markup:</p>
+<pre><code>&lt;pre class="awesome-code"&gt;&lt;code&gt;def toHtml(str: String) =
+    markeven.toHtml(str)&lt;/code&gt;&lt;/pre&gt;</code></pre>
+<h3 id="ol-ul">Ordered and unordered lists</h3>
+<p>Lists in Markeven have strict rules which help you build highly structured documents.</p>
+<p>The first thing to know about is <em>a list marker</em>. Ordered lists <em>must</em> start with <code>1.</code> followed by at least one space. Unordered lists <em>must</em> start with <code>*</code> followed by at least one space. Every subsequent list item must start with the same marker (a number followed by a dot and whitespace in case of ordered lists):</p>
+<pre class="no-highlight"><code>1. list item 1
+2. list item 2
+
+* list item 1
+* list item 2</code></pre>
+<p>Here is generated markup for the above snippet:</p>
+<pre class="html"><code>&lt;ol&gt;
+  &lt;li&gt;list item 1&lt;/li&gt;
+  &lt;li&gt;list item 2&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+  &lt;li&gt;list item 1&lt;/li&gt;
+  &lt;li&gt;list item 2&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+<p>Lists items can contain another block-level elements. To interpret whitespace-sensitive blocks properly, you should maintain the same indentation inside list items. We refer to this indentation as <em>list item baseline</em>:</p>
+<pre class="no-highlight"><code>*  This paragraph is under first list item.
+
+   This paragraph is also under first list item, because
+   it is properly indented.
+
+*     This list item has another baseline.
+
+      So we should indent our second paragraph accordingly.
+
+This paragraph, however, is outside list.</code></pre>
+<p>Following markup will be generated:</p>
+<pre class="html"><code>&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;This paragraph is under first list item.&lt;/p&gt;
+    &lt;p&gt;This paragraph is also under first list item, because it is properly indented.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;This list item has another baseline.&lt;/p&gt;
+    &lt;p&gt;So we should indent our second paragraph accordingly.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This paragraph, however, is outside list.&lt;/p&gt;</code></pre>
+<p>Nested lists follow the same rules:</p>
+<pre class="no-highlight"><code>1. List 1 item 1
+
+2. List 1 item 2
+
+   1. List 2 item 1
+
+   2. List 2 item 2
+
+3. List 1 item 3</code></pre>
+<p>Codeblocks can also be nested inside list items. Each line of a code block must be indented with at least 4 spaces or 1 tab relatively to list item's baseline:</p>
+<pre class="no-highlight"><code>1.  Code inside list item:
+
+        def sayHello = {
+          println("Hello world!")
+        }</code></pre>
+<p>You can also add a visual guide indicating current list item baseline using the pipe <code>|</code> character. It can be useful in cases when the list item is long and its content is complex:</p>
+<pre class="no-highlight"><code>1.   | This is a long and complex list item.
+     |
+     |    code block
+     |
+     |  * another list
+     |  * ...
+
+2. And that's it.</code></pre>
+<p>Note that list items belong to the same list only if their markers are equaly indented. Following example shows two different lists:</p>
+<pre class="no-highlight"><code>  * List one item one
+
+  * List one item two
+
+* List two item one
+
+* List two item two
+
+And a paragraph.</code></pre>
+<p>Here's the markup:</p>
+<pre class="html"><code>&lt;ul&gt;
+  &lt;li&gt;List one item one&lt;/li&gt;
+  &lt;li&gt;List one item two&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul&gt;
+  &lt;li&gt;List two item one&lt;/li&gt;
+  &lt;li&gt;List two item two&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;And a paragraph.&lt;/p&gt;</code></pre>
+<h3 id="table">Tables</h3>
+<p>Markeven supports simple syntax for tables:</p>
+<pre class="no-highlight"><code>---------------------------------------------
+|   Column 1  |   Column 2   |   Column 3   |
+--------------|--------------|---------------
+| one         | two          | three        |
+| four        | five         | six          |
+---------------------------------------------</code></pre>
+<p>Here's the markup:</p>
+<pre class="html"><code>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Column 1&lt;/th&gt;
+      &lt;th&gt;Column 2&lt;/th&gt;
+      &lt;th&gt;Column 3&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;one&lt;/td&gt;
+      &lt;td&gt;two&lt;/td&gt;
+      &lt;td&gt;three&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;four&lt;/td&gt;
+      &lt;td&gt;five&lt;/td&gt;
+      &lt;td&gt;six&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+<p>As you can see, the first and the last line of table should consist of minus <code>-</code> characters only. The only exception to this rule is that the first line can optionally end with <code>&gt;</code> character. If <code>&gt;</code> character is there, the width of table will expand to its maximum.</p>
+<p>Cells are separated by the pipe <code>|</code> character, you can omit leading and trailing pipes. Table header is separated from table body by the separator line. This line can optionally contain semicolon <code>:</code> characters to express column alignment: a semicolon to the left side means left alignment, a semicolon to the right side means right alignment, two semicolons at both ends means center alignment:</p>
+<pre class="no-highlight"><code>---------------------------------------------
+|   Column 1  |   Column 2   |   Column 3   |
+-------------:|:------------:|:--------------
+|         one |      two     | three        |
+|        four |     five     | six          |
+---------------------------------------------</code></pre>
+<p>You can also omit the header, in this case you cannot specify column alignment with semicolons:</p>
+<pre class="no-highlight"><code>--------------------
+one  | two  | three
+--------------------</code></pre>
+<h3 id="blockquote">Blockquotes</h3>
+<p>Blockquotes are similar to <a href="#sections">sections</a>, but they are rendered into HTML <code>blockquote</code> element. Each line of a blockquote must start with <code>&gt;</code> character. Like sections, blockquotes can contain nested block elements:</p>
+<pre class="no-highlight"><code>&gt; This is blockquote.
+&gt;
+&gt; &gt; This blockquote is nested.
+&gt;
+&gt; That's it.</code></pre>
+<p>Here's generated markup:</p>
+<pre class="html"><code>&lt;blockquote&gt;
+  &lt;p&gt;This is blockquote.&lt;/p&gt;
+  &lt;blockquote&gt;This blockquote is nested.&lt;/blockquote&gt;
+  &lt;p&gt;That's it.&lt;/p&gt;
+&lt;/blockquote&gt;</code></pre>
+<h3 id="hr">Horizontal rulers</h3>
+<p>A horizontal ruler is rendered from a block which contains three or more minus <code>-</code> characters:</p>
+<pre class="no-highlight"><code>This is some text.
+
+---
+
+This is some more text.</code></pre>
+<p>Following markup will be produced by Markeven:</p>
+<pre class="html"><code>&lt;p&gt;This is some text.&lt;/p&gt;
+&lt;hr/&gt;
+&lt;p&gt;This is some more text.&lt;/p&gt;</code></pre>
+<p>No other syntaxes for <code>&lt;hr/&gt;</code> are supported.</p>
+<h3 id="inline-html">Inline HTML</h3>
+<p>Markeven allows you to place HTML elements right inside your text. Their content won't get processed:</p>
+<pre class="no-highlight"><code>&lt;div&gt;
+
+    This text won't get transformed into a code block
+
+&lt;/div&gt;
+
+    But this will.</code></pre>
+<p>There are no strict rules about inline HTML. The only important thing is that your markup should be correct (tags closed and properly nested). Markeven does not have the ability to &ldquo;fix&rdquo; wrong HTML markup yet :)</p>
+<h3 id="selectors">Block selectors</h3>
+<p>Each block can optionally have a <em>selector</em>. It is used to add <code>id</code> and <code>class</code> HTML attributes to blocks:</p>
+<pre class="no-highlight"><code>I have an id.                     {#para1}
+
+I have two classes.               {.class1.class2}
+
+I have an id and a class.         {#para3.class1}</code></pre>
+<p>The example above will be transformed into a following HTML snippet:</p>
+<pre class="html"><code>&lt;p id="para1"&gt;I have an id.&lt;/p&gt;
+&lt;p class="class1 class2"&gt;I have two classes.&lt;/p&gt;
+&lt;p id="para3" class="class1"&gt;I have an id and a class.&lt;/p&gt;</code></pre>
+<p>The most common use of selectors is to assign <code>id</code> attribute so that they can be used in <a href="#links">links</a>:</p>
+<pre class="no-highlight"><code>Now I can be referenced by id!        {#mypara}
+
+Look! I can reference [another paragraph](#mypara).</code></pre>
+<p>The selector expression is enclosed into curly braces and must be placed at the end of the first line of the block (no trailing whitespace allowed!).</p>
+<h2>Text enhancements</h2>
+<p>Inside block level elements following text enhancements occur:</p>
+<ul>
+  <li><a href="#links">links</a> are processed;</li>
+  <li>text surrounded with backtick <code>`</code> characters is transformed into <code>code</code> span;</li>
+  <li>text surrounded with underscores <code>_</code> becomes <code>em</code> (emphasized);</li>
+  <li>text surrounded with asterisks <code>*</code> becomes <code>strong</code> (strongly emphasized);</li>
+  <li>text surrounded with tildas <code>~</code> becomes <code>del</code> (deleted);</li>
+  <li>
+    <p>various typographic improvements are applied to text:</p>
+    <ul>
+      <li>two minus chars <code>--</code> are replaces with &mdash; (long tiret);</li>
+      <li>double quotes are replaced with &ldquo;curly&rdquo; quotes;</li>
+      <li>three consequtive dots <code>...</code> are replaced with &hellip;;</li>
+      <li><code>&lt;-</code> and <code>-&gt;</code> are replaced with &larr; and &rarr; accordingly;</li>
+      <li><code>(c)</code>, <code>(r)</code> and <code>(tm)</code> are replaced with &copy;, &reg;, &trade;;</li>
+    </ul>
+  </li>
+</ul>
+<p>You can also use backslash escaping to prevent misinterpreting special characters. Following characters can be escaped: <code>\`_*{}[]()#+-~.!</code></p>
+<h2>Links &amp; Images</h2>
+<p>Two style of links are supported: inline and reference.</p>
+<p>Inline links look like this: <code>[my text](http://my_url)</code> or <code>[some text](http://some_url "some title")</code> and are rendered into HTML <code>a</code> element: <code>&lt;a href="http://my_url"&gt;my text&lt;/a&gt;</code> and <code>&lt;a href="http://some_url" title="some title"&gt;some text&lt;/a&gt;</code>.</p>
+<p>Reference-style links are split into link definition and link usage. Using previous examples, here's how link definitions could look like:</p>
+<pre class="no-highlight"><code>[id1]: http://my_url
+[id2]: http://some_url "some title"</code></pre>
+<p>Link usages would then look like this: <code>[my text][id1]</code> and <code>[some text][id2]</code>. The generated markup is equal to the previous one.</p>
+<p>The syntax for images is similar to the one for links: the exclamation <code>!</code> sign immediately before opening bracket tells markeven to interpret the link as an image. Link text becomes the value of <code>alt</code> attribute:</p>
+<pre class="no-highlight"><code>Inline image: ![some image](/img/hello.png "Hello")
+
+Or reference-style image: ![some image][img]
+
+  [img]: /img/hello.png "Hello"</code></pre>
+<p>Both cases generate following markup for image:</p>
+<pre><code>&lt;img src="/img/hello.png" title="Hello" alt="some image"/&gt;</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class MarkevenProcessor() {
+
+  val protector = new Protector
+  val links = new HashMap[String, LinkDefinition]()
+  var level = 0
+  val macros = new HashMap[String, StringEx =&gt; CharSequence]()
+  val postProcessors = new ListBuffer[(String, StringEx =&gt; StringEx)]()
+
+  def increaseIndent() {
+    level += 1
+  }
+  def decreaseIndent() {
+    if (level &gt; 0) level -= 1
+  }
+
+  def resolveLink(id: String): Option[LinkDefinition] = links.get(id.toLowerCase)
+
+  def addMacro(name: String, function: StringEx =&gt; CharSequence): this.type = {
+    macros += (name -&gt; function)
+    this
+  }
+
+  def postProcess(element: String)(handler: StringEx =&gt; StringEx) {
+    this.postProcessors ++= List(element -&gt; handler)
+  }
+
+  def currentIndent: String =
+    if (level &lt;= 0) &quot;&quot;
+    else &quot;  &quot; * level
+
+  def normalize(s: StringEx): StringEx = s.replaceAll(&quot;\t&quot;,&quot;    &quot;).replaceAll(regexes.lineEnds, &quot;\n&quot;)
+
+  def cleanEmptyLines(s: StringEx): StringEx = s.replaceAll(regexes.blankLines, &quot;&quot;)
+
+  def stripLinkDefinitions(s: StringEx): StringEx = s.replaceAll(
+    regexes.linkDefinition, m =&gt; {
+      val id = m.group(1).trim.toLowerCase
+      val url = processUrl(m.group(2))
+      var t = m.group(4)
+      val title = new StringEx(if (t == null) &quot;&quot; else t)
+      encodeChars(title)
+      encodeBackslashEscapes(title)
+      encodeChars(url)
+      encodeBackslashEscapes(url)
+      links += id -&gt; new LinkDefinition(url, title)
+      &quot;&quot;
+    })
+
+  def hashHtmlBlocks(s: StringEx): StringEx =
+    s.replaceIndexed(regexes.inlineHtmlBlockStart, m =&gt; {
+      val startIdx = m.start
+      var endIdx = 0
+      if (m.group(2) != null) {
+        // self-closing tag, escape as is
+        endIdx = m.end
+      } else {
+        // find end-index of matching closing tag
+        val tagName = m.group(1)
+        // following regex will have `group(1) == null` for closing tags;
+        // `group(2)` determines if a tag is self-closing.
+        val tm = regexes.htmlTag(tagName).matcher(s.buffer)
+        var depth = 1
+        var idx = m.end
+        while (depth &gt; 0 &amp;&amp; idx &lt; s.length &amp;&amp; tm.find(idx)) {
+          if (tm.group(1) == null) depth -= 1        // closing tag
+          else if (tm.group(2) == null) depth += 1   // opening tag
+          idx = tm.end
+        }
+        endIdx = idx
+      }
+      // add to protector and replace
+      val key = protector.addToken(s.buffer.subSequence(startIdx, endIdx))
+      (key, endIdx)
+    })
+
+  def hashInlineHtml(s: StringEx): StringEx = s.replaceAll(regexes.htmlTag,
+    m =&gt; protector.addToken(m.group(0)))
+
+  def hashHtmlComments(s: StringEx): StringEx = s.replaceAll(regexes.htmlComment,
+    m =&gt; protector.addToken(m.group(0)))
+
+  def readBlocks(s: StringEx): Seq[Block] = {
+    val result = new ListBuffer[Block]()
+    val chunks = new ChunkIterator(s.split(regexes.blocks))
+    while (chunks.hasNext)
+      result += readBlock(chunks)
+    result
+  }
+
+  def readBlock(chunks: ChunkIterator): Block = {
+    // get current chunk
+    val s = chunks.next
+    // strip selector if any
+    val selector = stripSelector(s)
+    // assume code block
+    if (s.startsWith(&quot;    &quot;))
+      return processComplexChunk(chunks, new CodeBlock(s, selector),
+        c =&gt; c.startsWith(&quot;    &quot;))
+    // trim any leading whitespace
+    val indent = s.trimLeft()
+    // do not include empty freaks
+    if (s.length == 0) return EmptyBlock
+    // assume fenced code block
+    if (s.startsWith(&quot;```&quot;)) {
+      val c = s.clone.substring(3)
+      if (c.startsWith(&quot;\n&quot;))
+        c.substring(1)
+      // self-contained block?
+      if (isFenceEnd(c))
+        return new CodeBlock(c, selector).fenced()
+      var inside = true
+      return processComplexChunk(chunks, new CodeBlock(c, selector).fenced(), { c =&gt;
+        if (!inside) false
+        else {
+          if (isFenceEnd(c))
+            inside = false
+          true
+        }
+      })
+    }
+    // assume unordered list and ordered list
+    if (s.startsWith(&quot;* &quot;))
+      return processComplexChunk(chunks, new UnorderedListBlock(s, selector, indent),
+        c =&gt; isUl(c, indent))
+    if (s.startsWith(&quot;1. &quot;))
+      return processComplexChunk(chunks, new OrderedListBlock(s, selector, indent),
+        c =&gt; isOl(c, indent))
+    // assume blockquote and section
+    if (s.startsWith(&quot;&gt;&quot;))
+      if (s.matches(regexes.d_blockquote)) {
+        return new BlockquoteBlock(s, selector)
+      } else return new ParagraphBlock(s, selector)
+    if (s.startsWith(&quot;|&quot;))
+      if (s.matches(regexes.d_div)) {
+        return new SectionBlock(s, selector)
+      } else return new ParagraphBlock(s, selector)
+    // assume table, headings and hrs
+    s.matches(regexes.d_table, m =&gt; {
+      new TableBlock(s, selector)
+    }) orElse s.matches(regexes.d_heading, m =&gt; {
+      val marker = m.group(1)
+      val body = m.group(2)
+      new HeadingBlock(new StringEx(body), selector, marker.length)
+    }) orElse s.matches(regexes.d_h1, m =&gt; {
+      new HeadingBlock(new StringEx(m.group(1)), selector, 1)
+    }) orElse s.matches(regexes.d_h2, m =&gt; {
+      new HeadingBlock(new StringEx(m.group(1)), selector, 2)
+    }) orElse s.matches(regexes.d_hr, m =&gt; {
+      new HorizontalRulerBlock(selector)
+    }) match {
+      case Some(block: Block) =&gt; block
+      case _ =&gt; // nothing matched -- paragraph
+        new ParagraphBlock(s, selector)
+    }
+  }
+
+  def processComplexChunk(chunks: ChunkIterator,
+                          block: Block,
+                          accept: StringEx =&gt; Boolean): Block = {
+    var eob = false
+    while (chunks.hasNext &amp;&amp; !eob) {
+      val c = chunks.peek
+      if (accept(c)) {
+        block.text.append(&quot;\n\n&quot;).append(c)
+        chunks.next
+      } else eob = true
+    }
+    block
+  }
+
+  def isFenceEnd(s: StringEx): Boolean = {
+    s.trimRight()
+    if (s.endsWith(&quot;```&quot;)) {
+      s.substring(0, s.length - 3)
+      if (s.endsWith(&quot;\n&quot;))
+        s.substring(0, s.length - 1)
+      return true
+    }
+    false
+  }
+
+  def isOl(s: StringEx, indent: Int): Boolean = {
+    val i = new CharIterator(s)
+    while (i.hasNext &amp;&amp; i.index &lt; indent - 1)
+      if (i.next != ' ') return false
+    if (!i.hasNext) return false
+    // first char must be digit or space
+    var c = i.next
+    if (c == ' ') return true
+    if (!c.isDigit) return false
+    // look for more digits or `. `
+    while(i.hasNext) {
+      c = i.next
+      if (c == '.' &amp;&amp; i.hasNext &amp;&amp; i.peek == ' ') return true
+      else if (!c.isDigit) return false
+    }
+    false
+  }
+
+  def isUl(s: StringEx, indent: Int): Boolean = {
+    val i = new CharIterator(s)
+    while (i.hasNext &amp;&amp; i.index &lt; indent - 1)
+      if (i.next != ' ') return false
+    if (!i.hasNext) return false
+    // first char must be asterisk or space
+    var c = i.next
+    if (c == ' ') return true
+    (c == '*' &amp;&amp; i.hasNext &amp;&amp; i.peek == ' ')
+  }
+
+  def stripSelector(s: StringEx): Selector = {
+    var id = &quot;&quot;
+    var classes = new ListBuffer[String]()
+    s.replaceFirst(regexes.blockSelector, m =&gt; {
+      val idSelector = m.group(1)
+      val classesSelector = m.group(2)
+      if (idSelector != null)
+        id = idSelector.substring(1)
+      if (classesSelector != null)
+        classesSelector.split(&quot;\\.&quot;).foreach { cl =&gt;
+          if (cl != &quot;&quot;)
+            classes += cl
+        }
+      &quot;&quot;
+    })
+    new Selector(id, classes)
+  }
+
+  def process(cs: CharSequence, out: Writer) {
+    val s = new StringEx(cs)
+    normalize(s)
+    stripLinkDefinitions(s)
+    hashHtmlBlocks(s)
+    hashHtmlComments(s)
+    cleanEmptyLines(s)
+    writeHtml(readBlocks(s), out)
+  }
+
+  def transform(s: StringEx): StringEx = {
+    normalizeSpan(s)
+    hashInlineHtml(s)
+    doMacros(s)
+    encodeChars(s)
+    doCodeSpans(s)
+    encodeBackslashEscapes(s)
+    doInlineImages(s)
+    doRefImages(s)
+    doInlineLinks(s)
+    doRefLinks(s)
+    doSpanEnhancements(s)
+    unprotect(s)
+  }
+
+  def normalizeSpan(s: StringEx): StringEx =
+    s.trim().replaceAll(&quot;  \n&quot;, &quot;&lt;br/&gt;\n&quot;).replaceAll(&quot;\n&quot;, &quot; &quot;)
+
+  protected def processSingleMacro(m: Matcher): CharSequence = {
+    var name = m.group(1)
+    if (name == null) name = &quot;&quot;
+    if (name.length &gt; 0)
+      name = name.substring(0, name.length - 1)
+    val contents = new StringEx(m.group(2))
+    val r = macros.get(name).map(f =&gt; f(contents)).getOrElse(m.group(0))
+    r
+  }
+
+  def doMacros(s: StringEx): StringEx =
+    s.replaceAll(regexes.macro, m =&gt; protector.addToken(processSingleMacro(m)))
+
+  def doCodeSpans(s: StringEx) {
+    s.replaceAll(regexes.codeSpan, m =&gt; {
+      val s = new StringEx(m.group(2)).trim()
+      // there can be protected content inside codespans, so decode them first
+      unprotect(s)
+      encodeChars(s)
+      protector.addToken(s.append(&quot;&lt;/code&gt;&quot;).prepend(&quot;&lt;code&gt;&quot;))
+    })
+  }
+
+  def encodeBackslashEscapes(s: StringEx): StringEx =
+    s.replaceAll(regexes.backslashChar, m =&gt; {
+      val c = m.group(0)
+      escapeMap.getOrElse(c, c)
+    })
+
+  def doRefLinks(s: StringEx): StringEx = s.replaceAll(regexes.refLinks, m =&gt; {
+    val linkText = m.group(1)
+    var id = m.group(2)
+    if (id == &quot;&quot;) id = linkText
+    id = id.trim
+    val linkContent = new StringEx(linkText)
+    doSpanEnhancements(linkContent)
+    val result = resolveLink(id)
+        .map(ld =&gt; ld.toLink(linkContent))
+        .getOrElse(new StringEx(m.group(0)))
+    doMacros(result)
+    protector.addToken(result)
+  })
+
+  def doRefImages(s: StringEx): StringEx = s.replaceAll(regexes.refImages, m =&gt; {
+    val altText = m.group(1)
+    var id = m.group(2)
+    if (id == &quot;&quot;) id = altText
+    id = id.trim
+    val result = resolveLink(id)
+        .map(ld =&gt; ld.toImageLink(altText))
+        .getOrElse(new StringEx(m.group(0)))
+    doMacros(result)
+    protector.addToken(result)
+  })
+
+  def doInlineLinks(s: StringEx): StringEx = s.replaceAll(regexes.inlineLinks, m =&gt; {
+    val linkText = m.group(1)
+    val url = encodeChars(unprotect(processUrl(m.group(2))))
+    var title = m.group(4)
+    if (title == null) title = &quot;&quot;
+    val linkContent = new StringEx(linkText)
+    doSpanEnhancements(linkContent)
+    val result = new LinkDefinition(url, new StringEx(title)).toLink(linkContent)
+    doMacros(result)
+    protector.addToken(result)
+  })
+
+  def doInlineImages(s: StringEx): StringEx = s.replaceAll(regexes.inlineImages, m =&gt; {
+    val altText = m.group(1)
+    val url = processUrl(m.group(2))
+    var title = m.group(4)
+    if (title == null) title = &quot;&quot;
+    val result = new LinkDefinition(url, new StringEx(title)).toImageLink(altText)
+    doMacros(result)
+    protector.addToken(result)
+  })
+
+  def doSpanEnhancements(s: StringEx): StringEx = {
+    doTypographics(s)
+    recurseSpanEnhancements(s)
+    s
+  }
+
+  protected def processUrl(url: CharSequence): StringEx = new StringEx(url)
+
+  protected def recurseSpanEnhancements(s: StringEx): StringEx =
+    s.replaceAll(regexes.spanEnhancements, m =&gt; {
+      val element = m.group(1) match {
+        case &quot;*&quot; =&gt; &quot;strong&quot;
+        case &quot;_&quot; =&gt; &quot;em&quot;
+        case &quot;~&quot; =&gt; &quot;del&quot;
+        case _ =&gt; &quot;span&quot;
+      }
+      val content = new StringEx(m.group(2))
+      recurseSpanEnhancements(content)
+      new StringEx(&quot;&lt;&quot;).append(element).append(&quot;&gt;&quot;)
+          .append(content).append(&quot;&lt;/&quot;).append(element).append(&quot;&gt;&quot;)
+    })
+
+  def doTypographics(s: StringEx): StringEx = {
+    s.replaceAll(regexes.ty_dash, typographics.dash)
+    s.replaceAll(regexes.ty_larr, typographics.larr)
+    s.replaceAll(regexes.ty_rarr, typographics.rarr)
+    s.replaceAll(regexes.ty_trade, typographics.trade)
+    s.replaceAll(regexes.ty_reg, typographics.reg)
+    s.replaceAll(regexes.ty_copy, typographics.copy)
+    s.replaceAll(regexes.ty_hellip, typographics.hellip)
+    s.replaceAll(regexes.ty_ldquo, typographics.ldquo)
+    s.replaceAll(regexes.ty_rdquo, typographics.rdquo)
+    s
+  }
+
+  def unprotect(s: StringEx): StringEx =
+    s.replaceAll(regexes.protectKey, m =&gt; {
+      val key = m.group(0)
+      protector.decode(key) match {
+        case Some(cs) =&gt; unprotect(new StringEx(cs))
+        case _ =&gt; key
+      }
+    })
+
+  def writeHtml(blocks: Seq[Block], out: Writer) {
+    blocks.foreach(b =&gt; if (b != EmptyBlock) {
+      b.writeHtml(this, out)
+      out.write(newLine)
+    })
+  }
+
+  def formHtml(blocks: Seq[Block], indent: Boolean = false): StringEx = {
+    val result = new StringEx(&quot;&quot;)
+    if (indent) level += 1
+    blocks.foreach(b =&gt;
+      if (b != EmptyBlock) result.append(b.toHtml(this)).append(newLine))
+    if (indent) level -= 1
+    result
+  }
+
+  def newLine: String = &quot;\n&quot;
+
+  def toHtml(cs: CharSequence): String = {
+    val out = new StringWriter(cs.length)
+    process(cs, out)
+    out.toString
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

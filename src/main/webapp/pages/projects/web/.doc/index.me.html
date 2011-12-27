@@ -1,0 +1,12 @@
+<h1 id="web">Circumflex Web Framework</h1>
+<p>Circumflex Web Framework is a DSL for quick and robust web application development.</p>
+<p>Here's the sample web application:</p>
+<pre class="scala"><code>class Main extends RequestRouter {
+  get("/") = "Hello world!"
+  get("/posts/:id") = "Post #" + uri("id")
+  post("/form") = {
+    // do some work
+    // render FreeMarker template:
+    ftl("/done.ftl")
+  }
+}</code></pre>

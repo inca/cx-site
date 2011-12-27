@@ -1,0 +1,89 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;static.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package freemarker
+
+import core._
+import java.io.File
+import collection.JavaConversions
+import org.apache.commons.io.FileUtils
+import collection.mutable.HashMap</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Static HTML generator</h1>
+<p>Circumflex FreeMarker Helper offers a tiny tool which scans <code>sourcePath</code> (relative to <code>templatesRoot</code>) for templates (which are resolved from <code>templatesRoot</code>) and generates corresponding HTML file into <code>targetDir</code> preserving directory structure and names.</p>
+<p>Any exceptions occured inside template will cause a template to be omitted.</p>
+<p>For example, consider following source directory (<code>templateRoot</code> = <code>src/main/resources/templates</code>, <code>sourcePath</code>):</p>
+<pre><code>src/main/resources/templates/static/
+\ errors/
+| \ 502.ftl
+| \ 404.ftl
+| \ layout.ftl
+\ layout.ftl
+\ index.ftl</code></pre>
+<p>After running <code>StaticHtmlGenerator</code> it will populate target directory with following HTML files (assuming that <code>layout.ftl</code> cannot be rendered on their own):</p>
+<pre><code>src/main/webapp/public/html/
+\ errors/
+| \ 502.html
+| \ 404.html
+\ index.ftl</code></pre>
+<p>You can also pass additional data using <code>add</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class StaticHtmlGenerator(val templatesRoot: File,
+                          val sourcePath: String,
+                          val targetDir: File) {
+
+  val sourceDir = new File(templatesRoot, sourcePath)
+  val data = new HashMap[String, Any]
+
+  def add(name: String, value: Any): this.type = {
+    data += name -&gt; value
+    this
+  }
+
+  def generate() {
+    val files = FileUtils.listFiles(sourceDir, Array(&quot;ftl&quot;), true)
+    FTL_LOG.info(&quot;Generating static html files into &quot; + targetDir.getCanonicalPath)
+    val t = time {
+      JavaConversions.collectionAsScalaIterable[File](files).foreach { file =&gt;
+        val template = file.getCanonicalPath.substring(templatesRoot.getCanonicalPath.length())
+        val relName = file.getCanonicalPath
+            .substring(sourceDir.getCanonicalPath.length())
+            .replaceAll(&quot;\\.ftl$&quot;, &quot;.html&quot;)
+        val outFile = new File(targetDir, relName)
+        outFile.getParentFile.mkdirs()
+        try {
+          Context.executeInNew { ctx =&gt;
+            ctx.update(&quot;msg&quot;, msg)
+            ctx.update(&quot;cfg&quot;, cx)
+            ctx ++= data
+            FileUtils.writeStringToFile(outFile, ftl2string(template), &quot;UTF-8&quot;)
+          }
+        } catch {
+          case e: Exception =&gt;
+            FTL_LOG.warn(&quot;Skipping &quot; + template + &quot; due to &quot; + e.getClass.getSimpleName)
+            FTL_LOG.debug(&quot;Exception in static generation&quot;, e)
+        }
+      }
+    }
+    FTL_LOG.info(&quot;Generated static html files in &quot; + t._1.toDouble / 1000 + &quot; seconds.&quot;)
+  }
+
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

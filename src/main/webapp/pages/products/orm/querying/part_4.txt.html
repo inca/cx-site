@@ -1,0 +1,28 @@
+<h1>ORM: Querying</h1>
+<h2 id="order-by">Ordering</h2>
+<p>Ordering expressions appear in <code>ORDER_BY</code> clause of <code>Select</code>, they determine how rows in result set will be sorted. The easiest way to specify ordering expressions is to use implicit convertions from <code>String</code> or <code>Field</code> into <code>Order</code>:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) ORDER_BY (co.name)</code></pre>
+<p>You can also add either <code>ASC</code> or <code>DESC</code> ordering specificator to explicitly set the direction of sorting:</p>
+<pre class="scala"><code>SELECT (co.*) FROM (co) ORDER_BY (co.name ASC)</code></pre>
+<p>If no specificator given, ascending sorting is assumed by default.</p>
+<h2 id="group-by">Grouping &amp; Having</h2>
+<p>A query can optionally condense into a single row all selected rows that share the same value for a subset of query <a href="/orm/querying/part&#95;1.html#projection">projections</a>. Such queries are often refered to as <em>grouping queries</em> and the projections are usually refered to as <em>grouping projections</em>.</p>
+<p>Grouping queries are built using the <code>GROUP_BY</code> clause:</p>
+<pre class="scala"><code>SELECT (co.*) FROM co GROUP_BY (co.*)</code></pre>
+<p>As the example above shows, grouping projections are specified as arguments to the <code>GROUP_BY</code> method.</p>
+<p>Grouping queries are often used in conjunction with aggregate functions. If aggregate functions are used, they are computed across all rows making up each group, producing separate value for each group, whereas without <code>GROUP_BY</code> an aggregate produces a single value computed across all the selected rows:</p>
+<pre class="scala"><code>val co = Country AS "co"
+val ci = City AS "ci"
+// how many cities correspond to each selected country?
+SELECT (co.* -&gt; COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*)</code></pre>
+<p>Groups can be optionally filtered using the <code>HAVING</code> clause. It accepts a <a href="/orm/querying/part&#95;2.html#predicate">predicate</a>:</p>
+<pre class="scala"><code>SELECT (co.* -&gt; COUNT(ci.id)) FROM (co JOIN ci) GROUP_BY (co.*) HAVING (co.code LIKE "c_")</code></pre>
+<p>Note that <code>HAVING</code> is different from <code>WHERE</code>: <code>WHERE</code> filters individual rows before the application of <code>GROUP_BY</code>, while <code>HAVING</code> filters group rows created by <code>GROUP_BY</code>.</p>
+<h2 id="limit-offset">Limit &amp; Offset</h2>
+<p>The <code>LIMIT</code> clause specifies the maximum number of rows a query will return:</p>
+<pre class="scala"><code>// select 10 first countries:
+SELECT (co.*) FROM co LIMIT 10</code></pre>
+<p>The <code>OFFSET</code> clause specifies the number of rows to skip before starting to return results. When both are specified, the amount of rows specified in the <code>OFFSET</code> clause is skipped before starting to count the maximum amount of returned rows specified in the <code>LIMIT</code> clause:</p>
+<pre class="scala"><code>// select 5 countries starting from 10th:
+SELECT (co.*) FROM co LIMIT 5 OFFSET 10</code></pre>
+<p>Note that query planners in database engines often take <code>LIMIT</code> and <code>OFFSET</code> into account when generating a query plan, so you are very likely to get different row orders for different <code>LIMIT</code>/<code>OFFSET</code> values. Thus, you should use explicit <a href="#order-by">ordering</a> to achieve consistent and predictable results when selecting different subsets of a query result with <code>LIMIT</code>/<code>OFFSET</code>.</p>

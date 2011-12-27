@@ -1,0 +1,229 @@
+<h1 id="web">Circumflex Web Framework</h1>
+<p>Circumflex Web Framework is a DSL for quick and robust web application development.</p>
+<p>Here's the sample web application:</p>
+<pre class="scala"><code>class Main extends RequestRouter {
+  get("/") = "Hello world!"
+  get("/posts/:id") = "Post #" + uri("id")
+  post("/form") = {
+    // do some work
+    // render FreeMarker template:
+    ftl("/done.ftl")
+  }
+}</code></pre>
+<h1 id="install">Installation &amp; Configuration</h1>
+<p>Circumflex web applications run in standard Servlet 2.5 containers. There's a couple of things you should do in order to start using Circumflex Web Framework.</p>
+<p>First, make sure that <code>circumflex-core-&lt;version&gt;.jar` and `circumflex-web-&lt;version&gt;.jar</code> are in the classpath (add <code>&lt;dependency&gt;</code> with <code>circumflex-core</code> and <code>circumflex-web</code> as described in <a href="/index.html#start">quick start guide</a>).</p>
+<p>Second, configure <code>CircumflexFilter</code> in <code>/WEB-INF/web.xml</code>:</p>
+<pre class="xml"><code>&lt;web-app version="2.5"&gt;
+  &lt;filter&gt;
+    &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+    &lt;filter-class&gt;ru.circumflex.web.CircumflexFilter&lt;/filter-class&gt;
+  &lt;/filter&gt;
+  &lt;filter-mapping&gt;
+    &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;*&lt;/url-pattern&gt;
+    &lt;dispatcher&gt;REQUEST&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;INCLUDE&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;ERROR&lt;/dispatcher&gt;
+  &lt;/filter-mapping&gt;
+&lt;/web-app&gt;</code></pre>
+<p>Third, configure the <a href="#main">main request router</a> of your application by setting <code>cx.router</code> configuration parameter:</p>
+<ul>
+  <li>
+    <p>via <code>src/main/resource/cx.properties</code> file:</p>
+    <pre><code>cx.router=com.myapp.web.MainRouter</code></pre>
+  </li>
+  <li>or via <code>pom.xml</code> <a href="/plugin.html#cfg">using Circumflex Maven Plugin</a>.</li>
+</ul>
+<p>Please refer to <a href="/core.html#cfg">Circumflex Configuration API</a> for more information on how to configure your application.</p>
+<h2 id="import">Imports</h2>
+<p>All code examples assume that you have following <code>import</code> statement in code where necessary:</p>
+<pre class="scala"><code>import ru.circumflex._, core._, web._</code></pre>
+<h1 id="samples">Sample Applications</h1>
+<p>There's a couple of projects hosted on <a href="http://github.com">GitHub</a> which can help you understand <a href="#web">Circumflex Web Framework</a> better:</p>
+<ul>
+  <li><a href="http://github.com/vast/ciridiri" title="ciridiri -- dead simple wiki engine">vast/ciridiri</a> &mdash; dead simple wiki engine;</li>
+  <li><a href="http://github.com/inca/cx-site" title="Source code of site http://circumflex.ru">inca/cx-site</a> &mdash; source code of this site;</li>
+  <li><a href="http://github.com/inca/sandbox-blog" title="Sample Circumflex application">inca/sandbox-blog</a> &mdash; sample Circumflex application which demonstrates the basics of <a href="#web">Circumflex Web Framework</a> and <a href="/orm.html">ORM</a>.</li>
+</ul>
+<h1 id="basics">Basic Concepts</h1>
+<h2 id="routers">Request Routers</h2>
+<p>Each Circumflex web application is composed of one or more <em>request routers</em>. Request router is a subclass of <code>RequestRouter</code> which sequentionally defines <a href="#routes">routes</a> directly within its body:</p>
+<pre class="scala"><code>class Main extends RequestRouter {
+  get("/") = "Hello world!"
+  get("/posts/:id") = "Post #" + uri.get("id")
+  post("/form") = {
+    // Do some work
+    // . . .
+    // Render FreeMarker template:
+    ftl("/done.ftl")
+  }
+}</code></pre>
+<p>Request routers are essentially the controllers of the application. Since <a href="#web">Circumflex Web Framework</a> employs the Front Controller pattern, each web application should have a single</p>
+<em id="main">main router</em>
+<p>&mdash; a special <code>RequestRouter</code> which gets executed on every request. It dispatches all requests of web application.</p>
+<p>Request routers can also be easily nested:</p>
+<pre class="scala"><code>class MainRouter extends RequestRouter {
+  // with matching
+  any("/users/*") =&gt; new UsersRouter
+  any("/posts/*") =&gt; new PostsRouter
+  any("/mail/*") =&gt; new MailRouter
+  any("/downloads/*") =&gt; new DownloadsRouter
+  // unconditionally
+  new MiscRouter
+}</code></pre>
+<p>It is generally a good practice to have different routers for different tasks &mdash; it makes the code modular, more organized and easier to maintain.</p>
+<h2 id="routes">Routes</h2>
+<p><a href="#web">Circumflex Web Framework</a> is designed around the <em>route concept</em>. A route is an HTTP method with matching mechanism and attached block.</p>
+<p>Routes are defined using one of the following members of <code>RequestRouter</code>:</p>
+<ul>
+  <li><code>get</code> (matches HTTP <code>GET</code> requests);</li>
+  <li><code>post</code> (matches HTTP <code>POST</code> requests);</li>
+  <li><code>put</code> (matches HTTP <code>PUT</code> requests);</li>
+  <li><code>patch</code> (matches HTTP <code>PATCH</code> requests);</li>
+  <li><code>delete</code> (matches HTTP <code>DELETE</code> requests);</li>
+  <li><code>options</code> (matches HTTP <code>OPTIONS</code> requests);</li>
+  <li><code>head</code> (matches HTTP <code>HEAD</code> requests);</li>
+  <li><code>getOrHead</code> (matches either HTTP <code>GET</code> or HTTP <code>HEAD</code>);</li>
+  <li><code>getOrPost</code> (matches either HTTP <code>GET</code> or HTTP <code>POST</code>);</li>
+  <li><code>any</code> (matches any HTTP request).</li>
+</ul>
+<p>Each route should define a <a href="#matchers">matcher</a>, which describes the conditions a request must satisfy to be matched by the route.</p>
+<p>Each route also has an associated block which gets executed if matching succeeds. A block must evaluate to <code>RouteResponse</code> which will be sent to client (<code>String</code> and <code>scala.xml.Node</code> are converted to <code>RouteResponse</code> implicitly):</p>
+<pre class="scala"><code>class MyRouter extends RequestRouter {
+  get("/hello/:name.txt") = "Hello, " + param("name") + "!"
+  get("/hello/:name.xml") = {
+    val name = param("name")
+    &lt;hello to={name}/&gt;
+  }
+}</code></pre>
+<p>Upon successful matching the block attached to corresponding route gets executed. Internally we use <code>ResponseSentException</code>, a special control throwable, to indicate that request processing has been finished. This exception is caught by <code>CircumflexFilter</code> which performs response flushing and finalizes request processing.</p>
+<p>Various helpers throw <code>ResponseSentException</code> instead of yielding <code>RouteResponse</code>:</p>
+<pre class="scala"><code>get("/") = redirect("/index.html")</code></pre>
+<h2 id="matchers">Matchers</h2>
+<p>Request matching can be performed against request URI and zero or more request headers. The syntax is self-descriptive:</p>
+<pre class="scala"><code>get("/")        // matches GET /
+get("/posts")   // matches GET /posts
+post("/posts")  // matches POST /posts</code></pre>
+<p>You can combine several matchers in one route using the <code>&amp;</code> method:</p>
+<pre class="scala"><code>get("/mail" &amp; Accept("text/html") &amp; Host("localhost"))
+// matches following request:
+// GET /mail
+// Host: localhost
+// Accept: text/html</code></pre>
+<h2 id="params">Parameters</h2>
+<p>Routes can include patterns with named parameters which can be accessed in the attached block. The following route matches <code>GET /posts/43</code> or <code>GET /posts/foo</code>; the construct <code>uri("id")</code> is used to capture the parameter from request URI:</p>
+<pre class="scala"><code>get("/posts/:id") = "Post #" + uri("id")</code></pre>
+<p>Route patterns may also include wildcard parameters (<code>*</code> for zero or more characters, <code>+</code> for one or more characters), they can be accessed via index (starting with <code>1</code> like in regex groups):</p>
+<pre class="scala"><code>get("/files/+") = "Downloading file " + uri(1)</code></pre>
+<p>You may also refer to the whole match with <code>0</code> index:</p>
+<pre class="scala"><code>get("/files/:name.:ext") = {
+  println("The URI is: " + uri(0))
+  "Filename is " + uri("name") + ", extension is " + uri("ext")
+}</code></pre>
+<p>Named parameters are indexed too:</p>
+<pre class="scala"><code>get("*/:two/+/:four") = {
+  // uri(2) == uri("two")
+  // uri(4) == uri("four")
+  (1 to 4).map(i =&gt; i + " -&gt; " + uri(i)).mkString("\n")
+}</code></pre>
+<p>Parameters can also be extracted using the <code>param</code> helper. Unlike <code>uri</code>, which represents match results from URI only, the <code>param</code> helper can extract named parameters from headers:</p>
+<pre class="scala"><code>get("/" &amp; Accept("text/:format")) = "The format is " + param("format")</code></pre>
+<p>You can also extract request parameters using <code>param</code>:</p>
+<pre class="scala"><code>get("/") = "Limit is " + param("limit") + ", offset is " + param.getOrElse("offset", "0")
+// &gt;&gt; GET /?limit=50&amp;offset=10
+// &lt;&lt; Limit is 50, offset is 10
+// &gt;&gt; GET /?limit=5
+// &lt;&lt; Limit is 5, offset is 0</code></pre>
+<h2 id="static">Serving Static files</h2>
+<p>By default static files are served from <code>&lt;webapp_root&gt;/public</code> directory. You may override this by setting <code>cx.public</code> configuration parameter.</p>
+<h2 id="redirect-rewrite">Redirecting &amp; Forwarding</h2>
+<p>You can send <code>302 Found</code> HTTP redirect:</p>
+<pre class="scala"><code>get("/") = sendRedirect("/index.html")</code></pre>
+<p>You can also perform request forwarding (a.k.a. URI rewriting) &mdash; the request will be dispatched again, but with different URI):</p>
+<pre class="scala"><code>get("/") = forward("/index.html")</code></pre>
+<p>Note that you should add <code>&lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;</code> to <code>CircumflexFilter</code> mapping in your <code>web.xml</code> to make forwarding work. You should also avoid infinite forwarding loops manually.</p>
+<h2 id="errors">Sending Errors</h2>
+<p>You can send errors with specific status code and optional message:</p>
+<pre class="scala"><code>get("/") = sendError(500, "We don't work yet.")</code></pre>
+<h2 id="send-file">Sending Files</h2>
+<p>You can use the <code>sendFile</code> helper to send arbitrary file to client:</p>
+<pre class="scala"><code>get("/") = sendFile(new File("/path/to/file.txt"))</code></pre>
+<p>You can also specify optional <code>filename</code> so that <code>Content-Disposition: attachment</code> could be added to response:</p>
+<pre class="scala"><code>get("/") = sendFile(new File("/path/to/file.txt"), "greetings.txt")</code></pre>
+<p>The content type of the file is guessed based on it's extension. You may override it:</p>
+<pre class="scala"><code>get("/") = {
+  response.contentType("text/plain")
+  sendFile(new File("/path/to/file.text"), "greetings.txt")
+}</code></pre>
+<p>You can also use the more efficient <code>xSendFile</code> helper to delegate the file transfering to your web server. This feature is configured via <code>cx.XSendFile</code> configuration parameter. Consult your web server documentation to obtain more information on this feature.</p>
+<h2 id="xhr">Handling AJAX Requests</h2>
+<p>You can determine if current request is <code>XmlHttpRequest</code>:</p>
+<pre class="scala"><code>get("/") = if (request.body.xhr_?) "AJAX" else "plain old request"</code></pre>
+<h2 id="headers">Accessing Headers</h2>
+<p>You get the contents of request headers using the <code>header</code> helper:</p>
+<pre class="scala"><code>get("/") = "Serving to host: " + headers("Host")</code></pre>
+<h2 id="session">Accessing Session</h2>
+<p>Dealing with session attributes is fairly easy:</p>
+<pre class="scala"><code>get("/") = {
+  // get attribute
+  session("attr1")
+  // set attribute
+  session("attr2") = "My value"
+}</code></pre>
+<h2 id="flashes">Flashes</h2>
+<p>Flashes provide a way to pass temporary objects between requests:</p>
+<pre class="scala"><code>get("/") = flash.get("note") match {
+  case Some(value) =&gt; "Having a note: " + value
+  case None =&gt; "No notes for now..."
+}
+
+post("/") = {
+  flash("note") = "Hello from POST, folks!"
+  redirect("/")
+}</code></pre>
+<p>Anything you place in <code>flash</code> helper will be exposed until the first lookup and then cleared out. This is a great way of dealing with notices and alerts which only need to be shown once.</p>
+<h1 id="advanced">Advanced concepts</h1>
+<p>This topic reveals some nitty-gritty details about <a href="#web">Circumflex Web Framework</a>.</p>
+<h2 id="adv-matching">Matching</h2>
+<p>The central abstractions of the route matching mechanism are:</p>
+<ul>
+  <li><code>Match</code> &mdash; holds <a href="#params">parameters</a> extracted during successful match (already familiar helper, <code>uri</code>, is <code>Match</code> actually);</li>
+  <li><code>Matcher</code> &mdash; performs actual matching and yields a sequence of <code>Match</code> objects on success.</li>
+</ul>
+<p><code>Match</code> objects are designed to be used inside attached blocks of routes, where you can naturally assume that match succeeded:</p>
+<pre class="scala"><code>get("/:name") = uri("name")</code></pre>
+<p><code>Match</code> also has <code>name</code> which reflects the context where match has occured. URI-based matcher returns <code>Match</code> with name <code>uri</code> while headers-based matchers create <code>Match</code> objects with the name of corresponding HTTP header.</p>
+<p>You can lookup certain <code>Match</code> object in <code>CircumflexContext</code> by it's name:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/:format")) = ctx("Accept") match {
+  case m: Match =&gt; "Requested format is " + m("format")
+  case _ =&gt; ""
+}</code></pre>
+<p>In general you don't have to lookup <code>Match</code> objects, the <code>param</code> helper can retrieve named parameters from all matches that appear in <code>CircumflexContext</code>. So the previous example could be rewritten in much more convenient manner:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/:format")) = "Requested format is " + param("format")</code></pre>
+<p>However, there are situations where looking up a <code>Matcher</code> can come in handy. For example, you cannot access splats (wildcard matches) or indexed parameters with <code>param</code>:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/+")) = ctx("Accept") match {
+  case m: Match =&gt; "Requested format is " + m(1)
+  case _ =&gt; ""
+}</code></pre>
+<p>Standard <code>RegexMatcher</code> can also accept an arbitrary regular expression, the groups will be accessible from <code>Match</code> by their index:</p>
+<pre class="scala"><code>get("/posts/(\\d+)".r) = {
+  val id = uri(1).toLong
+  // lookup the post by id and render response
+  "..."
+}</code></pre>
+<h2 id="prefix">Router Prefix</h2>
+<p>You may optionally specify the <code>prefix</code> for request router. All URI-based matchers inside the router will be prepended by this prefix:</p>
+<pre class="scala"><code>class PostsRouter extends RequestRouter("/posts") {
+  get("/") = "Showing posts"                  // matches GET /posts/
+  get("/show/:id") = "Post " + param("id")    // matches GET /posts/show/149
+}</code></pre>
+<p>Alternatively, you can let the enclosing router specify a prefix for subrouter:</p>
+<pre class="scala"><code>class SubRouter(prefix: String) extends RequestRouter(prefix)
+
+class MainRouter extends RequestRouter {
+  new SubRouter("/prefix-a")
+  new SubRouter("/prefix-b")
+}</code></pre>
+<p>Note that <a href="#main">main request routers</a> should have the default zero-arguments constructor, so the prefix <strong>must</strong> be hardcoded. Generally, main routers have <code>""</code> prefix (unless different filter mappings are specified in <code>web.xml</code>).</p>

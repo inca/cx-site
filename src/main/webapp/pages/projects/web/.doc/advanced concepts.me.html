@@ -1,0 +1,43 @@
+<h1 id="advanced">Advanced concepts</h1>
+<p>This topic reveals some nitty-gritty details about <a href="!}0pwW5pi4XgiSeZZpQh3S">Circumflex Web Framework</a>.</p>
+<h2 id="adv-matching">Matching</h2>
+<p>The central abstractions of the route matching mechanism are:</p>
+<ul>
+  <li><code>Match</code> &mdash; holds <a href="!}cx6q7KymALFQ8qikBnXL">parameters</a> extracted during successful match (already familiar helper, <code>uri</code>, is <code>Match</code> actually);</li>
+  <li><code>Matcher</code> &mdash; performs actual matching and yields a sequence of <code>Match</code> objects on success.</li>
+</ul>
+<p><code>Match</code> objects are designed to be used inside attached blocks of routes, where you can naturally assume that match succeeded:</p>
+<pre class="scala"><code>get("/:name") = uri("name")</code></pre>
+<p><code>Match</code> also has <code>name</code> which reflects the context where match has occured. URI-based matcher returns <code>Match</code> with name <code>uri</code> while headers-based matchers create <code>Match</code> objects with the name of corresponding HTTP header.</p>
+<p>You can lookup certain <code>Match</code> object in <code>CircumflexContext</code> by it's name:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/:format")) = ctx("Accept") match {
+  case m: Match =&gt; "Requested format is " + m("format")
+  case _ =&gt; ""
+}</code></pre>
+<p>In general you don't have to lookup <code>Match</code> objects, the <code>param</code> helper can retrieve named parameters from all matches that appear in <code>CircumflexContext</code>. So the previous example could be rewritten in much more convenient manner:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/:format")) = "Requested format is " + param("format")</code></pre>
+<p>However, there are situations where looking up a <code>Matcher</code> can come in handy. For example, you cannot access splats (wildcard matches) or indexed parameters with <code>param</code>:</p>
+<pre class="scala"><code>get("/foo" &amp; Accept("text/+")) = ctx("Accept") match {
+  case m: Match =&gt; "Requested format is " + m(1)
+  case _ =&gt; ""
+}</code></pre>
+<p>Standard <code>RegexMatcher</code> can also accept an arbitrary regular expression, the groups will be accessible from <code>Match</code> by their index:</p>
+<pre class="scala"><code>get("/posts/(\\d+)".r) = {
+  val id = uri(1).toLong
+  // lookup the post by id and render response
+  "..."
+}</code></pre>
+<h2 id="prefix">Router Prefix</h2>
+<p>You may optionally specify the <code>prefix</code> for request router. All URI-based matchers inside the router will be prepended by this prefix:</p>
+<pre class="scala"><code>class PostsRouter extends RequestRouter("/posts") {
+  get("/") = "Showing posts"                  // matches GET /posts/
+  get("/show/:id") = "Post " + param("id")    // matches GET /posts/show/149
+}</code></pre>
+<p>Alternatively, you can let the enclosing router specify a prefix for subrouter:</p>
+<pre class="scala"><code>class SubRouter(prefix: String) extends RequestRouter(prefix)
+
+class MainRouter extends RequestRouter {
+  new SubRouter("/prefix-a")
+  new SubRouter("/prefix-b")
+}</code></pre>
+<p>Note that <a href="[[link:web:basic concepts#main">main request routers</a> should have the default zero-arguments constructor, so the prefix <strong>must</strong> be hardcoded. Generally, main routers have <code>""</code> prefix (unless different filter mappings are specified in <code>web.xml</code>).</p>

@@ -1,0 +1,75 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;cookie.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package web
+
+import javax.servlet.http.Cookie</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>HTTP Cookies</h1>
+<p>HTTP is stateless protocol. <a href="http://www.faqs.org/rfcs/rfc2965.html">RFC2965</a> describes a way for a web application to send state information to the user agent and for the user agent to return the state information to the origin web application. This state information is often referred to as <em>cookie</em>.</p>
+<p>Circumflex Web Framework helps you set response cookies and access request cookies throughout your application using case class <code>HttpCookie</code>. It is mutable and dead simple.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>case class HttpCookie(var name: String,
+                      var value: String,
+                      var domain: String = null,
+                      var path: String = null,
+                      var comment: String = null,
+                      var secure: Boolean = false,
+                      var maxAge: Int = -1) {</code></pre>
+        </td>
+      </tr>
+      <tr id="section-2">
+        <td class="docs">
+          <p>You can convert <code>HttpCookie</code> back to <code>javax.servlet.Cookie</code> using <code>convert</code> method.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>  def convert(): Cookie = {
+    val c = new Cookie(name, value)
+    if (domain != null) c.setDomain(domain)
+    if (path != null) c.setPath(path)
+    if (comment != null) c.setComment(comment)
+    c.setSecure(secure)
+    c.setMaxAge(maxAge)
+    c
+  }
+  override def toString = name + &quot; = &quot; + value
+}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-3">
+        <td class="docs">
+          <p>Depending on your application needs you can obtain an instance of <code>HttpCookie</code> by supplying <code>javax.servlet.Cookie</code> as an argument to <code>apply</code> method of <code>HttpCookie</code> singleton:</p>
+<pre><code>HttpCookie(rawCookie)</code></pre>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>object HttpCookie {
+  def apply(cookie: Cookie): HttpCookie =
+    new HttpCookie(
+      cookie.getName,
+      cookie.getValue,
+      cookie.getDomain,
+      cookie.getPath,
+      cookie.getComment,
+      cookie.getSecure,
+      cookie.getMaxAge)
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

@@ -1,0 +1,13 @@
+<h1 id="sql">ORM: Querying</h1>
+<p>A precise request for information retrieval from database is often refered to as <em>query</em>. There are various ways you can query your data with Circumflex ORM:</p>
+<ul>
+  <li>using <a href="select.html">select queries</a>, a neat object-oriented DSL for retrieving <a href="/orm/ddl/part&#95;1.html#record">records</a> as well as arbitrary <a href="/orm/querying/part&#95;1.html#projection">projections</a> with SQL-like syntax;</li>
+  <li>using the <a href="/orm/querying/part&#95;6.html#criteria">Criteria API</a>, an alternative DSL for retrieving <a href="/orm/ddl/part&#95;1.html#record">records</a> with associations prefetching capabilities;</li>
+  <li>using native queries for executing vendor-specific queries for <a href="/orm/ddl/part&#95;1.html#record">records</a> or arbitrary <a href="/orm/querying/part&#95;1.html#projection">projections</a>.</li>
+</ul>
+<p>All data retrieval queries derive from the <code>SQLQuery[T]</code> class. It defines following methods for query execution:</p>
+<ul>
+  <li><code>list()</code> executes a query and returns <code>Seq[T]</code>;</li>
+  <li><code>unique()</code> executes a query and returns <code>Option[T]</code>, an exception is thrown if more than one row is returned from database;</li>
+  <li><code>resultSet[A](actions: ResultSet =&gt; A)</code> executes a query and passes JDBC <code>ResultSet</code> object to specified <code>actions</code> function, the result is determined by that function.</li>
+</ul>

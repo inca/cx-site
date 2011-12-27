@@ -1,0 +1,19 @@
+<h1>ORM: Querying</h1>
+<h2 id="set-ops">Union, Intersect &amp; Except</h2>
+<p>Most database engines allow to comine the results of two queries using the <em>set operations</em>. Following set operations are available:</p>
+<ul>
+  <li><code>UNION</code> &mdash; appends the result of one query to another, eliminating duplicate rows from its result;</li>
+  <li><code>UNION_ALL</code> &mdash; same as <code>UNION</code>, but leaves duplicate rows in result set;</li>
+  <li><code>INTERSECT</code> &mdash; returns all rows that are in the result of both queries, duplicate rows are eliminated;</li>
+  <li><code>INTERSECT_ALL</code> &mdash; same as <code>INTERSECT</code>, but no duplicate rows are eliminated;</li>
+  <li><code>EXCEPT</code> &mdash; returns all rows that are in the result of left-hand query, but not in the result of right-hand query; again, the duplicates are eliminated;</li>
+  <li><code>EXCEPT_ALL</code> &mdash; same as <code>EXCEPT</code>, but duplicates are left in the result set.</li>
+</ul>
+<p>The syntax for using set operations is:</p>
+<pre class="scala"><code>// select the names of both countries and cities in a single result set:
+SELECT (co.name) FROM co UNION (SELECT (ci.name) FROM ci)</code></pre>
+<p>Set operations can also be nested and chained:</p>
+<pre class="scala"><code>q1 INTERSECT q2 EXCEPT q3
+(q1 UNION q2) INTERSECT q3</code></pre>
+<p>The queries combined using set operations should have matching <a href="/orm/querying/part&#95;1.html#projection">projections</a>. Following will not compile:</p>
+<pre class="scala"><code>SELECT (co.*) FROM co UNION (SELECT (ci.*) FROM ci)</code></pre>

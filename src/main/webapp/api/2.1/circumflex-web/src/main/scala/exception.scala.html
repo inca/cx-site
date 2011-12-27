@@ -1,0 +1,31 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;exception.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package web
+
+import core._
+import util.control.ControlThrowable</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Exceptions</h1>
+<p>The <code>ResponseSentException</code> are thrown by response helpers and routes upon successful matching and are caught by <code>CircumflexFilter</code>. They indicate that the response has been processed successfully (and, possibly, already flushed to the client) and that no additional actions need to be taken.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class ResponseSentException extends CircumflexException(&quot;The response has been sent.&quot;)
+    with ControlThrowable</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

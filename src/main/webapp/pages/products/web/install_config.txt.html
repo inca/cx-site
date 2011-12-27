@@ -1,0 +1,32 @@
+<h1 id="install">Web: Installation &amp; Configuration</h1>
+<h2 id="existing-projects">Use With Existing Projects</h2>
+<p>Circumflex web applications run in standard Servlet 2.5 containers. There's a couple of things you should do in order to start using Circumflex Web Framework.</p>
+<p>First, make sure that <code>circumflex-core-&lt;version&gt;.jar` and `circumflex-web-&lt;version&gt;.jar</code> are in the classpath (add <code>&lt;dependency&gt;</code> with <code>circumflex-core</code> and <code>circumflex-web</code> as described in <a href="/index.html#start">quick start guide</a>).</p>
+<p>Second, configure <code>CircumflexFilter</code> in <code>/WEB-INF/web.xml</code>:</p>
+<pre class="xml"><code>&lt;web-app version="2.5"&gt;
+  &lt;filter&gt;
+    &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+    &lt;filter-class&gt;ru.circumflex.web.CircumflexFilter&lt;/filter-class&gt;
+  &lt;/filter&gt;
+  &lt;filter-mapping&gt;
+    &lt;filter-name&gt;Circumflex Filter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;*&lt;/url-pattern&gt;
+    &lt;dispatcher&gt;REQUEST&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;FORWARD&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;INCLUDE&lt;/dispatcher&gt;
+    &lt;dispatcher&gt;ERROR&lt;/dispatcher&gt;
+  &lt;/filter-mapping&gt;
+&lt;/web-app&gt;</code></pre>
+<p>Third, configure the <a href="/products/web/basic&#95;concepts.html#main">main request router</a> of your application by setting <code>cx.router</code> configuration parameter:</p>
+<ul>
+  <li>
+    <p>via <code>src/main/resource/cx.properties</code> file:</p>
+    <pre><code>cx.router=com.myapp.web.MainRouter</code></pre>
+  </li>
+  <li>or via <code>pom.xml</code> <a href="/plugin.html#cfg">using Circumflex Maven Plugin</a>.</li>
+</ul>
+<p>Please refer to <a href="/core.html#cfg">Circumflex Configuration API</a> for more information on how to configure your application.</p>
+<h2 id="import">Imports</h2>
+<p>All code examples assume that you have following <code>import</code> statement in code where necessary:</p>
+<pre class="scala"><code>import ru.circumflex._, core._, web._
+</code></pre>

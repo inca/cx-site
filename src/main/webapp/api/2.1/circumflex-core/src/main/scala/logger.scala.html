@@ -1,0 +1,57 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;logger.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package core</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Logger</h1>
+<p>Internally Circumflex uses <a href="http://www.slf4j.org">slf4j</a> to log it's activities.</p>
+<p>The <code>Logger</code> class lets applications save some performance by introducing by-name logging.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class Logger(val name: String) {
+  protected val log = org.slf4j.LoggerFactory.getLogger(name)
+  def info(msg: =&gt; Any) {
+    if (log.isInfoEnabled) log.info(msg.toString)
+  }
+  def warn(msg: =&gt; Any) {
+    if (log.isWarnEnabled) log.warn(msg.toString)
+  }
+  def warn(msg: =&gt; Any, e: Throwable) {
+    if (log.isWarnEnabled) log.warn(msg.toString, e)
+  }
+  def error(msg: =&gt; Any, e: Throwable) {
+    if (log.isErrorEnabled) log.error(msg.toString, e)
+  }
+  def error(msg: =&gt; Any) {
+    if (log.isErrorEnabled) log.error(msg.toString)
+  }
+  def debug(msg: =&gt; Any, e: Throwable) {
+    if (log.isDebugEnabled) log.debug(msg.toString, e)
+  }
+  def debug(msg: =&gt; Any) {
+    if (log.isDebugEnabled) log.debug(msg.toString)
+  }
+  def trace(msg: =&gt; Any, e: Throwable) {
+    if (log.isTraceEnabled) log.trace(msg.toString, e)
+  }
+  def trace(msg: =&gt; Any) {
+    if (log.isTraceEnabled) log.trace(msg.toString)
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

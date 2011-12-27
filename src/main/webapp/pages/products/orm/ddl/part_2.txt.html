@@ -1,0 +1,91 @@
+<h1>ORM: Data Definition</h1>
+<h2 id="idgen">Generating Identifiers</h2>
+<p>Circumflex ORM allows you to use database-generated identifiers as primary keys. Let's take a look at following data definition snippet:</p>
+<pre class="scala"><code>class City extends Record[Long, City] with IdentityGenerator[Long, City] {
+  val id = "id".BIGINT.NOT_NULL.AUTO_INCREMENT
+  val name = "name".TEXT.NOT_NULL
+  def PRIMARY_KEY = id
+  def relation = City
+}
+
+object City extends City with Table[Long, City]</code></pre>
+<p>This snippet shows a surrogate primary key example. The value of <code>id</code> is generated when a record is inserted. Then additional SQL select is issued to read this generated value.</p>
+<p>For more information refer to <a href="/api/2.0/circumflex-orm/record.scala">Circumflex ORM API Documentation</a>.</p>
+<h2 id="association">Associations</h2>
+<p>An <em>association</em> provides a way to link one relation with another.</p>
+<pre class="scala"><code>class City extends Record[Long, City] {
+  val country = "country_code".TEXT.REFERENCES(Country).ON_DELETE(CASCADE).ON_UPDATE(NO_ACTION)
+}</code></pre>
+<p>As the example above shows, associations are created from fields using the <code>REFERENCES</code> method. The type of the field must match the type of primary key of referenced relation.</p>
+<p>Associations also implicitly add foreign key constraint to table's definition. The cascading actions can be specified by invoking <code>ON_DELETE</code> and <code>ON_UPDATE</code> with one of the following arguments:</p>
+<ul>
+  <li><code>NO_ACTION</code> (default),</li>
+  <li><code>CASCADE</code>,</li>
+  <li><code>RESTRICT</code>,</li>
+  <li><code>SET_NULL</code>,</li>
+  <li><code>SET_DEFAULT</code>.</li>
+</ul>
+<p>Associations are directed: the relation that owns an association is often refered to as a <em>child relation</em>, while the relation to which an associations references is often refered to as a <em>parent relation</em>.</p>
+<p>Like with regular field, you can set an retrieve the association's value:</p>
+<pre class="scala"><code>// accessing
+country.value                       // Option[Country]
+country.get                         // Option[Country]
+country()                           // Country
+country.getOrElse(default: Country) // Country
+country.null_?                      // Boolean
+// setting
+country := switzerland
+country.set(switzerland)
+country.set(Some(switzerland))
+country.set(None)
+country.setNull</code></pre>
+<p>Associations do not store objects themselves. Instead they store the primary key of an object in their internal field. You can access and set this value directly using the <code>field</code> method:</p>
+<pre class="scala"><code>country.field   // Field[String, R]
+country.field := "ch"</code></pre>
+<p>When you access association using its <code>get</code>, <code>apply</code>, <code>value</code> or <code>getOrElse</code> methods, the actual record is returned from cache of current transaction. However, if record does not exist in cache yet, a transparent SQL select will be issued to fetch this record. This technique is usually refered to as <em>lazy initialization</em> or <em>lazy fetching</em>:</p>
+<pre class="scala"><code>val c = new City
+c.id := 16
+c.country()   // a SELECT query is executed to retrieve a Country
+              // for the City with id = 16
+c.country()   // further selects are not issued</code></pre>
+<p>The other side of association can optionally define an <em>inverse association</em> using following syntax:</p>
+<pre class="scala"><code>class Country extends Record[String, Country] {
+  def cities = inverseMany(City.country)
+}</code></pre>
+<p>Inverse associations are not represented by field in their relation, they are initialized by issuing the <code>SELECT</code> statement against child relation:</p>
+<pre class="scala"><code>val c = new Country
+c.code := 'ch'
+c.cities()   // a SELECT query is executed to retrieve a set of City objects
+             // which have country_code = 'ch'
+c.cities()   // further selects are not issued</code></pre>
+<p>Here we have the so-called &laquo;one-to-many&raquo; relationship. The &laquo;one-to-one&raquo; relationship is simulated by placing a unique constraint on association (in child table) and using <code>inverseOne</code> in parent table.</p>
+<p>You can also perform <em>association prefetching</em> for both straight and inverse associations using the <a href="/orm/querying/part&#95;6.html#criteria">Criteria API</a>.</p>
+<h2 id="validation">Validation</h2>
+<p>A record can be optionally validated before it is saved into database.</p>
+<p>The validation is performed using one or more <em>validators</em>, functions which take a <code>Record</code> and return <code>Option[Msg]</code>: <code>None</code> if validation succeeds or <code>Some[Msg]</code> otherwise. In case of failed validation the <code>Msg</code> object is used to describe the exact problem. Refer to <a href="/api/2.0/circumflex-core/messages.scala">Circumflex Messages API Documentation</a> to find out how to work with messages.</p>
+<p>Validators are added to the <code>validation</code> object inside <a href="/orm/ddl/part&#95;1.html#relation">relation</a>:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  validation.add(r =&gt; ...)
+      .add(r =&gt; ...)
+}</code></pre>
+<p>There are several predefined validators available for your convenience:</p>
+<pre class="scala"><code>object Country extends Table[String, Country] {
+  validation.notNull(_.code)
+      .notEmpty(_.code)
+      .pattern(_.code, "(?i:[a-z]{2})")
+}</code></pre>
+<p>A record is validated when either <code>validate</code> or <code>validate_!</code> is invoked. The first one returns <code>Option[MsgGroup]</code>:</p>
+<pre class="scala"><code>rec.validate match {
+  case None =&gt; ...            // validation succeeded
+  case Some(errors) =&gt; ...    // validation failed
+}</code></pre>
+<p>The second one does not return anything, but throws <code>ValidationException</code> if validation fails.</p>
+<p>The <code>validate_!</code> method is also called when a record is being saved into database, read more in <a href="/orm/dml.html#iud">Insert, Update &amp; Delete</a> section.</p>
+<p>It is also fairly easy to implement custom validators. Following example shows a validator for checking unique email addresses:</p>
+<pre class="scala"><code>object Account extends Table[Long, Account] {
+  validation.add(r =&gt; criteria
+      .add(r.email EQ r.email())
+      .unique
+      .map(a =&gt; new Msg(r.email.uuid + ".unique")))
+}
+</code></pre>

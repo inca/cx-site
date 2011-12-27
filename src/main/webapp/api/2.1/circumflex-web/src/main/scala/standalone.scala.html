@@ -1,0 +1,83 @@
+<div id="docco-page">
+  <h1 id="docco-back">
+    <a href="../../../../index.html" title="Back to index">&larr;</a>&nbsp;&nbsp;standalone.scala
+  </h1>
+  <table cellspacing="0" cellpadding="0">
+    <tbody>
+      <tr id="section-0">
+        <td class="docs">
+          
+        </td>
+        <td class="code">
+          <pre class="scala"><code>package ru.circumflex
+package web
+import core._
+import org.eclipse.jetty.webapp.WebAppContext
+import org.eclipse.jetty.server.Server
+import java.net.{InetAddress, InetSocketAddress}</code></pre>
+        </td>
+      </tr>
+      <tr id="section-1">
+        <td class="docs">
+          <h1>Standalone Server</h1>
+<p>Circumflex Web Framework ships <code>StandaloneServer</code> which uses Jetty under the curtains. It can be used to start server manually (e.g. via Scala console). Usage is simple: use <code>start</code> method to bring standalone server up and <code>stop</code> method to shut the server down. Initialization are not synchronized, so if you intend dynamic start-stop functionality, consider external synchronization.</p>
+<p>The best practice for setting up the standalone server is to provide a singleton object:</p>
+<pre><code>object MyServer extends StandaloneServer</code></pre>
+<p>Following configuration parameters are required to get standalone server up and running:</p>
+<ul>
+  <li><code>cx.webappRoot</code> specifies content root of web application (<code>src/main/webapp</code> is default);</li>
+  <li><code>cx.contextPath</code> specifies the context path of web application (<code>/</code> by default);</li>
+  <li><code>cx.port</code> specifies port which Jetty will listen to.</li>
+</ul>
+<p>Jetty's <code>WebAppContext</code> is used as default requests handler: it provides sensible defaults for almost every web application startup (it reads configuration from <code>web.xml</code> and all other Jetty-specific descriptors). You can override the server with your own implementation using the <code>cx.jetty.server</code> configuration property (the normal instantiation facility is employed in this case):</p>
+<p>Refer to Jetty documentation for more information.</p>
+
+        </td>
+        <td class="code">
+          <pre class="scala"><code>class StandaloneServer {
+  val listenAddress: InetAddress = cx.get(&quot;cx.listenAddress&quot;) match {
+    case Some(a: InetAddress) =&gt; a
+    case Some(s: String) =&gt; InetAddress.getByName(s)
+    case _ =&gt; InetAddress.getByName(&quot;0.0.0.0&quot;)
+  }
+  val port: Int = cx.get(&quot;cx.port&quot;) match {
+    case Some(p: Int) =&gt; p
+    case Some(s: String) =&gt; try { s.toInt } catch { case e: Exception =&gt; 8180 }
+    case _ =&gt; 8180
+  }
+  val webappRoot: String = cx.get(&quot;cx.webappRoot&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;src/main/webapp&quot;
+  }
+  val contextPath: String = cx.get(&quot;cx.contextPath&quot;) match {
+    case Some(s: String) =&gt; s
+    case _ =&gt; &quot;/&quot;
+  }
+
+  protected var _server: Server = _
+
+  def server: Server = {
+    if (_server == null) {
+      _server = cx.instantiate[Server](&quot;cx.jetty.server&quot;, prepareDefaultServer())
+    }
+    _server
+  }
+
+  def prepareDefaultServer(): Server = {
+    val handler = new WebAppContext(webappRoot, contextPath)
+    val srv = new Server(new InetSocketAddress(listenAddress, port))
+    srv.setHandler(handler)
+    srv
+  }
+
+  def start() {
+    server.start()
+  }
+  def stop() {
+    server.stop()
+  }
+}</code></pre>
+        </td>
+      </tr>
+  </table>
+</div>

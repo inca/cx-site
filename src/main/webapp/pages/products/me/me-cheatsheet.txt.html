@@ -1,0 +1,106 @@
+<h2>Syntax Cheatsheet</h2>
+<h3>Phrase Emphasis</h3>
+<pre class="no-highlight"><code>_italic_   *bold*</code></pre>
+<h3>Links</h3>
+<p>Inline:</p>
+<pre class="no-highlight"><code>An [example](http://url.com/ "Title")</code></pre>
+<p>Reference-style labels (titles are optional):</p>
+<pre class="no-highlight"><code>An [example][id]. Then, anywhere
+else in the doc, define the link:
+
+  [id]: http://example.com/  "Title"</code></pre>
+<h3>Headers</h3>
+<p>Setext-style:</p>
+<pre class="no-highlight"><code>Header 1
+========
+
+Header 2
+--------</code></pre>
+<p>atx-style:</p>
+<pre class="no-highlight"><code># Header 1
+
+## Header 2
+
+###### Header 6</code></pre>
+<p>with optional <code>id</code> attribute:</p>
+<pre class="no-highlight"><code># My title     {#my-title}
+
+and then use it with [link](#my-title)</code></pre>
+<h3>Lists</h3>
+<p>Ordered, without paragraphs:</p>
+<pre class="no-highlight"><code>1.  Foo
+2.  Bar</code></pre>
+<p>Unordered, with paragraphs:</p>
+<pre class="no-highlight"><code>*   A list item.
+
+    With multiple paragraphs.
+
+*   Bar</code></pre>
+<p>You can nest them:</p>
+<pre class="no-highlight"><code>*   Abacus
+
+    * answer
+*   Bubbles
+
+    1.  bunk
+    2.  bupkis
+
+        * BELITTLER
+    3. burper
+*   Cunning</code></pre>
+<h3>Blockquotes</h3>
+<pre class="no-highlight"><code>&gt; Email-style angle brackets
+&gt; are used for blockquotes.
+
+&gt; &gt; And, they can be nested.
+
+&gt; #### Headers in blockquotes
+&gt;
+&gt; * You can quote a list.
+&gt; * Etc.</code></pre>
+<h3>Code Spans</h3>
+<pre class="no-highlight"><code>`&lt;code&gt;` spans are delimited
+by backticks.
+
+You can include literal backticks
+like `` `this` ``.</code></pre>
+<h3>Preformatted Code Blocks</h3>
+<p>Indent every line of a code block by at least 4 spaces or 1 tab.</p>
+<pre class="no-highlight"><code>This is a normal paragraph.
+
+    This is a preformatted
+    code block.</code></pre>
+<h3>Horizontal Rules</h3>
+<p>Three or more dashes or asterisks:</p>
+<pre class="no-highlight"><code>---</code></pre>
+<h3>Manual Line Breaks</h3>
+<p>End a line with two or more spaces:</p>
+<pre class="no-highlight"><code>Roses are red,
+Violets are blue.</code></pre>
+<h3>Inline HTML</h3>
+<p>The content of inline HTML is not processed, unless wrapped into special HTML comment:</p>
+<pre class="no-highlight"><code>&lt;div&gt;
+  This text remains `as is`.
+  &lt;!--#md--&gt;
+  This text *is* processed.
+  &lt;!--~--&gt;
+  Here comes unprocessed text again.
+&lt;/div&gt;</code></pre>
+<h3>SmartyPants</h3>
+<pre class="no-highlight"><code>"quotes around text"  -&gt;  &ldquo;curly ones&rdquo;
+(c) and (C)           -&gt;  &copy;
+(r) and (R)           -&gt;  &reg;
+(tm) and (TM)         -&gt;  &trade;
+--                    -&gt;  &mdash;
+...                   -&gt;  &hellip;
+&lt;-                    -&gt;  &larr;
+-&gt;                    -&gt;  &rarr;</code></pre>
+<p>Ampersands in text are wrapped with <code>&lt;span class="amp"&gt;</code> for enhanced styling.</p>
+<h3>Tables</h3>
+<pre class="no-highlight"><code>--------------------------------
+Col1      | Col2      | Col3
+--------------------------------
+Cell 1 1  | Cell 1 2  | Cell 1 3
+Cell 2 1  | Cell 2 2  | Cell 2 3
+--------------------------------</code></pre>
+<p>For more information go to <a href="http://localhost:8888/api/2.0/circumflex-markeven/src/main/scala/processor.scala.html">Markeven</a> documentation.</p>

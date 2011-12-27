@@ -1,0 +1,19 @@
+<h1 id="web">Circumflex Web Framework</h1>
+<p>Circumflex Web Framework is a DSL for quick and robust web application development.</p>
+<p>Here's the sample web application:</p>
+<pre class="scala"><code>class Main extends RequestRouter {
+  get("/") = "Hello world!"
+  get("/posts/:id") = "Post #" + uri("id")
+  post("/form") = {
+    // do some work
+    // render FreeMarker template:
+    ftl("/done.ftl")
+  }
+}</code></pre>
+<h1 id="samples">Sample Applications</h1>
+<p>There's a couple of projects hosted on <a href="http://github.com">GitHub</a> which can help you understand <a href="#web">Circumflex Web Framework</a> better:</p>
+<ul>
+  <li><a href="http://github.com/vast/ciridiri" title="ciridiri -- dead simple wiki engine">vast/ciridiri</a> &mdash; dead simple wiki engine;</li>
+  <li><a href="http://github.com/inca/cx-site" title="Source code of site http://circumflex.ru">inca/cx-site</a> &mdash; source code of this site;</li>
+  <li><a href="http://github.com/inca/sandbox-blog" title="Sample Circumflex application">inca/sandbox-blog</a> &mdash; sample Circumflex application which demonstrates the basics of <a href="#web">Circumflex Web Framework</a> and <a href="/orm/index.html">ORM</a>.</li>
+</ul>
